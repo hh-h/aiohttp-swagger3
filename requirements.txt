@@ -1,0 +1,5 @@
+aiohttp
+pyyaml
+attrs
+openapi-spec-validator
+strict_rfc3339
