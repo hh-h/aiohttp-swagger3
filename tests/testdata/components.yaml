@@ -1,0 +1,23 @@
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+      required:
+        - name
+        - age
+
+  parameters:
+    Month:
+      name: month
+      in: query
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 11

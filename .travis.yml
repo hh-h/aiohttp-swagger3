@@ -1,0 +1,32 @@
+language: python
+matrix:
+  include:
+  - python: '3.6'
+    dist: xenial
+  - python: '3.7'
+    dist: xenial
+  - python: 3.7-dev
+    dist: xenial
+  - python: nightly
+    dist: xenial
+  fast_finish: true
+  allow_failures:
+  - python: 3.7-dev
+  - python: nightly
+install:
+  - pip install -r requirements.txt
+  - pip install tox-travis codecov
+script:
+  - tox
+after_success:
+  - codecov
+deploy:
+  provider: pypi
+  skip_existing: true
+  user: hh-h
+  password:
+    secure: OKBjgNcr9e9cAZhOmMSEbHP4ZIGbfPu8OPo5ThX9GW2uC7FNSCUA81BDV94V62GIEp7UoVIggrnk2Z04tTb3BGgUnwlT3zvCCi8P7EtuNdbNzhfrp1mQMVHS9ycGaihD9VnlkyqXdqKv2QqaFZESevotl0hpKm70fGRyTAcokuvtFd6NXI/Ei0Y2SFqz5fo1dcONoFiqGO+e9ImT4Dkarzq4kadmvNidPLv7bTAB9WDidIsJ9cGyKmdRGQY0cJIfxqVnHDTCgjyGE5Wh1DcOMsIZfutplDcw3VAa2RTuiFF1mOR7miKBIr/e8ehcYcIUBTYb+Bp3RqDayebex/lGYfJPB2yj68Z0mhjkqPsZKH5dEZvXfkoMVnyG3Z8R1jNylL1Uuq73nJP6BAKj9aD/ttvQG4DQZwazyxLB3AkDxH12CbXCqCEQ0BJaBOo45Jjjkvp1dcWUk/DX/7xEUJ3LRKklnh4cWH/lM/xvQGVXDcGRxt3+By71hDSxlPAl2We7Qd5rDliWnK1GGA3ftHnRQ7zJ1boE5kTUWrujz4bk5yIwchV+HjaKnJFiyr3tnPz5W9jg4m7psYehx1l2wMWY5zvJQGvthTPUVN2NS68ybplC46MJ+bM8KqMvUGTBaTjd1L4jKiI4yCCkCtBMcK50myBhHOChDI5ThUSRSmdzm4w=
+  distributions: sdist bdist_wheel
+  on:
+    branch: master
+    python: '3.6'
