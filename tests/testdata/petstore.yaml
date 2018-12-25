@@ -24,21 +24,10 @@ paths:
       responses:
         '200':
           description: A paged array of pets
-          headers:
-            x-next:
-              description: A link to the next page of responses
-              schema:
-                type: string
           content:
             application/json:    
               schema:
                 $ref: "#/components/schemas/Pets"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     post:
       summary: Create a pet
       operationId: createPets
@@ -47,12 +36,6 @@ paths:
       responses:
         '201':
           description: Null response
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /pets/{pet_id}:
     get:
       summary: Info for a specific pet
@@ -74,12 +57,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Pet"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 components:
   schemas:
     Pet:
@@ -99,13 +76,3 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Pet"
-    Error:
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: integer
-          format: int32
-        message:
-          type: string

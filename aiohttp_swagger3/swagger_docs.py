@@ -1,9 +1,11 @@
 import functools
 from collections import defaultdict
-from typing import Any, Callable, Dict, Optional
+from typing import Dict, Optional, Union
 
 import yaml
 from aiohttp import web
+from aiohttp.abc import AbstractView
+from aiohttp.web_urldispatcher import _ExpectHandler, _WebHandler
 from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
@@ -37,18 +39,26 @@ class SwaggerDocs(Swagger):
         super().__init__(app, ui_path, spec)
 
     def add_route(
-        self, method: str, path: str, handler: Callable, **kwargs: Any
-    ) -> web.ResourceRoute:
+        self,
+        method: str,
+        path: str,
+        handler: Union[_WebHandler, AbstractView],
+        *,
+        name: Optional[str] = None,
+        expect_handler: Optional[_ExpectHandler] = None,
+    ) -> web.AbstractRoute:
         if handler.__doc__ and "---" in handler.__doc__:
             *_, spec = handler.__doc__.split("---")
             method_spec = yaml.load(spec)
             method_lower = method.lower()
             self.spec["paths"][path][method_lower] = method_spec
             validate_v3_spec(self.spec)
-            route = SwaggerRoute(method_lower, path, handler, swagger=self, **kwargs)
+            route = SwaggerRoute(method_lower, path, handler, swagger=self)
             self._app[_SWAGGER_SPECIFICATION] = self.spec
             return self._app.router.add_route(
                 method, path, functools.partial(self._handle_swagger_call, route)
             )
         else:
-            return self._app.router.add_route(method, path, handler, **kwargs)
+            return self._app.router.add_route(
+                method, path, handler, name=name, expect_handler=expect_handler
+            )

@@ -1,5 +1,7 @@
-from ast import literal_eval
-from typing import Dict, List, Optional, Union
+import json
+import re
+from functools import wraps
+from typing import Dict, List, Optional, Tuple, Union
 
 from aiohttp import web
 
@@ -7,7 +9,35 @@ from aiohttp_swagger3 import SwaggerDocs, SwaggerFile
 
 
 def error_to_json(error: str) -> Dict:
-    return literal_eval(error.replace("400: ", ""))
+    return json.loads(error.replace("400: ", ""))
+
+
+def decorator(fn):
+    @wraps(fn)
+    async def wrapper(*args, **kwargs):
+        return await fn(*args, **kwargs)
+
+    return wrapper
+
+
+@decorator
+async def decorated_handler(request, param_id: int):
+    """
+    ---
+    parameters:
+
+      - name: param_id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    responses:
+      '200':
+        description: OK.
+
+    """
+    return web.json_response({"param_id": param_id})
 
 
 async def no_doc_handler(request):
@@ -1460,6 +1490,31 @@ async def path_handler(request, param_id: int):
     return web.json_response({"param_id": param_id})
 
 
+async def body_custom_handler(request, body: Dict):
+    """
+    ---
+    requestBody:
+      required: true
+      content:
+        custom/handler:
+          schema:
+            type: object
+            required:
+              - required
+            properties:
+              required:
+                type: integer
+              optional:
+                type: integer
+
+    responses:
+      '200':
+        description: OK.
+
+    """
+    return web.json_response(body)
+
+
 async def get_all_pets(request, limit: Optional[int] = None):
     pets = []
     for i in range(limit or 3):
@@ -1509,8 +1564,7 @@ async def test_primitives(aiohttp_client, loop):
         },
     )
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "int": int,
         "int32": int32,
         "int64": int64,
@@ -1530,8 +1584,7 @@ async def test_default(aiohttp_client, loop):
     client = await aiohttp_client(app)
     resp = await client.get("/r", json={})
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "integer": 15,
         "number": 15.5,
         "string": "string",
@@ -1548,8 +1601,7 @@ async def test_optional(aiohttp_client, loop):
     client = await aiohttp_client(app)
     resp = await client.get("/r", json={})
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"body": {}}
+    assert await resp.json() == {"body": {}}
 
     params = {
         "integer": 15,
@@ -1561,8 +1613,7 @@ async def test_optional(aiohttp_client, loop):
 
     resp = await client.get("/r", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "integer": 15,
         "number": 15.5,
         "string": "string",
@@ -1601,16 +1652,14 @@ async def test_body(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "required property"
-    assert json == {
+    assert error == {
         "body": {
             "int": msg,
             "int32": msg,
@@ -1639,9 +1688,8 @@ async def test_body(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": {
             "int": "value should be type of int",
             "int32": "value should be type of int",
@@ -1670,9 +1718,8 @@ async def test_body(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": {
             "int": "value should be type of int",
             "int32": "value should be type of int",
@@ -1701,9 +1748,8 @@ async def test_body(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": {
             "int": "value should be type of int",
             "int32": "value should be type of int",
@@ -1732,9 +1778,8 @@ async def test_body(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": {
             "int": "value should be type of int",
             "int32": "value should be type of int",
@@ -1764,8 +1809,7 @@ async def test_deep_nested(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_array(aiohttp_client, loop):
@@ -1777,8 +1821,7 @@ async def test_array(aiohttp_client, loop):
     a = [1, 2, -10, 15, 999, 0]
     resp = await client.get("/r", params={"array": ",".join(str(x) for x in a)})
     assert resp.status == 200
-    json = await resp.json()
-    assert json == a
+    assert await resp.json() == a
 
 
 async def test_ref(aiohttp_client, loop):
@@ -1790,8 +1833,7 @@ async def test_ref(aiohttp_client, loop):
     body = {"name": "pet", "age": 15}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_nullable(aiohttp_client, loop):
@@ -1815,8 +1857,7 @@ async def test_nullable(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {
         "int": None,
@@ -1832,8 +1873,7 @@ async def test_nullable(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_one_of_basic(aiohttp_client, loop):
@@ -1846,23 +1886,20 @@ async def test_one_of_basic(aiohttp_client, loop):
     body = {"int_or_bool": True}
     resp = await client.get("/r", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"int_or_bool": 10, "body": body}
+    assert await resp.json() == {"int_or_bool": 10, "body": body}
 
     params = {"int_or_bool": "true"}
     body = {"int_or_bool": 10}
     resp = await client.get("/r", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"int_or_bool": True, "body": body}
+    assert await resp.json() == {"int_or_bool": True, "body": body}
 
     params = {"int_or_bool": "abc"}
     body = {"int_or_bool": "bca"}
     resp = await client.get("/r", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "int_or_bool": "fail to validate oneOf",
         "body": {"int_or_bool": "fail to validate oneOf"},
     }
@@ -1878,42 +1915,36 @@ async def test_one_of_object(aiohttp_client, loop):
     body = {"object": {"id": 10}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"name": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"test": "value"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate oneOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate oneOf"}}
 
     body = {"object": {"id": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate oneOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate oneOf"}}
 
     body = {"object": {"name": 10}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate oneOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate oneOf"}}
 
     body = {"object": {"id": 10, "name": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate oneOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate oneOf"}}
 
 
 async def test_any_of_object(aiohttp_client, loop):
@@ -1926,55 +1957,47 @@ async def test_any_of_object(aiohttp_client, loop):
     body = {"object": {"id": 10}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"name": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"id": 10, "name": "string", "rank": "123"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"test": "value"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate anyOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate anyOf"}}
 
     body = {"object": {"id": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate anyOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate anyOf"}}
 
     body = {"object": {"name": 10}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate anyOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate anyOf"}}
 
     body = {"object": {"rank": "321"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate anyOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate anyOf"}}
 
     body = {"object": {"age": 15}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate anyOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate anyOf"}}
 
 
 async def test_all_of_object(aiohttp_client, loop):
@@ -1987,8 +2010,7 @@ async def test_all_of_object(aiohttp_client, loop):
     body = {"object": {"id": 10, "name": "string", "age": 15, "rank": "123"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {
         "object": {
@@ -2001,56 +2023,48 @@ async def test_all_of_object(aiohttp_client, loop):
     }
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"id": 10, "name": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"object": {"id": 10}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
     body = {"object": {"name": "string"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
     body = {"object": {"test": "value"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
     body = {"object": {"id": 10, "name": "string", "age": 10.1}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
     body = {"object": {"rank": "321"}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
     body = {"object": {"age": 15}}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"object": "fail to validate allOf"}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"object": "fail to validate allOf"}}
 
 
 async def test_body_with_optional_properties(aiohttp_client, loop):
@@ -2062,14 +2076,12 @@ async def test_body_with_optional_properties(aiohttp_client, loop):
     body = {"required": 10}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"required": 10, "optional": 15}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_body_with_additional_properties(aiohttp_client, loop):
@@ -2081,8 +2093,7 @@ async def test_body_with_additional_properties(aiohttp_client, loop):
     body = {"required": 10, "optional": 15, "str": "str", "int": 10}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_body_with_no_additional_properties(aiohttp_client, loop):
@@ -2094,9 +2105,8 @@ async def test_body_with_no_additional_properties(aiohttp_client, loop):
     body = {"required": 10, "optional": 15, "str": "str", "int": 10}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": {
             "int": "additional property not allowed",
             "str": "additional property not allowed",
@@ -2113,8 +2123,7 @@ async def test_body_with_object_additional_properties(aiohttp_client, loop):
     body = {"required": 10, "optional": 15, "str": 999, "int": 10}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_enum(aiohttp_client, loop):
@@ -2129,8 +2138,7 @@ async def test_enum(aiohttp_client, loop):
     params = {"integer": integer, "string": string, "number": str(number)}
     resp = await client.get("/r", params=params)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"integer": integer, "string": string, "number": number}
+    assert await resp.json() == {"integer": integer, "string": string, "number": number}
 
     integer = 100
     string = "abcd"
@@ -2138,9 +2146,8 @@ async def test_enum(aiohttp_client, loop):
     params = {"integer": integer, "string": string, "number": str(number)}
     resp = await client.get("/r", params=params)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "integer": "value should be one of [1, 5, 10]",
         "string": "value should be one of ['abc', 'bca']",
         "number": "value should be one of [10.1, 10.2]",
@@ -2157,8 +2164,7 @@ async def test_header(aiohttp_client, loop):
     headers = {"x-request-id": "some_request_id"}
     resp = await client.get("/r", headers=headers)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == headers
+    assert await resp.json() == headers
 
 
 async def test_path(aiohttp_client, loop):
@@ -2170,8 +2176,7 @@ async def test_path(aiohttp_client, loop):
 
     resp = await client.get("/r/10")
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"param_id": 10}
+    assert await resp.json() == {"param_id": 10}
 
 
 async def test_ref_parameter(aiohttp_client, loop):
@@ -2184,8 +2189,7 @@ async def test_ref_parameter(aiohttp_client, loop):
     params = {"month": 5}
     resp = await client.get("/r", params=params)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == params
+    assert await resp.json() == params
 
 
 async def test_minimum_maximum(aiohttp_client, loop):
@@ -2201,8 +2205,7 @@ async def test_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "query_int": int_param,
         "query_float": float_param,
         "path_int": int_param,
@@ -2216,8 +2219,7 @@ async def test_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "query_int": int_param,
         "query_float": float_param,
         "path_int": int_param,
@@ -2231,8 +2233,7 @@ async def test_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "query_int": int_param,
         "query_float": float_param,
         "path_int": int_param,
@@ -2246,11 +2247,10 @@ async def test_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg_int = "value should be more than or equal to 10"
     msg_float = "value should be more than or equal to 10.1"
-    assert json == {
+    assert error == {
         "query_int": msg_int,
         "query_float": msg_float,
         "body": {"int": msg_int, "float": msg_float},
@@ -2264,11 +2264,10 @@ async def test_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg_int = "value should be less than or equal to 20"
     msg_float = "value should be less than or equal to 19.9"
-    assert json == {
+    assert error == {
         "query_int": msg_int,
         "query_float": msg_float,
         "body": {"int": msg_int, "float": msg_float},
@@ -2290,11 +2289,10 @@ async def test_exclusive_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg_int = "value should be more than 10"
     msg_float = "value should be more than 10.1"
-    assert json == {
+    assert error == {
         "query_int": msg_int,
         "query_float": msg_float,
         "body": {"int": msg_int, "float": msg_float},
@@ -2308,11 +2306,10 @@ async def test_exclusive_minimum_maximum(aiohttp_client, loop):
     params = {"query_int": int_param, "query_float": str(float_param)}
     resp = await client.post(f"/r/{int_param}/{float_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg_int = "value should be less than 20"
     msg_float = "value should be less than 19.9"
-    assert json == {
+    assert error == {
         "query_int": msg_int,
         "query_float": msg_float,
         "body": {"int": msg_int, "float": msg_float},
@@ -2335,10 +2332,9 @@ async def test_int32_bounds(aiohttp_client, loop):
     path_param = -2_147_483_649
     resp = await client.post(f"/r/{path_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "value out of bounds int32"
-    assert json == {"query": msg, "body": {"int": msg}, "path": msg}
+    assert error == {"query": msg, "body": {"int": msg}, "path": msg}
 
     body_param = 2_147_483_648
     body = {"int": body_param}
@@ -2347,10 +2343,9 @@ async def test_int32_bounds(aiohttp_client, loop):
     path_param = 2_147_483_648
     resp = await client.post(f"/r/{path_param}", params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "value out of bounds int32"
-    assert json == {"query": msg, "body": {"int": msg}, "path": msg}
+    assert error == {"query": msg, "body": {"int": msg}, "path": msg}
 
 
 async def test_min_max_length(aiohttp_client, loop):
@@ -2371,8 +2366,7 @@ async def test_min_max_length(aiohttp_client, loop):
         f"/r/{path_param}", headers=headers, params=params, json=body
     )
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "header": header_param,
         "query": query_param,
         "path": path_param,
@@ -2390,10 +2384,9 @@ async def test_min_max_length(aiohttp_client, loop):
         f"/r/{path_param}", headers=headers, params=params, json=body
     )
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "value length should be more than 5"
-    assert json == {"query": msg, "body": {"str": msg}, "header": msg, "path": msg}
+    assert error == {"query": msg, "body": {"str": msg}, "header": msg, "path": msg}
 
     header_param = "long_string"
     headers = {"header": header_param}
@@ -2406,10 +2399,9 @@ async def test_min_max_length(aiohttp_client, loop):
         f"/r/{path_param}", headers=headers, params=params, json=body
     )
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "value length should be less than 10"
-    assert json == {"query": msg, "body": {"str": msg}, "header": msg, "path": msg}
+    assert error == {"query": msg, "body": {"str": msg}, "header": msg, "path": msg}
 
 
 async def test_min_max_properties(aiohttp_client, loop):
@@ -2422,15 +2414,13 @@ async def test_min_max_properties(aiohttp_client, loop):
     body = {"str1": "str1", "str2": "str1", "str3": "str1"}
     resp = await client.post(f"/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"str1": "str1"}
     resp = await client.post(f"/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": "number or properties must be more than 2"}
+    error = error_to_json(await resp.text())
+    assert error == {"body": "number or properties must be more than 2"}
 
     body = {
         "str1": "str1",
@@ -2442,9 +2432,8 @@ async def test_min_max_properties(aiohttp_client, loop):
     }
     resp = await client.post(f"/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": "number or properties must be less than 5"}
+    error = error_to_json(await resp.text())
+    assert error == {"body": "number or properties must be less than 5"}
 
 
 async def test_min_max_items(aiohttp_client, loop):
@@ -2462,8 +2451,11 @@ async def test_min_max_items(aiohttp_client, loop):
     params = {"query": ",".join(str(x) for x in query_param)}
     resp = await client.post(f"/r", headers=headers, params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"header": header_param, "query": query_param, "body": body}
+    assert await resp.json() == {
+        "header": header_param,
+        "query": query_param,
+        "body": body,
+    }
 
     header_param = [1]
     headers = {"header": ",".join(str(x) for x in header_param)}
@@ -2473,10 +2465,9 @@ async def test_min_max_items(aiohttp_client, loop):
     params = {"query": ",".join(str(x) for x in query_param)}
     resp = await client.post(f"/r", headers=headers, params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "number or items must be more than 2"
-    assert json == {"query": msg, "body": {"array": msg}, "header": msg}
+    assert error == {"query": msg, "body": {"array": msg}, "header": msg}
 
     header_param = [1, 2, 3, 4, 5, 6, 7]
     headers = {"header": ",".join(str(x) for x in header_param)}
@@ -2486,10 +2477,9 @@ async def test_min_max_items(aiohttp_client, loop):
     params = {"query": ",".join(str(x) for x in query_param)}
     resp = await client.post(f"/r", headers=headers, params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "number or items must be less than 5"
-    assert json == {"query": msg, "body": {"array": msg}, "header": msg}
+    assert error == {"query": msg, "body": {"array": msg}, "header": msg}
 
 
 async def test_unique_items(aiohttp_client, loop):
@@ -2507,8 +2497,11 @@ async def test_unique_items(aiohttp_client, loop):
     params = {"query": ",".join(str(x) for x in query_param)}
     resp = await client.post(f"/r", headers=headers, params=params, json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"header": header_param, "query": query_param, "body": body}
+    assert await resp.json() == {
+        "header": header_param,
+        "query": query_param,
+        "body": body,
+    }
 
     header_param = [1, 1]
     headers = {"header": ",".join(str(x) for x in header_param)}
@@ -2518,10 +2511,9 @@ async def test_unique_items(aiohttp_client, loop):
     params = {"query": ",".join(str(x) for x in query_param)}
     resp = await client.post(f"/r", headers=headers, params=params, json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
+    error = error_to_json(await resp.text())
     msg = "all items must be unique"
-    assert json == {"query": msg, "body": {"array": msg}, "header": msg}
+    assert error == {"query": msg, "body": {"array": msg}, "header": msg}
 
 
 async def test_float_as_int(aiohttp_client, loop):
@@ -2536,8 +2528,7 @@ async def test_float_as_int(aiohttp_client, loop):
     body = {"int_float": int_float, "int_double": int_double}
     resp = await client.post(f"/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
 
 async def test_corner_cases(aiohttp_client, loop):
@@ -2550,9 +2541,8 @@ async def test_corner_cases(aiohttp_client, loop):
     params = {"int32": "abc", "int64": "cca", "float": "bca", "double": "bba"}
     resp = await client.post(f"/r", params=params)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "int32": "value should be type of int",
         "int64": "value should be type of int",
         "float": "value should be type of float",
@@ -2571,8 +2561,7 @@ async def test_query_array(aiohttp_client, loop):
     params = {"query1": ",".join(str(x) for x in query1)}
     resp = await client.post(f"/r", params=params)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"query1": query1, "query2": None}
+    assert await resp.json() == {"query1": query1, "query2": None}
 
 
 async def test_string_formats(aiohttp_client, loop):
@@ -2608,8 +2597,7 @@ async def test_string_formats(aiohttp_client, loop):
         },
     )
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {
+    assert await resp.json() == {
         "date": date,
         "datetime": datetime,
         "password": password,
@@ -2648,9 +2636,8 @@ async def test_string_formats(aiohttp_client, loop):
         },
     )
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "date": "value should be date format",
         "datetime": "value should be datetime format",
         "byte": "value should be base64-encoded string",
@@ -2672,15 +2659,13 @@ async def test_string_pattern(aiohttp_client, loop):
     string = "123"
     resp = await client.get("/r", params={"string": string})
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"string": string}
+    assert await resp.json() == {"string": string}
 
     string = "asd"
     resp = await client.get("/r", params={"string": string})
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"string": "value should match regex pattern '^\\d{3}$'"}
+    error = error_to_json(await resp.text())
+    assert error == {"string": "value should match regex pattern '^\\d{3}$'"}
 
 
 async def test_incorrent_json_body(aiohttp_client, loop):
@@ -2694,9 +2679,8 @@ async def test_incorrent_json_body(aiohttp_client, loop):
         "/r", data="{{", headers={"content-type": "application/json"}
     )
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {
+    error = error_to_json(await resp.text())
+    assert error == {
         "body": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
     }
 
@@ -2711,35 +2695,30 @@ async def test_array_in_object(aiohttp_client, loop):
     body = {"array": []}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"array": [1, 2, 3]}
     resp = await client.get("/r", json=body)
     assert resp.status == 200
-    json = await resp.json()
-    assert json == body
+    assert await resp.json() == body
 
     body = {"array": ["1", 2, 3]}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"array": {0: "value should be type of int"}}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"array": {"0": "value should be type of int"}}}
 
     body = {"array": [1, 2.2, 3]}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"array": {1: "value should be type of int"}}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"array": {"1": "value should be type of int"}}}
 
     body = {"array": [1, 2, True]}
     resp = await client.get("/r", json=body)
     assert resp.status == 400
-    error = await resp.text()
-    json = error_to_json(error)
-    assert json == {"body": {"array": {2: "value should be type of int"}}}
+    error = error_to_json(await resp.text())
+    assert error == {"body": {"array": {"2": "value should be type of int"}}}
 
 
 async def test_no_docs(aiohttp_client, loop):
@@ -2767,13 +2746,11 @@ async def test_spec_file(aiohttp_client, loop):
 
     resp = await client.get("/pets", params={"limit": 1})
     assert resp.status == 200
-    json = await resp.json()
-    assert json == [{"id": 0, "name": "pet_0", "tag": "tag_0"}]
+    assert await resp.json() == [{"id": 0, "name": "pet_0", "tag": "tag_0"}]
 
     resp = await client.get("/pets")
     assert resp.status == 200
-    json = await resp.json()
-    assert json == [
+    assert await resp.json() == [
         {"id": 0, "name": "pet_0", "tag": "tag_0"},
         {"id": 1, "name": "pet_1", "tag": "tag_1"},
         {"id": 2, "name": "pet_2", "tag": "tag_2"},
@@ -2784,15 +2761,116 @@ async def test_spec_file(aiohttp_client, loop):
 
     resp = await client.get("/pets/1")
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"id": 1, "name": "pet_1", "tag": "tag_1"}
+    assert await resp.json() == {"id": 1, "name": "pet_1", "tag": "tag_1"}
 
     resp = await client.get(f"/pets/1")
     assert resp.status == 200
-    json = await resp.json()
-    assert json == {"id": 1, "name": "pet_1", "tag": "tag_1"}
+    assert await resp.json() == {"id": 1, "name": "pet_1", "tag": "tag_1"}
 
     resp = await client.get(f"/pets/100")
     assert resp.status == 500
-    json = await resp.json()
-    assert json == {"code": 10, "message": f"pet with ID '100' not found"}
+    assert await resp.json() == {"code": 10, "message": f"pet with ID '100' not found"}
+
+
+async def test_decorated_handlers(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("GET", "/r/{param_id}", decorated_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/r/10")
+    assert resp.status == 200
+    assert await resp.json() == {"param_id": 10}
+
+
+async def test_route_out_of_spec_file(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
+    s.add_route("GET", "/r", no_doc_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/r", json={"array": "whatever"})
+    assert resp.status == 200
+
+
+async def test_media_type_with_charset(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("GET", "/r", body_with_optional_properties_handler)
+
+    client = await aiohttp_client(app)
+
+    body = {"required": 10}
+    resp = await client.get(
+        "/r",
+        data=json.dumps(body),
+        headers={"content-type": "application/json; charset=UTF-8"},
+    )
+    assert resp.status == 200
+    assert await resp.json() == body
+
+
+async def custom_handler(request: web.Request) -> Tuple[Dict, bool]:
+    # <key1>[value1]<key2>[value2]
+    text = await request.text()
+    return dict(re.findall(r"<(?P<key>.+?)>\[(?P<value>.+?)\]", text)), True
+
+
+async def test_custom_media_type(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.register_media_type_handler("custom/handler", custom_handler)
+
+    s.add_route("GET", "/r", body_custom_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get(
+        "/r", data="<required>[10]", headers={"content-type": "custom/handler"}
+    )
+    assert resp.status == 200
+    assert await resp.json() == {"required": 10}
+
+    resp = await client.get(
+        "/r",
+        data="<required>[10]<optional>[20]",
+        headers={"content-type": "custom/handler"},
+    )
+    assert resp.status == 200
+    assert await resp.json() == {"required": 10, "optional": 20}
+
+
+async def test_decorated_routes(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    routes = web.RouteTableDef()
+
+    @routes.get("/r")
+    async def get_handler(request, int32: int):
+        """
+        ---
+        parameters:
+
+          - name: int32
+            in: query
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+        """
+        return web.json_response({"int32": int32})
+
+    s = SwaggerDocs(app, "/docs")
+    s.add_routes(routes)
+
+    client = await aiohttp_client(app)
+
+    params = {"int32": 15}
+    resp = await client.get("/r", params=params)
+    assert resp.status == 200
+    assert await resp.json() == params

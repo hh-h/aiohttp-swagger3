@@ -1,10 +1,23 @@
-from typing import Any, Callable, Dict, List
+import json
+from types import FunctionType
+from typing import Awaitable, Callable, Dict, List, Tuple, Union, cast
 
 from aiohttp import web
+from aiohttp.abc import AbstractView
 
 from .parameter import Parameter
 from .swagger import Swagger
 from .validators import MISSING, ValidatorError, schema_to_validator
+
+_SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
+
+
+def _get_fn_parameters(fn: Union[_SwaggerHandler, AbstractView]) -> Tuple[str, ...]:
+    func = cast(FunctionType, fn)
+    if func.__closure__ is None:
+        arg_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
+        return func.__code__.co_varnames[:arg_count]
+    return _get_fn_parameters(func.__closure__[0].cell_contents)
 
 
 class SwaggerRoute:
@@ -12,15 +25,13 @@ class SwaggerRoute:
         self,
         method: str,
         path: str,
-        handler: Callable,
+        handler: Union[_SwaggerHandler, AbstractView],
         *,
-        swagger: Swagger,
-        **kwargs: Any
+        swagger: Swagger
     ) -> None:
         self.method = method
         self.path = path
         self.handler = handler
-        self.kwargs = kwargs
         self.qp: List[Parameter] = []
         self.pp: List[Parameter] = []
         self.hp: List[Parameter] = []
@@ -59,7 +70,7 @@ class SwaggerRoute:
                     schema_to_validator(value["schema"], components),
                     body.get("required", False),
                 )
-        self.params = handler.__code__.co_varnames
+        self.params = _get_fn_parameters(handler)
 
     async def parse(self, request: web.Request) -> Dict:
         params = {"request": request}
@@ -91,19 +102,19 @@ class SwaggerRoute:
                         params[param.name] = value
         # body parameters
         if self.bp:
-            media_type = request.headers["Content-Type"]
+            raw_media_type = request.headers["Content-Type"]
+            media_type = raw_media_type.split(";")[0]
             if media_type not in self.bp:
                 raise Exception("no content-type handler")
             handler = self._swagger.get_media_type_handler(media_type)
             param = self.bp[media_type]
             try:
-                v = await handler(request)
+                v, has_raw = await handler(request)
             except ValidatorError as e:
                 errors[param.name] = e.error
             else:
                 try:
-                    # TODO it can be not False
-                    value = param.validator.validate(v, False)
+                    value = param.validator.validate(v, has_raw)
                 except ValidatorError as e:
                     errors[param.name] = e.error
                 else:
@@ -143,5 +154,5 @@ class SwaggerRoute:
                 if param.name in self.params:
                     params[param.name] = value
         if errors:
-            raise web.HTTPBadRequest(reason=errors)
+            raise web.HTTPBadRequest(reason=json.dumps(errors))
         return params

@@ -1,8 +1,10 @@
 import functools
-from typing import Any, Callable
+from typing import Optional, Union
 
 import yaml
 from aiohttp import web
+from aiohttp.abc import AbstractView
+from aiohttp.web_urldispatcher import _ExpectHandler, _WebHandler
 from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
@@ -20,13 +22,21 @@ class SwaggerFile(Swagger):
         self._app[_SWAGGER_SPECIFICATION] = spec
 
     def add_route(
-        self, method: str, path: str, handler: Callable, **kwargs: Any
-    ) -> web.ResourceRoute:
+        self,
+        method: str,
+        path: str,
+        handler: Union[_WebHandler, AbstractView],
+        *,
+        name: Optional[str] = None,
+        expect_handler: Optional[_ExpectHandler] = None,
+    ) -> web.AbstractRoute:
         lower_method = method.lower()
-        if self.spec["paths"][path][lower_method]:
-            route = SwaggerRoute(lower_method, path, handler, swagger=self, **kwargs)
+        if path in self.spec["paths"] and lower_method in self.spec["paths"][path]:
+            route = SwaggerRoute(lower_method, path, handler, swagger=self)
             return self._app.router.add_route(
                 method, path, functools.partial(self._handle_swagger_call, route)
             )
         else:
-            return self._app.router.add_route(method, path, handler, **kwargs)
+            return self._app.router.add_route(
+                method, path, handler, name=name, expect_handler=expect_handler
+            )
