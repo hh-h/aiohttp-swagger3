@@ -1,8 +1,19 @@
 import pathlib
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    Callable,
+    DefaultDict,
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from aiohttp import hdrs, web
+from aiohttp.abc import AbstractView
+from aiohttp.web_urldispatcher import _WebHandler
 
 from .handlers import application_json
 from .routes import _SWAGGER_INDEX_HTML, _redirect, _swagger_home, _swagger_spec
@@ -11,7 +22,7 @@ if TYPE_CHECKING:
     from .swagger_route import SwaggerRoute
 
 
-class Swagger:
+class Swagger(web.UrlDispatcher):
     def __init__(self, app: web.Application, ui_path: str, spec: Dict) -> None:
         if not ui_path.startswith("/"):
             raise Exception("ui_path should start with /")
@@ -20,7 +31,7 @@ class Swagger:
         self.spec = spec
 
         self.handlers: DefaultDict[
-            str, Dict[str, Callable[[web.Request], Any]]
+            str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
 
         self._app.router.add_route("GET", ui_path, _redirect)
@@ -35,62 +46,72 @@ class Swagger:
 
         self.register_media_type_handler("application/json", application_json)
 
+        super().__init__()
+
     async def _handle_swagger_call(
         self, route: "SwaggerRoute", request: web.Request
-    ) -> web.Response:
+    ) -> web.StreamResponse:
+        if isinstance(route.handler, AbstractView):
+            raise Exception("abstract view is not supported yet")
         kwargs = await route.parse(request)
         return await route.handler(**kwargs)
 
-    def add_route(
-        self,
-        method: str,
-        path: str,
-        handler: Callable[[web.Request], web.Response],
-        **kwargs: Any,
-    ) -> web.ResourceRoute:
-        raise NotImplementedError
-
     def add_head(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
 
+    def add_options(
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
+        return self.add_route(hdrs.METH_OPTIONS, path, handler, **kwargs)
+
     def add_get(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self,
+        path: str,
+        handler: _WebHandler,
+        name: Optional[str] = None,
+        allow_head: bool = True,
+        **kwargs: Any,
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_GET, path, handler, **kwargs)
 
     def add_post(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_POST, path, handler, **kwargs)
 
     def add_put(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PUT, path, handler, **kwargs)
 
     def add_patch(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PATCH, path, handler, **kwargs)
 
     def add_delete(
-        self, path: str, handler: Callable[[web.Request], web.Response], **kwargs: Any
-    ) -> web.ResourceRoute:
+        self, path: str, handler: _WebHandler, **kwargs: Any
+    ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_DELETE, path, handler, **kwargs)
 
-    def add_routes(self, routes: List[web.RouteDef]) -> None:
-        for route_obj in routes:
-            route_obj.register(self)
+    def add_view(
+        self, path: str, handler: AbstractView, **kwargs: Any
+    ) -> web.AbstractRoute:
+        return self.add_route(hdrs.METH_ANY, path, handler, **kwargs)
 
     def register_media_type_handler(
-        self, media_type: str, handler: Callable[[web.Request], Any]
+        self,
+        media_type: str,
+        handler: Callable[[web.Request], Awaitable[Tuple[Any, bool]]],
     ) -> None:
         typ, subtype = media_type.split("/")
         self.handlers[typ][subtype] = handler
 
-    def get_media_type_handler(self, media_type: str) -> Callable[[web.Request], Any]:
+    def get_media_type_handler(
+        self, media_type: str
+    ) -> Callable[[web.Request], Awaitable[Tuple[Any, bool]]]:
         typ, subtype = media_type.split("/")
         if typ not in self.handlers:
             if "*" not in self.handlers:

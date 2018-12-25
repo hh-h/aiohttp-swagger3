@@ -10,8 +10,16 @@
 Feel free to try this library and raise an issue if it does not work as expected, thanks!
 
 # About
-Package to validating requests using swagger specification 3.0.  
+Package for validating aiohttp requests using swagger specification 3.0.  
 It's marked as pre-alpha on pypi.org, but that's because I haven't decided architecture yet. However, we use it in production :)
+
+# Requirements
+- python3.6+
+- aiohttp>3 (haven't tested with v2, though)
+- pyyaml
+- attrs
+- openapi-spec-validator
+- strict_rfc3339
 
 # Limitations
 - only application/json supported for now, but you can create own [handler](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples/custom_handler)
@@ -87,9 +95,15 @@ More [examples](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples)
 - [x] allOf
 - [x] oneOf
 - [x] anyOf
+- [x] string formats: date, date-time, password, byte, binary, email, uuid, hostname, ipv4, ipv6
 
 # TODO (raise an issue if needed)
 
+- ### aiohttp specific
+- [ ] class based view
+- [ ] METH_ANY (*) routes
+
+- ### swagger specific
 - [ ] cookies
 - [ ] multipleOf
 - [ ] not 
