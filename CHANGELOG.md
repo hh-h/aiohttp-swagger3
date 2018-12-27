@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2 (27-12-2018)
+- added support for application/x-www-form-urlencoded (only primitives)
+
 ## 0.1.1 (25-12-2018)
 - fixed detection of content-type
 - added ability to work with handler decorators

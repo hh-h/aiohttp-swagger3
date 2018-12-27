@@ -22,7 +22,7 @@ It's marked as pre-alpha on pypi.org, but that's because I haven't decided archi
 - strict_rfc3339
 
 # Limitations
-- only application/json supported for now, but you can create own [handler](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples/custom_handler)
+- only application/json and application/x-www-form-urlencoded supported for now, but you can create own [handler](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples/custom_handler)
 - header/query parameters only supported simple/form array serialization, e.g. 1,2,3,4
 - see TODO below
 
@@ -73,6 +73,8 @@ def main():
 More [examples](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples)
 
 # Features
+- [x] application/json
+- [x] application/x-www-form-urlencoded (except array and object)
 - [x] items
 - [x] properties
 - [x] pattern
@@ -112,5 +114,5 @@ More [examples](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples)
 - [ ] readOnly, writeOnly
 - [ ] more serialization methods, see: [https://swagger.io/docs/specification/serialization/](https://swagger.io/docs/specification/serialization/)
 - [ ] encoding
-- [ ] form data serialization out of the box
+- [ ] form data serialization (array, object)
 - [ ] default (array, object)
