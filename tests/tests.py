@@ -3,7 +3,7 @@ import re
 from functools import wraps
 from typing import Dict, List, Optional, Tuple, Union
 
-from aiohttp import web
+from aiohttp import hdrs, web
 
 from aiohttp_swagger3 import SwaggerDocs, SwaggerFile
 
@@ -1515,6 +1515,33 @@ async def body_custom_handler(request, body: Dict):
     return web.json_response(body)
 
 
+async def form_data_handler(request, body: Dict):
+    """
+    ---
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              integer:
+                type: integer
+              number:
+                type: number
+              string:
+                type: string
+              boolean:
+                type: boolean
+
+    responses:
+      '200':
+        description: OK.
+
+    """
+    return web.json_response(body)
+
+
 async def get_all_pets(request, limit: Optional[int] = None):
     pets = []
     for i in range(limit or 3):
@@ -2668,7 +2695,7 @@ async def test_string_pattern(aiohttp_client, loop):
     assert error == {"string": "value should match regex pattern '^\\d{3}$'"}
 
 
-async def test_incorrent_json_body(aiohttp_client, loop):
+async def test_incorrect_json_body(aiohttp_client, loop):
     app = web.Application(loop=loop)
     s = SwaggerDocs(app, "/docs")
     s.add_route("GET", "/r", body_with_optional_properties_handler)
@@ -2874,3 +2901,90 @@ async def test_decorated_routes(aiohttp_client, loop):
     resp = await client.get("/r", params=params)
     assert resp.status == 200
     assert await resp.json() == params
+
+
+async def test_form_data(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("GET", "/r", form_data_handler)
+
+    client = await aiohttp_client(app)
+
+    integer = 15
+    number = 15.5
+    string = "string"
+    boolean = True
+    data = {
+        "integer": integer,
+        "number": number,
+        "string": string,
+        "boolean": str(boolean).lower(),
+    }
+    resp = await client.get("/r", data=data)
+    print(dir(resp.request_info))
+    assert resp.status == 200
+    assert await resp.json() == {
+        "integer": integer,
+        "number": number,
+        "string": string,
+        "boolean": boolean,
+    }
+
+
+async def test_swagger_json(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(
+        app, "/docs", title="test app", version="2.2.2", description="test description"
+    )
+    s.add_route("GET", "/r/{param_id}", path_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
+    assert await resp.json() == {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "test app",
+            "version": "2.2.2",
+            "description": "test description",
+        },
+        "paths": {
+            "/r/{param_id}": {
+                "get": {
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "param_id",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "OK."}},
+                }
+            }
+        },
+    }
+
+
+async def test_index_html(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("GET", "/r/{param_id}", path_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/")
+    assert resp.status == 200
+
+
+async def test_redirect(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("GET", "/r/{param_id}", path_handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs", allow_redirects=False)
+    assert resp.status == 301
+    assert "/docs/" == resp.headers.get(hdrs.LOCATION) or resp.headers.get(hdrs.URI)

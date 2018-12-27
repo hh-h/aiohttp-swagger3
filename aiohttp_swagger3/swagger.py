@@ -15,7 +15,7 @@ from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 from aiohttp.web_urldispatcher import _WebHandler
 
-from .handlers import application_json
+from .handlers import application_json, x_www_form_urlencoded
 from .routes import _SWAGGER_INDEX_HTML, _redirect, _swagger_home, _swagger_spec
 
 if TYPE_CHECKING:
@@ -45,6 +45,9 @@ class Swagger(web.UrlDispatcher):
             self._app[_SWAGGER_INDEX_HTML] = f.read()
 
         self.register_media_type_handler("application/json", application_json)
+        self.register_media_type_handler(
+            "application/x-www-form-urlencoded", x_www_form_urlencoded
+        )
 
         super().__init__()
 
