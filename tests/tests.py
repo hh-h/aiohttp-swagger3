@@ -2988,3 +2988,17 @@ async def test_redirect(aiohttp_client, loop):
     resp = await client.get("/docs", allow_redirects=False)
     assert resp.status == 301
     assert "/docs/" == resp.headers.get(hdrs.LOCATION) or resp.headers.get(hdrs.URI)
+
+
+async def test_named_resources(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_routes(
+        [
+            web.get("/pets", get_all_pets, name="get"),
+            web.post("/pets", create_pet, name="post"),
+        ]
+    )
+
+    assert "get" in app.router
+    assert "post" in app.router

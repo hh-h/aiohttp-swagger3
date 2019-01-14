@@ -77,7 +77,7 @@ class Swagger(web.UrlDispatcher):
         allow_head: bool = True,
         **kwargs: Any,
     ) -> web.AbstractRoute:
-        return self.add_route(hdrs.METH_GET, path, handler, **kwargs)
+        return self.add_route(hdrs.METH_GET, path, handler, name=name, **kwargs)
 
     def add_post(
         self, path: str, handler: _WebHandler, **kwargs: Any
