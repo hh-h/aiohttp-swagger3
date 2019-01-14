@@ -55,10 +55,8 @@ class SwaggerDocs(Swagger):
             validate_v3_spec(self.spec)
             route = SwaggerRoute(method_lower, path, handler, swagger=self)
             self._app[_SWAGGER_SPECIFICATION] = self.spec
-            return self._app.router.add_route(
-                method, path, functools.partial(self._handle_swagger_call, route)
-            )
-        else:
-            return self._app.router.add_route(
-                method, path, handler, name=name, expect_handler=expect_handler
-            )
+            handler = functools.partial(self._handle_swagger_call, route)
+
+        return self._app.router.add_route(
+            method, path, handler, name=name, expect_handler=expect_handler
+        )

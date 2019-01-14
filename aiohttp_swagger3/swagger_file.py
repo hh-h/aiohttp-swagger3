@@ -33,10 +33,8 @@ class SwaggerFile(Swagger):
         lower_method = method.lower()
         if path in self.spec["paths"] and lower_method in self.spec["paths"][path]:
             route = SwaggerRoute(lower_method, path, handler, swagger=self)
-            return self._app.router.add_route(
-                method, path, functools.partial(self._handle_swagger_call, route)
-            )
-        else:
-            return self._app.router.add_route(
-                method, path, handler, name=name, expect_handler=expect_handler
-            )
+            handler = functools.partial(self._handle_swagger_call, route)
+
+        return self._app.router.add_route(
+            method, path, handler, name=name, expect_handler=expect_handler
+        )

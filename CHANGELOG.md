@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.3 (14-01-2019)
+- fixed forgot to pass named resources for GET methods
+
 ## 0.1.2 (27-12-2018)
 - added support for application/x-www-form-urlencoded (only primitives)
 
