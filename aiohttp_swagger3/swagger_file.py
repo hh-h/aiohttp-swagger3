@@ -13,12 +13,19 @@ from .swagger_route import SwaggerRoute
 
 
 class SwaggerFile(Swagger):
-    def __init__(self, app: web.Application, ui_path: str, spec_file: str) -> None:
+    def __init__(
+        self,
+        app: web.Application,
+        ui_path: str,
+        spec_file: str,
+        *,
+        request_key: str = "data",
+    ) -> None:
         with open(spec_file) as f:
             spec = yaml.load(f)
         validate_v3_spec(spec)
 
-        super().__init__(app, ui_path, spec)
+        super().__init__(app, ui_path, spec, request_key)
         self._app[_SWAGGER_SPECIFICATION] = spec
 
     def add_route(

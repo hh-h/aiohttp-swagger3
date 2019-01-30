@@ -19,6 +19,7 @@ class SwaggerDocs(Swagger):
         app: web.Application,
         ui_path: str,
         *,
+        request_key: str = "data",
         title: str = "OpenAPI3",
         version: str = "1.0.0",
         description: Optional[str] = None,
@@ -36,7 +37,7 @@ class SwaggerDocs(Swagger):
             with open(components) as f:
                 spec.update(yaml.load(f))
 
-        super().__init__(app, ui_path, spec)
+        super().__init__(app, ui_path, spec, request_key)
 
     def add_route(
         self,

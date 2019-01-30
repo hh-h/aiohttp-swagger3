@@ -74,7 +74,8 @@ class SwaggerRoute:
 
     async def parse(self, request: web.Request) -> Dict:
         params = {"request": request}
-        request["data"] = {}
+        request_key = self._swagger.request_key
+        request[request_key] = {}
         # query parameters
         errors: Dict = {}
         if self.qp:
@@ -97,7 +98,7 @@ class SwaggerRoute:
                     errors[param.name] = e.error
                     continue
                 if value != MISSING:
-                    request["data"][param.name] = value
+                    request[request_key][param.name] = value
                     if param.name in self.params:
                         params[param.name] = value
         # body parameters
@@ -118,7 +119,7 @@ class SwaggerRoute:
                 except ValidatorError as e:
                     errors[param.name] = e.error
                 else:
-                    request["data"][param.name] = value
+                    request[request_key][param.name] = value
                     if param.name in self.params:
                         params[param.name] = value
         # header parameters
@@ -138,7 +139,7 @@ class SwaggerRoute:
                     errors[param.name] = e.error
                     continue
                 if value != MISSING:
-                    request["data"][param.name] = value
+                    request[request_key][param.name] = value
                     if param.name in self.params:
                         params[param.name] = value
         # path parameters
@@ -150,7 +151,7 @@ class SwaggerRoute:
                 except ValidatorError as e:
                     errors[param.name] = e.error
                     continue
-                request["data"][param.name] = value
+                request[request_key][param.name] = value
                 if param.name in self.params:
                     params[param.name] = value
         if errors:
