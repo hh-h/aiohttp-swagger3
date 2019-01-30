@@ -23,12 +23,15 @@ if TYPE_CHECKING:
 
 
 class Swagger(web.UrlDispatcher):
-    def __init__(self, app: web.Application, ui_path: str, spec: Dict) -> None:
+    def __init__(
+        self, app: web.Application, ui_path: str, spec: Dict, request_key: str
+    ) -> None:
         if not ui_path.startswith("/"):
             raise Exception("ui_path should start with /")
         ui_path = ui_path.rstrip("/")
         self._app = app
         self.spec = spec
+        self.request_key = request_key
 
         self.handlers: DefaultDict[
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
