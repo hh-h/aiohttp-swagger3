@@ -2,6 +2,7 @@
 
 ## 0.1.4 (31-01-2019)
 - ability to set key where validated data stored in request
+- bump swagger ui to 3.20.5
 
 ## 0.1.3 (14-01-2019)
 - fixed forgot to pass named resources for GET methods
