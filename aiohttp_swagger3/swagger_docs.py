@@ -5,12 +5,16 @@ from typing import Dict, Optional, Union
 import yaml
 from aiohttp import web
 from aiohttp.abc import AbstractView
-from aiohttp.web_urldispatcher import _ExpectHandler, _WebHandler
 from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import Swagger
 from .swagger_route import SwaggerRoute
+
+try:
+    from aiohttp.web_urldispatcher import _ExpectHandler, _WebHandler
+except ImportError:
+    _ExpectHandler, _WebHandler = None, None
 
 
 class SwaggerDocs(Swagger):

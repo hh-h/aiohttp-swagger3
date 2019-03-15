@@ -13,13 +13,18 @@ from typing import (
 
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
-from aiohttp.web_urldispatcher import _WebHandler
 
 from .handlers import application_json, x_www_form_urlencoded
 from .routes import _SWAGGER_INDEX_HTML, _redirect, _swagger_home, _swagger_spec
 
 if TYPE_CHECKING:
     from .swagger_route import SwaggerRoute
+
+
+try:
+    from aiohttp.web_urldispatcher import _WebHandler
+except ImportError:
+    _WebHandler = None
 
 
 class Swagger(web.UrlDispatcher):
