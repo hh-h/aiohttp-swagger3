@@ -22,7 +22,7 @@ class SwaggerFile(Swagger):
         request_key: str = "data",
     ) -> None:
         with open(spec_file) as f:
-            spec = yaml.load(f)
+            spec = yaml.safe_load(f)
         validate_v3_spec(spec)
 
         super().__init__(app, ui_path, spec, request_key)

@@ -15,7 +15,7 @@ It's marked as pre-alpha on pypi.org, but that's because I haven't decided archi
 
 # Requirements
 - python3.6+
-- aiohttp>3 (haven't tested with v2, though)
+- aiohttp>=3
 - pyyaml
 - attrs
 - openapi-spec-validator

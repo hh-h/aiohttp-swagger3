@@ -35,7 +35,7 @@ class SwaggerDocs(Swagger):
 
         if components:
             with open(components) as f:
-                spec.update(yaml.load(f))
+                spec.update(yaml.safe_load(f))
 
         super().__init__(app, ui_path, spec, request_key)
 
@@ -50,7 +50,7 @@ class SwaggerDocs(Swagger):
     ) -> web.AbstractRoute:
         if handler.__doc__ and "---" in handler.__doc__:
             *_, spec = handler.__doc__.split("---")
-            method_spec = yaml.load(spec)
+            method_spec = yaml.safe_load(spec)
             method_lower = method.lower()
             self.spec["paths"][path][method_lower] = method_spec
             validate_v3_spec(self.spec)
