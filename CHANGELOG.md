@@ -2,6 +2,7 @@
 
 ## 0.1.5 (15-03-2019)
 - use yaml's safe_load instead of load
+- bump swagger ui to 3.21.0
 
 ## 0.1.4 (31-01-2019)
 - ability to set key where validated data stored in request
