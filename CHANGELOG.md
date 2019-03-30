@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.6 (30-03-2019)
+- added ability to skip validation
+
 ## 0.1.5 (15-03-2019)
 - use yaml's safe_load instead of load
 - bump swagger ui to 3.21.0

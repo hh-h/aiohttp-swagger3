@@ -28,13 +28,21 @@ except ImportError:
 
 
 class Swagger(web.UrlDispatcher):
+    __slots__ = ("_app", "validate", "spec", "request_key", "handlers")
+
     def __init__(
-        self, app: web.Application, ui_path: str, spec: Dict, request_key: str
+        self,
+        app: web.Application,
+        ui_path: str,
+        validate: bool,
+        spec: Dict,
+        request_key: str,
     ) -> None:
         if not ui_path.startswith("/"):
             raise Exception("ui_path should start with /")
         ui_path = ui_path.rstrip("/")
         self._app = app
+        self.validate = validate
         self.spec = spec
         self.request_key = request_key
 

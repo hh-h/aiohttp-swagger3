@@ -21,6 +21,18 @@ def _get_fn_parameters(fn: Union[_SwaggerHandler, AbstractView]) -> Tuple[str, .
 
 
 class SwaggerRoute:
+    __slots__ = (
+        "_swagger",
+        "method",
+        "path",
+        "handler",
+        "qp",
+        "pp",
+        "hp",
+        "bp",
+        "params",
+    )
+
     def __init__(
         self,
         method: str,

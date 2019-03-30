@@ -1,5 +1,5 @@
 __all__ = ("SwaggerDocs", "SwaggerFile", "__version__")
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "Valetov Konstantin"
 
 from .swagger_docs import SwaggerDocs
