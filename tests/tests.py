@@ -3061,3 +3061,41 @@ async def test_custom_request_key(aiohttp_client, loop):
     req = "str"
     resp = await client.post("/r/str", headers=headers, params=params, json=req)
     assert resp.status == 200
+
+
+async def test_validation_false(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    routes = web.RouteTableDef()
+
+    @routes.post("/r")
+    async def get_handler(request):
+        """
+        ---
+        parameters:
+
+          - name: query
+            in: query
+            required: true
+            schema:
+              type: string
+
+        responses:
+          '200':
+            description: OK.
+        """
+        assert "data" not in request
+        assert request.rel_url.query["query"] == "str"
+        return web.json_response()
+
+    s = SwaggerDocs(app, "/docs", validate=False)
+    s.add_routes(routes)
+
+    client = await aiohttp_client(app)
+
+    params = {"query": "str"}
+    resp = await client.post("/r", params=params)
+    assert resp.status == 200
+
+    resp = await client.get("/docs/")
+    assert resp.status == 200

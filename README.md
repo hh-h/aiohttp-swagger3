@@ -10,8 +10,11 @@
 Feel free to try this library and raise an issue if it does not work as expected, thanks!
 
 # About
-Package for validating aiohttp requests using swagger specification 3.0.  
+Package for displaying swagger docs and optionally validating/parsing aiohttp requests using swagger specification 3.0 only.  
 It's marked as pre-alpha on pypi.org, but that's because I haven't decided architecture yet. However, we use it in production :)
+
+# Disable validation
+Okay, just pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, default is `True`
 
 # Requirements
 - python3.6+

@@ -18,11 +18,14 @@ except ImportError:
 
 
 class SwaggerDocs(Swagger):
+    __slots__ = ()
+
     def __init__(
         self,
         app: web.Application,
         ui_path: str,
         *,
+        validate: bool = True,
         request_key: str = "data",
         title: str = "OpenAPI3",
         version: str = "1.0.0",
@@ -41,7 +44,7 @@ class SwaggerDocs(Swagger):
             with open(components) as f:
                 spec.update(yaml.safe_load(f))
 
-        super().__init__(app, ui_path, spec, request_key)
+        super().__init__(app, ui_path, validate, spec, request_key)
 
     def add_route(
         self,
@@ -52,7 +55,7 @@ class SwaggerDocs(Swagger):
         name: Optional[str] = None,
         expect_handler: Optional[_ExpectHandler] = None,
     ) -> web.AbstractRoute:
-        if handler.__doc__ and "---" in handler.__doc__:
+        if self.validate and handler.__doc__ and "---" in handler.__doc__:
             *_, spec = handler.__doc__.split("---")
             method_spec = yaml.safe_load(spec)
             method_lower = method.lower()
