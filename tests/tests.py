@@ -3099,3 +3099,46 @@ async def test_validation_false(aiohttp_client, loop):
 
     resp = await client.get("/docs/")
     assert resp.status == 200
+
+
+async def test_object_can_have_optional_props(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    routes = web.RouteTableDef()
+
+    @routes.post("/r")
+    async def get_handler(request, body: Dict):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  integer:
+                    type: integer
+                  string:
+                    type: string
+                  array:
+                    type: array
+                    items:
+                      type: string
+                  object:
+                    type: object
+
+        responses:
+          '200':
+            description: OK.
+        """
+        return web.json_response(body)
+
+    s = SwaggerDocs(app, "/docs")
+    s.add_routes(routes)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.post("/r", json={})
+    assert resp.status == 200
+    assert await resp.json() == {}
