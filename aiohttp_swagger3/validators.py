@@ -338,12 +338,16 @@ class Object(Validator):
     additionalProperties: Union[bool, Validator] = True
     nullable: bool = False
 
-    def validate(self, raw_value: Optional[Dict], raw: bool) -> Optional[Dict]:
+    def validate(
+        self, raw_value: Union[None, Dict, _MissingType], raw: bool
+    ) -> Union[None, Dict, _MissingType]:
         if raw_value is None:
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of dict")
         elif not isinstance(raw_value, dict):
+            if isinstance(raw_value, _MissingType):
+                return raw_value
             raise ValidatorError("value should be type of dict")
         value = {}
         errors: Dict = {}

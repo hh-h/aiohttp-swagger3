@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.7 (11-04-2019)
+- fixed bug when object inside object couldn't be optional
+
 ## 0.1.6 (30-03-2019)
 - added ability to skip validation
 
