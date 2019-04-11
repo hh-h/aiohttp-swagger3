@@ -2,6 +2,7 @@
 
 ## 0.1.7 (11-04-2019)
 - fixed bug when object inside object couldn't be optional
+- fixed bug when allow_head was ignored
 
 ## 0.1.6 (30-03-2019)
 - added ability to skip validation
