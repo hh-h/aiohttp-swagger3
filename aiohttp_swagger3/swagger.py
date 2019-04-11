@@ -93,6 +93,8 @@ class Swagger(web.UrlDispatcher):
         allow_head: bool = True,
         **kwargs: Any,
     ) -> web.AbstractRoute:
+        if allow_head:
+            self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
         return self.add_route(hdrs.METH_GET, path, handler, name=name, **kwargs)
 
     def add_post(

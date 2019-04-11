@@ -3142,3 +3142,17 @@ async def test_object_can_have_optional_props(aiohttp_client, loop):
     resp = await client.post("/r", json={})
     assert resp.status == 200
     assert await resp.json() == {}
+
+
+async def test_allow_head(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_get("/r1/{param_id}", path_handler)
+    s.add_get("/r2/{param_id}", path_handler, allow_head=False)
+
+    client = await aiohttp_client(app)
+    resp = await client.head("/r1/1")
+    assert resp.status == 200
+
+    resp = await client.head("/r2/1")
+    assert resp.status == 405
