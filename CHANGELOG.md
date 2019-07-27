@@ -2,6 +2,9 @@
 
 ## 0.2.0 (27-06-2019)
 - added ability to handle empty arrays in query parameters
+- added class based view
+- added METH_ANY support
+- fixed incorrect validate=False behaviour
 
 ## 0.1.8 (27-06-2019)
 - bump swagger ui to 3.23.1

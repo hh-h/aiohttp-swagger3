@@ -1,19 +1,14 @@
 import functools
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import yaml
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
-from .swagger import Swagger
-from .swagger_route import SwaggerRoute
-
-try:
-    from aiohttp.web_urldispatcher import _ExpectHandler, _WebHandler
-except ImportError:
-    _ExpectHandler, _WebHandler = None, None
+from .swagger import ExpectHandler, Swagger
+from .swagger_route import SwaggerRoute, _SwaggerHandler
 
 
 class SwaggerFile(Swagger):
@@ -39,19 +34,35 @@ class SwaggerFile(Swagger):
         self,
         method: str,
         path: str,
-        handler: Union[_WebHandler, AbstractView],
+        handler: Union[_SwaggerHandler, AbstractView],
         *,
         name: Optional[str] = None,
-        expect_handler: Optional[_ExpectHandler] = None,
+        expect_handler: Optional[ExpectHandler] = None,
     ) -> web.AbstractRoute:
-        lower_method = method.lower()
-        if (
-            self.validate
-            and path in self.spec["paths"]
-            and lower_method in self.spec["paths"][path]
-        ):
-            route = SwaggerRoute(lower_method, path, handler, swagger=self)
-            handler = functools.partial(self._handle_swagger_call, route)
+        if self.validate and path in self.spec["paths"]:
+            if isinstance(handler, type) and issubclass(handler, AbstractView):
+                for meth in hdrs.METH_ALL:
+                    meth = meth.lower()
+                    if meth not in self.spec["paths"][path]:
+                        continue
+                    handler_ = getattr(handler, meth, None)
+                    if handler_ is None:
+                        continue
+                    route = SwaggerRoute(meth, path, handler_, swagger=self)
+                    setattr(
+                        handler,
+                        meth,
+                        functools.partialmethod(
+                            self._handle_swagger_method_call, route
+                        ),
+                    )
+            else:
+                method_lower = method.lower()
+                if method_lower in self.spec["paths"][path]:
+                    route = SwaggerRoute(
+                        method_lower, path, cast(_SwaggerHandler, handler), swagger=self
+                    )
+                    handler = functools.partial(self._handle_swagger_call, route)
 
         return self._app.router.add_route(
             method, path, handler, name=name, expect_handler=expect_handler

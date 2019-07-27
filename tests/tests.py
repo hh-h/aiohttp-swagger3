@@ -1549,8 +1549,8 @@ async def get_all_pets(request, limit: Optional[int] = None):
     return web.json_response(pets)
 
 
-async def create_pet(request):
-    return web.json_response(status=201)
+async def create_pet(request, body: Dict):
+    return web.json_response(body, status=201)
 
 
 async def get_one_pet(request, pet_id: int):
@@ -2788,8 +2788,10 @@ async def test_spec_file(aiohttp_client, loop):
         {"id": 2, "name": "pet_2", "tag": "tag_2"},
     ]
 
-    resp = await client.post("/pets")
+    req = {"id": 10, "name": "pet", "tag": "tag"}
+    resp = await client.post("/pets", json=req)
     assert resp.status == 201
+    assert await resp.json() == req
 
     resp = await client.get("/pets/1")
     assert resp.status == 200
@@ -3105,6 +3107,25 @@ async def test_validation_false(aiohttp_client, loop):
     resp = await client.get("/docs/")
     assert resp.status == 200
 
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
+    spec = await resp.json()
+    assert spec["paths"] == {
+        "/r": {
+            "post": {
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {"200": {"description": "OK."}},
+            }
+        }
+    }
+
 
 async def test_object_can_have_optional_props(aiohttp_client, loop):
     app = web.Application(loop=loop)
@@ -3161,3 +3182,218 @@ async def test_allow_head(aiohttp_client, loop):
 
     resp = await client.head("/r2/1")
     assert resp.status == 405
+
+
+async def test_class_based_view(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    class View(web.View):
+        async def get(self, param_id: int):
+            """
+            ---
+            parameters:
+
+              - name: param_id
+                in: path
+                required: true
+                schema:
+                  type: integer
+
+            responses:
+              '200':
+                description: OK.
+
+            """
+            assert self.request["data"]["param_id"] == param_id
+            return web.json_response({"param_id": param_id})
+
+        async def post(self, param_id: int, body: Dict):
+            """
+            ---
+            parameters:
+
+              - name: param_id
+                in: path
+                required: true
+                schema:
+                  type: integer
+
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      integer:
+                        type: integer
+
+            responses:
+              '200':
+                description: OK.
+
+            """
+            return web.json_response({"param_id": param_id, "body": body})
+
+    s = SwaggerDocs(app, "/docs")
+    s.add_routes([web.view("/r/{param_id}", View)])
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/r/10")
+    assert resp.status == 200
+    assert await resp.json() == {"param_id": 10}
+
+    body = {"integer": 20}
+    resp = await client.post("/r/20", json=body)
+    assert resp.status == 200
+    assert await resp.json() == {"param_id": 20, "body": body}
+
+
+async def test_decorated_class_based_view(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    routes = web.RouteTableDef()
+
+    @routes.view("/r/{param_id}")
+    class View(web.View):
+        async def get(self, param_id: int):
+            """
+            ---
+            parameters:
+
+              - name: param_id
+                in: path
+                required: true
+                schema:
+                  type: integer
+
+            responses:
+              '200':
+                description: OK.
+
+            """
+            return web.json_response({"param_id": param_id})
+
+        async def post(self, param_id: int, body: Dict):
+            """
+            ---
+            parameters:
+
+              - name: param_id
+                in: path
+                required: true
+                schema:
+                  type: integer
+
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      integer:
+                        type: integer
+
+            responses:
+              '200':
+                description: OK.
+
+            """
+            return web.json_response({"param_id": param_id, "body": body})
+
+    s = SwaggerDocs(app, "/docs")
+    s.add_routes(routes)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/r/10")
+    assert resp.status == 200
+    assert await resp.json() == {"param_id": 10}
+
+    body = {"integer": 20}
+    resp = await client.post("/r/20", json=body)
+    assert resp.status == 200
+    assert await resp.json() == {"param_id": 20, "body": body}
+
+
+async def test_class_based_spec_file(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
+
+    class Pets(web.View):
+        async def get(self, limit: Optional[int] = None):
+            pets = []
+            for i in range(limit or 3):
+                pets.append({"id": i, "name": f"pet_{i}", "tag": f"tag_{i}"})
+            return web.json_response(pets)
+
+        async def post(self, body: Dict):
+            return web.json_response(body, status=201)
+
+    s.add_routes([web.view("/pets", Pets)])
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/pets", params={"limit": 1})
+    assert resp.status == 200
+    assert await resp.json() == [{"id": 0, "name": "pet_0", "tag": "tag_0"}]
+
+    resp = await client.get("/pets")
+    assert resp.status == 200
+    assert await resp.json() == [
+        {"id": 0, "name": "pet_0", "tag": "tag_0"},
+        {"id": 1, "name": "pet_1", "tag": "tag_1"},
+        {"id": 2, "name": "pet_2", "tag": "tag_2"},
+    ]
+
+    req = {"id": 10, "name": "pet", "tag": "tag"}
+    resp = await client.post("/pets", json=req)
+    assert resp.status == 201
+    assert await resp.json() == req
+
+
+async def test_meth_any(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+    s.add_route("*", "/r/{param_id}", path_handler)
+
+    client = await aiohttp_client(app)
+
+    for method in (
+        hdrs.METH_GET,
+        hdrs.METH_POST,
+        hdrs.METH_PUT,
+        hdrs.METH_PATCH,
+        hdrs.METH_DELETE,
+    ):
+        resp = await getattr(client, method.lower())("/r/10")
+        assert resp.status == 200
+        assert await resp.json() == {"param_id": 10}
+
+
+async def test_spec_file_validation_false(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+
+    async def get_all_pets(request):
+        assert "data" not in request
+        assert request.rel_url.query["query"] == "str"
+        return web.json_response()
+
+    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml", validate=False)
+    s.add_get("/pets", get_all_pets)
+
+    client = await aiohttp_client(app)
+
+    params = {"query": "str"}
+    resp = await client.get("/pets", params=params)
+    assert resp.status == 200
+
+    resp = await client.get("/docs/")
+    assert resp.status == 200
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
+    spec = await resp.json()
+    assert "/pets" in spec["paths"]

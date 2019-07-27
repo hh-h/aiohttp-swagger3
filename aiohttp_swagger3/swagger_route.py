@@ -1,9 +1,8 @@
 import json
 from types import FunctionType
-from typing import Awaitable, Callable, Dict, List, Tuple, Union, cast
+from typing import Awaitable, Callable, Dict, List, Tuple, cast
 
 from aiohttp import web
-from aiohttp.abc import AbstractView
 
 from .parameter import Parameter
 from .swagger import Swagger
@@ -12,7 +11,7 @@ from .validators import MISSING, ValidatorError, schema_to_validator
 _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
 
 
-def _get_fn_parameters(fn: Union[_SwaggerHandler, AbstractView]) -> Tuple[str, ...]:
+def _get_fn_parameters(fn: _SwaggerHandler) -> Tuple[str, ...]:
     func = cast(FunctionType, fn)
     if func.__closure__ is None:
         arg_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
@@ -34,12 +33,7 @@ class SwaggerRoute:
     )
 
     def __init__(
-        self,
-        method: str,
-        path: str,
-        handler: Union[_SwaggerHandler, AbstractView],
-        *,
-        swagger: Swagger
+        self, method: str, path: str, handler: _SwaggerHandler, *, swagger: Swagger
     ) -> None:
         self.method = method
         self.path = path
@@ -82,10 +76,12 @@ class SwaggerRoute:
                     schema_to_validator(value["schema"], components),
                     body.get("required", False),
                 )
-        self.params = _get_fn_parameters(handler)
+        self.params = set(_get_fn_parameters(self.handler))
 
     async def parse(self, request: web.Request) -> Dict:
-        params = {"request": request}
+        params = {}
+        if "request" in self.params:
+            params["request"] = request
         request_key = self._swagger.request_key
         request[request_key] = {}
         # query parameters
