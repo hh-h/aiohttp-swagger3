@@ -21,10 +21,7 @@ if TYPE_CHECKING:
     from .swagger_route import SwaggerRoute
 
 
-try:
-    from aiohttp.web_urldispatcher import _WebHandler
-except ImportError:
-    _WebHandler = None
+WebHandler = Callable[[web.Request], Awaitable[web.StreamResponse]]
 
 
 class Swagger(web.UrlDispatcher):
@@ -76,19 +73,19 @@ class Swagger(web.UrlDispatcher):
         return await route.handler(**kwargs)
 
     def add_head(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
 
     def add_options(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_OPTIONS, path, handler, **kwargs)
 
     def add_get(
         self,
         path: str,
-        handler: _WebHandler,
+        handler: WebHandler,
         name: Optional[str] = None,
         allow_head: bool = True,
         **kwargs: Any,
@@ -98,22 +95,22 @@ class Swagger(web.UrlDispatcher):
         return self.add_route(hdrs.METH_GET, path, handler, name=name, **kwargs)
 
     def add_post(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_POST, path, handler, **kwargs)
 
     def add_put(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PUT, path, handler, **kwargs)
 
     def add_patch(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PATCH, path, handler, **kwargs)
 
     def add_delete(
-        self, path: str, handler: _WebHandler, **kwargs: Any
+        self, path: str, handler: WebHandler, **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_DELETE, path, handler, **kwargs)
 

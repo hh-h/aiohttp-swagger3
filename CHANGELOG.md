@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.8 (27-06-2019)
+- bump swagger ui to 3.23.1
+
 ## 0.1.7 (11-04-2019)
 - fixed bug when object inside object couldn't be optional
 - fixed bug when allow_head was ignored
