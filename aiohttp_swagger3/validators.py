@@ -296,12 +296,13 @@ class Array(Validator):
                 raise ValidatorError("value should be type of list")
             items = []
             index = 0
-            try:
-                for i, value in enumerate(raw_value.split(",")):
-                    index = i
-                    items.append(self.validator.validate(value, raw))
-            except ValidatorError as e:
-                raise ValidatorError({index: e.error})
+            if raw_value:
+                try:
+                    for i, value in enumerate(raw_value.split(",")):
+                        index = i
+                        items.append(self.validator.validate(value, raw))
+                except ValidatorError as e:
+                    raise ValidatorError({index: e.error})
         elif isinstance(raw_value, list):
             items = []
             index = 0

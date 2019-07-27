@@ -1850,6 +1850,11 @@ async def test_array(aiohttp_client, loop):
     assert resp.status == 200
     assert await resp.json() == a
 
+    a = []
+    resp = await client.get("/r", params={"array": ",".join(str(x) for x in a)})
+    assert resp.status == 200
+    assert await resp.json() == a
+
 
 async def test_ref(aiohttp_client, loop):
     app = web.Application(loop=loop)
