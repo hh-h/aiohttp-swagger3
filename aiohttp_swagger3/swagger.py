@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 
 WebHandler = Callable[[web.Request], Awaitable[web.StreamResponse]]
+ExpectHandler = Callable[[web.Request], Awaitable[None]]
 
 
 class Swagger(web.UrlDispatcher):
@@ -67,10 +68,14 @@ class Swagger(web.UrlDispatcher):
     async def _handle_swagger_call(
         self, route: "SwaggerRoute", request: web.Request
     ) -> web.StreamResponse:
-        if isinstance(route.handler, AbstractView):
-            raise Exception("abstract view is not supported yet")
         kwargs = await route.parse(request)
         return await route.handler(**kwargs)
+
+    async def _handle_swagger_method_call(
+        self, view: web.View, route: "SwaggerRoute"
+    ) -> web.StreamResponse:
+        kwargs = await route.parse(view.request)
+        return await route.handler(view, **kwargs)
 
     def add_head(
         self, path: str, handler: WebHandler, **kwargs: Any

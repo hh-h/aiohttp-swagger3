@@ -104,10 +104,6 @@ More [examples](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples)
 
 # TODO (raise an issue if needed)
 
-- ### aiohttp specific
-- [ ] class based view
-- [ ] METH_ANY (*) routes
-
 - ### swagger specific
 - [ ] cookies
 - [ ] multipleOf

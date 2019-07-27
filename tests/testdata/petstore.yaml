@@ -33,9 +33,19 @@ paths:
       operationId: createPets
       tags:
         - pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
       responses:
         '201':
-          description: Null response
+          description: Pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
   /pets/{pet_id}:
     get:
       summary: Info for a specific pet
