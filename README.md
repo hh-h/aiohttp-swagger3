@@ -105,7 +105,6 @@ More [examples](https://github.com/hh-h/aiohttp-swagger3/tree/master/examples)
 # TODO (raise an issue if needed)
 
 - ### swagger specific
-- [ ] cookies
 - [ ] multipleOf
 - [ ] not 
 - [ ] allowEmptyValue
