@@ -1,0 +1,119 @@
+from aiohttp import hdrs, web
+
+from aiohttp_swagger3 import SwaggerDocs
+
+
+async def test_swagger_json(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(
+        app, "/docs", title="test app", version="2.2.2", description="test description"
+    )
+
+    async def handler(request, param_id: int):
+        """
+        ---
+        parameters:
+
+          - name: param_id
+            in: path
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response({"param_id": param_id})
+
+    s.add_route("GET", "/r/{param_id}", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
+    assert await resp.json() == {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "test app",
+            "version": "2.2.2",
+            "description": "test description",
+        },
+        "paths": {
+            "/r/{param_id}": {
+                "get": {
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "param_id",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "OK."}},
+                }
+            }
+        },
+    }
+
+
+async def test_index_html(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, param_id: int):
+        """
+        ---
+        parameters:
+
+          - name: param_id
+            in: path
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response({"param_id": param_id})
+
+    s.add_route("GET", "/r/{param_id}", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/")
+    assert resp.status == 200
+
+
+async def test_redirect(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, param_id: int):
+        """
+        ---
+        parameters:
+
+          - name: param_id
+            in: path
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response({"param_id": param_id})
+
+    s.add_route("GET", "/r/{param_id}", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs", allow_redirects=False)
+    assert resp.status == 301
+    assert "/docs/" == resp.headers.get(hdrs.LOCATION) or resp.headers.get(hdrs.URI)
