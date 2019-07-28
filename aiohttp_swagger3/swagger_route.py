@@ -28,6 +28,7 @@ class SwaggerRoute:
         "qp",
         "pp",
         "hp",
+        "cp",
         "bp",
         "params",
     )
@@ -41,6 +42,7 @@ class SwaggerRoute:
         self.qp: List[Parameter] = []
         self.pp: List[Parameter] = []
         self.hp: List[Parameter] = []
+        self.cp: List[Parameter] = []
         self.bp: Dict[str, Parameter] = {}
         self._swagger = swagger
         parameters = self._swagger.spec["paths"][path][method].get("parameters")
@@ -65,6 +67,8 @@ class SwaggerRoute:
                     self.pp.append(parameter)
                 elif param["in"] == "header":
                     self.hp.append(parameter)
+                elif param["in"] == "cookie":
+                    self.cp.append(parameter)
 
         if body is not None:
             for media_type, value in body["content"].items():
@@ -84,8 +88,8 @@ class SwaggerRoute:
             params["request"] = request
         request_key = self._swagger.request_key
         request[request_key] = {}
-        # query parameters
         errors: Dict = {}
+        # query parameters
         if self.qp:
             for param in self.qp:
                 if param.required:
@@ -162,6 +166,27 @@ class SwaggerRoute:
                 request[request_key][param.name] = value
                 if param.name in self.params:
                     params[param.name] = value
+        # cookie parameters
+        if self.cp:
+            for param in self.cp:
+                if param.required:
+                    try:
+                        v = request.cookies[param.name]
+                    except KeyError:
+                        errors[param.name] = "is required"
+                        continue
+                else:
+                    v = request.cookies.get(param.name, MISSING)
+                try:
+                    value = param.validator.validate(v, True)
+                except ValidatorError as e:
+                    errors[param.name] = e.error
+                    continue
+                if value != MISSING:
+                    request[request_key][param.name] = value
+                    if param.name in self.params:
+                        params[param.name] = value
+
         if errors:
             raise web.HTTPBadRequest(reason=json.dumps(errors))
         return params
