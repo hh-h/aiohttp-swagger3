@@ -80,8 +80,9 @@ async def test_api_key_header_auth(aiohttp_client, loop):
             description: OK.
 
         """
-        assert "X-API-KEY" in request["data"]
-        return web.json_response({"api_key": request["data"]["X-API-KEY"]})
+        assert "X-API-KEY" not in request["data"]
+        assert "x-api-key" in request["data"]
+        return web.json_response({"api_key": request["data"]["x-api-key"]})
 
     s.add_route("GET", "/r", handler)
 

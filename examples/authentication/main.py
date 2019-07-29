@@ -8,7 +8,7 @@ async def handler(request):
     ---
     security:
       - bearerAuth: []
-        apiKeyAuth: []
+      - apiKeyAuth: []
 
     responses:
       '200':
@@ -16,8 +16,8 @@ async def handler(request):
 
     """
     r = {}
-    if "X-API-KEY" in request["data"]:
-        r["api_key"] = request["data"]["X-API-KEY"]
+    if "x-api-key" in request["data"]:
+        r["api_key"] = request["data"]["x-api-key"]
     else:
         r["authorization"] = request["data"]["authorization"]
 
