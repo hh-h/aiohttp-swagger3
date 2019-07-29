@@ -456,7 +456,7 @@ class AuthBasic(Validator):
             raise ValidatorError({self.name: "is required"})
 
         if not value.startswith("Basic "):
-            raise ValidatorError({self.name: "value should start with Basic word"})
+            raise ValidatorError({self.name: "value should start with 'Basic' word"})
         return {self.name: value.replace("Basic ", "")}
 
 

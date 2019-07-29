@@ -1,3 +1,4 @@
+import pytest
 from aiohttp import hdrs, web
 
 from aiohttp_swagger3 import SwaggerDocs
@@ -117,3 +118,10 @@ async def test_redirect(aiohttp_client, loop):
     resp = await client.get("/docs", allow_redirects=False)
     assert resp.status == 301
     assert "/docs/" == resp.headers.get(hdrs.LOCATION) or resp.headers.get(hdrs.URI)
+
+
+async def test_incorrect_ui_path(loop):
+    app = web.Application(loop=loop)
+    with pytest.raises(Exception) as exc_info:
+        SwaggerDocs(app, "docs")
+    assert str(exc_info.value) == "ui_path should start with /"

@@ -1,3 +1,4 @@
+import pytest
 from aiohttp import web
 
 from aiohttp_swagger3 import SwaggerDocs
@@ -95,6 +96,16 @@ async def test_api_key_header_auth(aiohttp_client, loop):
     assert resp.status == 200
     assert await resp.json() == {"api_key": api_key}
 
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"x-api-key": "is required"}
+
+    resp = await client.get("/r", headers={"X-API-KEY": ""})
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"x-api-key": "value length should be more than 1"}
+
 
 async def test_api_key_query_auth(aiohttp_client, loop):
     app = web.Application(loop=loop)
@@ -125,6 +136,16 @@ async def test_api_key_query_auth(aiohttp_client, loop):
     assert resp.status == 200
     assert await resp.json() == {"api_key": api_key}
 
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"api_key": "is required"}
+
+    resp = await client.get("/r", params={"api_key": ""})
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"api_key": "value length should be more than 1"}
+
 
 async def test_api_key_cookie_auth(aiohttp_client, loop):
     app = web.Application(loop=loop)
@@ -154,6 +175,16 @@ async def test_api_key_cookie_auth(aiohttp_client, loop):
     resp = await client.get("/r", cookies=cookies)
     assert resp.status == 200
     assert await resp.json() == {"api_key": api_key}
+
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"C-API-KEY": "is required"}
+
+    resp = await client.get("/r", cookies={"C-API-KEY": ""})
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"C-API-KEY": "value length should be more than 1"}
 
 
 async def test_all_of_auth(aiohttp_client, loop):
@@ -263,3 +294,143 @@ async def test_one_of_auth(aiohttp_client, loop):
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == "One auth must be provided"
+
+
+async def test_missing_basic_word_in_auth(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
+
+    async def handler(request):
+        """
+        ---
+        security:
+          - basicAuth: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    authorization = "ZGVtbzpwQDU1dzByZA=="
+    headers = {"Authorization": authorization}
+
+    resp = await client.get("/r", headers=headers)
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"authorization": "value should start with 'Basic' word"}
+
+
+async def test_missing_bearer_word_in_auth(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
+
+    async def handler(request):
+        """
+        ---
+        security:
+          - bearerAuth: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    authorization = "ZGVtbzpwQDU1dzByZA=="
+    headers = {"Authorization": authorization}
+
+    resp = await client.get("/r", headers=headers)
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"authorization": "value should start with 'Bearer' word"}
+
+
+async def test_unknown_security(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
+
+    async def handler(request):
+        """
+        ---
+        security:
+          - wrongAuth: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    with pytest.raises(Exception) as exc_info:
+        s.add_route("GET", "/r", handler)
+    assert "security schema wrongAuth must be defined in components" == str(
+        exc_info.value
+    )
+
+
+async def test_complex_auth(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
+
+    async def handler(request):
+        """
+        ---
+        security:
+          - basicAuth: []
+            apiKeyCookieAuth: []
+          - bearerAuth: []
+            apiKeyHeaderAuth: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        assert "C-API-KEY" in request["data"] or "x-api-key" in request["data"]
+        api_key = (
+            request["data"]["C-API-KEY"]
+            if "C-API-KEY" in request["data"]
+            else request["data"]["x-api-key"]
+        )
+        authorization = request["data"]["authorization"]
+        return web.json_response({"http": authorization, "api_key": api_key})
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    option1_http = "111ZGVtbzpwQDU1dzByZA=="
+    option1_api_key = "111eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
+    option1 = {
+        "cookies": {"C-API-KEY": option1_api_key},
+        "headers": {"Authorization": f"Basic {option1_http}"},
+    }
+
+    option2_http = "222ZGVtbzpwQDU1dzByZA=="
+    option2_api_key = "222eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
+    option2 = {
+        "headers": {
+            "Authorization": f"Bearer {option2_http}",
+            "X-API-KEY": option2_api_key,
+        }
+    }
+
+    resp = await client.get("/r", **option1)
+    assert resp.status == 200
+    assert await resp.json() == {"api_key": option1_api_key, "http": option1_http}
+
+    resp = await client.get("/r", **option2)
+    assert resp.status == 200
+    assert await resp.json() == {"api_key": option2_api_key, "http": option2_http}
