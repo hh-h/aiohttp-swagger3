@@ -78,6 +78,7 @@ class SwaggerRoute:
                 elif param["in"] == "path":
                     self.pp.append(parameter)
                 elif param["in"] == "header":
+                    parameter.name = parameter.name.lower()
                     self.hp.append(parameter)
                 elif param["in"] == "cookie":
                     self.cp.append(parameter)

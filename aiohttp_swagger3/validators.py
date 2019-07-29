@@ -659,7 +659,7 @@ def _security_to_validator(sec_name: str, components: Dict) -> Validator:
             raise Exception(f"Unknown scheme {sec_def['scheme']} in {sec_name}")
     elif sec_def["type"] == "apiKey":
         if sec_def["in"] == "header":
-            return AuthApiKeyHeader(name=sec_def["name"])
+            return AuthApiKeyHeader(name=sec_def["name"].lower())
         elif sec_def["in"] == "query":
             return AuthApiKeyQuery(name=sec_def["name"])
         elif sec_def["in"] == "cookie":
