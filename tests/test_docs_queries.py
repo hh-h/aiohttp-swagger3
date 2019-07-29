@@ -608,3 +608,69 @@ async def test_decorated_routes(aiohttp_client, loop):
     resp = await client.get("/r", params=params)
     assert resp.status == 200
     assert await resp.json() == params
+
+
+async def test_missing_query_parameter(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request):
+        """
+        ---
+        parameters:
+
+          - name: variable
+            in: query
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"variable": "is required"}
+
+
+async def test_wrong_item_in_array(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request):
+        """
+        ---
+        parameters:
+
+          - name: array
+            in: query
+            required: true
+            schema:
+              type: array
+              items:
+                type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    params = {"array": ",".join(str(x) for x in [1, "abc", 3, True, 5])}
+    resp = await client.post(f"/r", params=params)
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"array": {"1": "value should be type of int"}}
