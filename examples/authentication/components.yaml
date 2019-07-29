@@ -1,0 +1,10 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY

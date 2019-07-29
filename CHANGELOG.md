@@ -2,6 +2,7 @@
 
 ## 0.2.1 (29-06-2019)
 - added cookie parameters support
+- added authentication
 
 ## 0.2.0 (27-06-2019)
 - added ability to handle empty arrays in query parameters

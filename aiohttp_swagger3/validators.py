@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Pattern, Set, Union
 
 import attr
 import strict_rfc3339
+from aiohttp import web
 
 _EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 _HOSTNAME_REGEX = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
@@ -444,6 +445,112 @@ class AllOf(Validator):
         return value
 
 
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AuthBasic(Validator):
+    name: str = "authorization"
+
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        try:
+            value = request.headers.getone(self.name)
+        except KeyError:
+            raise ValidatorError({self.name: "is required"})
+
+        if not value.startswith("Basic "):
+            raise ValidatorError({self.name: "value should start with Basic word"})
+        return {self.name: value.replace("Basic ", "")}
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AuthBearer(Validator):
+    name: str = "authorization"
+
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        try:
+            value = request.headers.getone(self.name)
+        except KeyError:
+            raise ValidatorError({self.name: "is required"})
+
+        if not value.startswith("Bearer "):
+            raise ValidatorError({self.name: "value should start with 'Bearer' word"})
+        return {self.name: value.replace("Bearer ", "")}
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AuthApiKeyHeader(Validator):
+    name: str
+
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        try:
+            value = request.headers.getone(self.name)
+        except KeyError:
+            raise ValidatorError({self.name: "is required"})
+
+        if len(value) == 0:
+            raise ValidatorError({self.name: "value length should be more than 1"})
+        return {self.name: value}
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AuthApiKeyQuery(Validator):
+    name: str
+
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        try:
+            value = request.rel_url.query.getone(self.name)
+        except KeyError:
+            raise ValidatorError({self.name: "is required"})
+
+        if len(value) == 0:
+            raise ValidatorError({self.name: "value length should be more than 1"})
+        return {self.name: value}
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AuthApiKeyCookie(Validator):
+    name: str
+
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        try:
+            value = request.cookies[self.name]
+        except KeyError:
+            raise ValidatorError({self.name: "is required"})
+
+        if len(value) == 0:
+            raise ValidatorError({self.name: "value length should be more than 1"})
+        return {self.name: value}
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class OneOfAuth(Validator):
+    validators: List[Validator]
+
+    def validate(self, request: web.Request, raw: bool) -> Dict[str, str]:
+        found = False
+        value: Optional[Dict[str, str]] = None
+        for validator in self.validators:
+            try:
+                value = validator.validate(request, raw)
+            except ValidatorError:
+                continue
+            if found:
+                raise ValidatorError("Only one auth must be provided")
+            found = True
+        if value is None:
+            raise ValidatorError("One auth must be provided")
+        return value
+
+
+@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+class AllOfAuth(Validator):
+    validators: List[Validator]
+
+    def validate(self, request: web.Request, raw: bool) -> Dict[str, str]:
+        value: Dict[str, str] = {}
+        for validator in self.validators:
+            value.update(validator.validate(request, raw))
+        return value
+
+
 def _type_to_validator(schema: Dict, components: Dict) -> Validator:
     if "type" not in schema:
         raise KeyError("type is required")
@@ -537,3 +644,57 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
         )
     else:
         return _type_to_validator(schema, components)
+
+
+def _security_to_validator(sec_name: str, components: Dict) -> Validator:
+    if sec_name not in components["securitySchemes"]:
+        raise Exception(f"security schema {sec_name} must be defined in components")
+    sec_def = components["securitySchemes"][sec_name]
+    if sec_def["type"] == "http":
+        if sec_def["scheme"] == "basic":
+            return AuthBasic()
+        elif sec_def["scheme"] == "bearer":
+            return AuthBearer()
+        else:
+            raise Exception(f"Unknown scheme {sec_def['scheme']} in {sec_name}")
+    elif sec_def["type"] == "apiKey":
+        if sec_def["in"] == "header":
+            return AuthApiKeyHeader(name=sec_def["name"])
+        elif sec_def["in"] == "query":
+            return AuthApiKeyQuery(name=sec_def["name"])
+        elif sec_def["in"] == "cookie":
+            return AuthApiKeyCookie(name=sec_def["name"])
+        else:
+            raise Exception(f"Unknown value of in {sec_def['in']} in {sec_name}")
+    else:
+        raise Exception(f"Unsupported auth type {sec_def['type']}")
+
+
+def security_to_validator(schema: List[Dict], components: Dict) -> Validator:
+    if "securitySchemes" not in components:
+        raise Exception("securitySchemes must be defined in components")
+    if len(schema) > 1:
+        validators = []
+        for security in schema:
+            if len(security) > 1:
+                validator: Validator = AllOfAuth(
+                    validators=[
+                        _security_to_validator(sec_name, components)
+                        for sec_name in security
+                    ]
+                )
+            else:
+                validator = _security_to_validator(next(iter(security)), components)
+            validators.append(validator)
+        return OneOfAuth(validators=validators)
+    else:
+        security = schema[0]
+        if len(security) > 1:
+            return AllOfAuth(
+                validators=[
+                    _security_to_validator(sec_name, components)
+                    for sec_name in security
+                ]
+            )
+        else:
+            return _security_to_validator(next(iter(security)), components)

@@ -21,3 +21,27 @@ components:
         format: int32
         minimum: 0
         maximum: 11
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+    apiKeyHeaderAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+
+    apiKeyQueryAuth:
+      type: apiKey
+      in: query
+      name: api_key
+
+    apiKeyCookieAuth:
+      type: apiKey
+      in: cookie
+      name: C-API-KEY

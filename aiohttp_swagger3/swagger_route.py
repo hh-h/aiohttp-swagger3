@@ -1,12 +1,17 @@
 import json
 from types import FunctionType
-from typing import Awaitable, Callable, Dict, List, Tuple, cast
+from typing import Awaitable, Callable, Dict, List, Optional, Tuple, cast
 
 from aiohttp import web
 
 from .parameter import Parameter
 from .swagger import Swagger
-from .validators import MISSING, ValidatorError, schema_to_validator
+from .validators import (
+    MISSING,
+    ValidatorError,
+    schema_to_validator,
+    security_to_validator,
+)
 
 _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
 
@@ -30,6 +35,7 @@ class SwaggerRoute:
         "hp",
         "cp",
         "bp",
+        "auth",
         "params",
     )
 
@@ -44,10 +50,16 @@ class SwaggerRoute:
         self.hp: List[Parameter] = []
         self.cp: List[Parameter] = []
         self.bp: Dict[str, Parameter] = {}
+        self.auth: Optional[Parameter] = None
         self._swagger = swagger
-        parameters = self._swagger.spec["paths"][path][method].get("parameters")
-        body = self._swagger.spec["paths"][path][method].get("requestBody")
+        method_section = self._swagger.spec["paths"][path][method]
+        parameters = method_section.get("parameters")
+        body = method_section.get("requestBody")
+        security = method_section.get("security")
         components = self._swagger.spec.get("components", {})
+        if security is not None:
+            parameter = Parameter("", security_to_validator(security, components), True)
+            self.auth = parameter
         if parameters is not None:
             for param in parameters:
                 if "$ref" in param:
@@ -89,6 +101,16 @@ class SwaggerRoute:
         request_key = self._swagger.request_key
         request[request_key] = {}
         errors: Dict = {}
+        # check auth
+        if self.auth:
+            try:
+                values = self.auth.validator.validate(request, True)
+            except ValidatorError as e:
+                raise web.HTTPBadRequest(reason=json.dumps(e.error))
+
+            for key, value in values.items():
+                request[request_key][key] = value
+
         # query parameters
         if self.qp:
             for param in self.qp:
