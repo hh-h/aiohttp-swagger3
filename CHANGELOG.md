@@ -2,6 +2,7 @@
 
 ## 0.2.2 (30-08-2019)
 - fixed string/binary doesn't allow bytes as input
+- bump swagger ui to 3.23.6
 
 ## 0.2.1 (29-06-2019)
 - added cookie parameters support
