@@ -178,9 +178,9 @@ class String(Validator):
     default: Optional[str] = None
 
     def validate(
-        self, raw_value: Union[None, str, _MissingType], raw: bool
-    ) -> Union[None, str, _MissingType]:
-        if isinstance(raw_value, str):
+        self, raw_value: Union[None, str, bytes, _MissingType], raw: bool
+    ) -> Union[None, str, bytes, _MissingType]:
+        if isinstance(raw_value, (str, bytes)):
             value = raw_value
         elif raw_value is None:
             if self.nullable:
@@ -205,6 +205,7 @@ class String(Validator):
             StringFormat.Password,
             StringFormat.Binary,
         ):
+            assert isinstance(value, str)
             if self.format == StringFormat.Uuid:
                 try:
                     uuid.UUID(value)
@@ -241,7 +242,11 @@ class String(Validator):
                 ):
                     raise ValidatorError("value should be valid hostname")
 
-        if self.pattern and not self.pattern.search(value):
+        if (
+            self.format != StringFormat.Binary
+            and self.pattern
+            and not self.pattern.search(value)
+        ):
             raise ValidatorError(
                 f"value should match regex pattern '{self.pattern.pattern}'"
             )

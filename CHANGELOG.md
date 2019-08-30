@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.2 (30-08-2019)
+- fixed string/binary doesn't allow bytes as input
+
 ## 0.2.1 (29-06-2019)
 - added cookie parameters support
 - added authentication

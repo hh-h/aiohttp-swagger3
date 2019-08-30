@@ -85,3 +85,40 @@ async def test_missing_custom_media_type(loop):
     with pytest.raises(Exception) as exc_info:
         s.add_route("POST", "/r", handler)
     assert "register handler for custom/handler first" == str(exc_info.value)
+
+
+async def test_file_upload(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def octet_stream_handler(request: web.Request) -> Tuple[bytes, bool]:
+        return await request.read(), True
+
+    s.register_media_type_handler("application/octet-stream", octet_stream_handler)
+
+    async def handler(request, body: bytes):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.Response(body=body)
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    data = b"\x00Binary-data\x00"
+    resp = await client.post("/r", data=data)
+    assert resp.status == 200
+    assert await resp.read() == data
