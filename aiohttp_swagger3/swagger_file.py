@@ -1,5 +1,5 @@
 import functools
-from typing import Optional, Union, cast
+from typing import Optional, Type, Union
 
 import yaml
 from aiohttp import hdrs, web
@@ -34,7 +34,7 @@ class SwaggerFile(Swagger):
         self,
         method: str,
         path: str,
-        handler: Union[_SwaggerHandler, AbstractView],
+        handler: Union[_SwaggerHandler, Type[AbstractView]],
         *,
         name: Optional[str] = None,
         expect_handler: Optional[ExpectHandler] = None,
@@ -59,9 +59,7 @@ class SwaggerFile(Swagger):
             else:
                 method_lower = method.lower()
                 if method_lower in self.spec["paths"][path]:
-                    route = SwaggerRoute(
-                        method_lower, path, cast(_SwaggerHandler, handler), swagger=self
-                    )
+                    route = SwaggerRoute(method_lower, path, handler, swagger=self)
                     handler = functools.partial(self._handle_swagger_call, route)
 
         return self._app.router.add_route(

@@ -125,3 +125,36 @@ async def test_incorrect_ui_path(loop):
     with pytest.raises(Exception) as exc_info:
         SwaggerDocs(app, "docs")
     assert str(exc_info.value) == "ui_path should start with /"
+
+
+async def test_swagger_json_renders_datetime(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(
+        app, "/docs", title="test app", version="2.2.2", description="test description"
+    )
+
+    async def handler(request):
+        """
+        ---
+        parameters:
+
+          - name: date
+            in: query
+            schema:
+              type: string
+              format: date
+              example: 2019-01-01
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
