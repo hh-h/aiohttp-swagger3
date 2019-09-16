@@ -9,6 +9,7 @@ from typing import (
     Dict,
     Optional,
     Tuple,
+    Type,
 )
 
 from aiohttp import hdrs, web
@@ -120,7 +121,7 @@ class Swagger(web.UrlDispatcher):
         return self.add_route(hdrs.METH_DELETE, path, handler, **kwargs)
 
     def add_view(
-        self, path: str, handler: AbstractView, **kwargs: Any
+        self, path: str, handler: Type[AbstractView], **kwargs: Any
     ) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_ANY, path, handler, **kwargs)
 

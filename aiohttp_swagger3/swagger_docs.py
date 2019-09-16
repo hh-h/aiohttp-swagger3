@@ -1,6 +1,6 @@
 import functools
 from collections import defaultdict
-from typing import Dict, Optional, Union, cast
+from typing import Dict, Optional, Type, Union
 
 import yaml
 from aiohttp import hdrs, web
@@ -64,7 +64,7 @@ class SwaggerDocs(Swagger):
         self,
         method: str,
         path: str,
-        handler: Union[_SwaggerHandler, AbstractView],
+        handler: Union[_SwaggerHandler, Type[AbstractView]],
         *,
         name: Optional[str] = None,
         expect_handler: Optional[ExpectHandler] = None,
@@ -89,15 +89,10 @@ class SwaggerDocs(Swagger):
                     hdrs.METH_DELETE,
                 ):
                     meth = meth.lower()
-                    handler = self._wrap_handler(
-                        meth, path, cast(_SwaggerHandler, handler), is_method=False
-                    )
+                    handler = self._wrap_handler(meth, path, handler, is_method=False)
             else:
                 handler = self._wrap_handler(
-                    method.lower(),
-                    path,
-                    cast(_SwaggerHandler, handler),
-                    is_method=False,
+                    method.lower(), path, handler, is_method=False
                 )
 
         return self._app.router.add_route(
