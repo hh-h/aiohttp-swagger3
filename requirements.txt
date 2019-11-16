@@ -1,5 +1,5 @@
 aiohttp>=3
 pyyaml
-attrs
+attrs>=19.2.0
 openapi-spec-validator
 strict_rfc3339

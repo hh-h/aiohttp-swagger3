@@ -56,7 +56,7 @@ class StringFormat(enum.Enum):
     IPv6 = "ipv6"
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Integer(Validator):
     format: IntegerFormat = attr.attrib(converter=IntegerFormat)
     minimum: Optional[int] = None
@@ -110,7 +110,7 @@ class Integer(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Number(Validator):
     format: NumberFormat = attr.attrib(converter=NumberFormat)
     minimum: Optional[float] = None
@@ -167,7 +167,7 @@ def _re_compile(pattern: Optional[str]) -> Optional[Pattern]:
     return re.compile(pattern)
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class String(Validator):
     format: StringFormat = attr.attrib(converter=StringFormat)
     pattern: Optional[Pattern] = attr.attrib(converter=_re_compile)
@@ -254,7 +254,7 @@ class String(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Boolean(Validator):
     nullable: bool = False
     default: Optional[bool] = None
@@ -286,7 +286,7 @@ class Boolean(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Array(Validator):
     validator: Validator
     uniqueItems: bool
@@ -336,7 +336,7 @@ class Array(Validator):
         return items
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Object(Validator):
     properties: Dict[str, Validator]
     required: Set[str]
@@ -403,7 +403,7 @@ class Object(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class OneOf(Validator):
     validators: List[Validator]
 
@@ -423,7 +423,7 @@ class OneOf(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AnyOf(Validator):
     validators: List[Validator]
 
@@ -436,7 +436,7 @@ class AnyOf(Validator):
         raise ValidatorError("fail to validate anyOf")
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AllOf(Validator):
     validators: List[Validator]
 
@@ -450,7 +450,7 @@ class AllOf(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthBasic(Validator):
     name: str = "authorization"
 
@@ -465,7 +465,7 @@ class AuthBasic(Validator):
         return {self.name: value.replace("Basic ", "")}
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthBearer(Validator):
     name: str = "authorization"
 
@@ -480,7 +480,7 @@ class AuthBearer(Validator):
         return {self.name: value.replace("Bearer ", "")}
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthApiKeyHeader(Validator):
     name: str
 
@@ -495,7 +495,7 @@ class AuthApiKeyHeader(Validator):
         return {self.name: value}
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthApiKeyQuery(Validator):
     name: str
 
@@ -510,7 +510,7 @@ class AuthApiKeyQuery(Validator):
         return {self.name: value}
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthApiKeyCookie(Validator):
     name: str
 
@@ -525,7 +525,7 @@ class AuthApiKeyCookie(Validator):
         return {self.name: value}
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class OneOfAuth(Validator):
     validators: List[Validator]
 
@@ -545,7 +545,7 @@ class OneOfAuth(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, cmp=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AllOfAuth(Validator):
     validators: List[Validator]
 

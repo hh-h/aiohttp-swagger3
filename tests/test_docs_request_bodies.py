@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, Optional
 
 from aiohttp import web
 
@@ -1216,3 +1216,146 @@ async def test_object_can_have_optional_props(aiohttp_client, loop):
     resp = await client.post("/r", json={})
     assert resp.status == 200
     assert await resp.json() == {}
+
+
+async def test_no_content_type(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, body: Optional[Dict] = None):
+        """
+        ---
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.post("/r", skip_auto_headers=("Content-Type",))
+    assert resp.status == 200
+    assert await resp.json() is None
+
+
+async def test_required_no_content_type(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, body: Dict):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.post("/r", skip_auto_headers=("Content-Type",))
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"body": "is required"}
+
+
+async def test_optional_body(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, body: Optional[Dict] = None):
+        """
+        ---
+        requestBody:
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    body = {"required": 10}
+    resp = await client.post("/r", json=body)
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"body": "no handler for application/json"}
+
+
+async def test_wrong_body(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request, body: Dict):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    s.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    body = {"required": 10}
+    resp = await client.post("/r", json=body)
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"body": "no handler for application/json"}

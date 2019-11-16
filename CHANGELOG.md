@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.4 (16-11-2019)
+- requestBody can be optional. Closes [#19](https://github.com/hh-h/aiohttp-swagger3/issues/19)
+
 ## 0.2.3 (16-09-2019)
 - fixed TypeError during rendering swagger docs. Closes [#17](https://github.com/hh-h/aiohttp-swagger3/issues/17)
 
