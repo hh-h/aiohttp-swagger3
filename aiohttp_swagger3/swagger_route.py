@@ -1,3 +1,4 @@
+import cgi
 import json
 from types import FunctionType
 from typing import Awaitable, Callable, Dict, List, Optional, Tuple, cast
@@ -138,25 +139,29 @@ class SwaggerRoute:
                         params[param.name] = value
         # body parameters
         if self.bp:
-            raw_media_type = request.headers["Content-Type"]
-            media_type = raw_media_type.split(";")[0]
-            if media_type not in self.bp:
-                raise Exception("no content-type handler")
-            handler = self._swagger.get_media_type_handler(media_type)
-            param = self.bp[media_type]
-            try:
-                v, has_raw = await handler(request)
-            except ValidatorError as e:
-                errors[param.name] = e.error
+            if "Content-Type" not in request.headers:
+                if next(iter(self.bp.values())).required:
+                    errors["body"] = "is required"
             else:
-                try:
-                    value = param.validator.validate(v, has_raw)
-                except ValidatorError as e:
-                    errors[param.name] = e.error
+                media_type, _ = cgi.parse_header(request.headers["Content-Type"])
+                if media_type not in self.bp:
+                    errors["body"] = f"no handler for {media_type}"
                 else:
-                    request[request_key][param.name] = value
-                    if param.name in self.params:
-                        params[param.name] = value
+                    handler = self._swagger.get_media_type_handler(media_type)
+                    param = self.bp[media_type]
+                    try:
+                        v, has_raw = await handler(request)
+                    except ValidatorError as e:
+                        errors[param.name] = e.error
+                    else:
+                        try:
+                            value = param.validator.validate(v, has_raw)
+                        except ValidatorError as e:
+                            errors[param.name] = e.error
+                        else:
+                            request[request_key][param.name] = value
+                            if param.name in self.params:
+                                params[param.name] = value
         # header parameters
         if self.hp:
             for param in self.hp:
