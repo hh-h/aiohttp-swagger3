@@ -11,7 +11,7 @@ setup(
     name='aiohttp-swagger3',
     version=__version__,
     packages=['aiohttp_swagger3'],
-    package_data={'aiohttp_swagger3': ['swagger_ui/*']},
+    package_data={'aiohttp_swagger3': ['swagger_ui/*', 'schema/schema.json']},
     url='https://github.com/hh-h/aiohttp-swagger3',
     license='Apache 2',
     author='Valetov Konstantin',

@@ -1,5 +1,5 @@
-aiohttp>=3
-pyyaml
-attrs>=19.2.0
-openapi-spec-validator
-strict_rfc3339
+aiohttp>=3.5,<4.0
+pyyaml>=5.1.0,<6.0
+attrs>=19.3.0,<20.0
+git+git@github.com:hh-h/python-fastjsonschema.git
+strict_rfc3339>=0.7,<1

@@ -5,7 +5,6 @@ from typing import Dict, Optional, Type, Union
 import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
-from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
@@ -49,7 +48,7 @@ class SwaggerDocs(Swagger):
         *_, spec = handler.__doc__.split("---")
         method_spec = yaml.safe_load(spec)
         self.spec["paths"][path][method] = method_spec
-        validate_v3_spec(self.spec)
+        self.spec_validate(self.spec)
         self._app[_SWAGGER_SPECIFICATION] = self.spec
         if not self.validate:
             return handler

@@ -1,3 +1,4 @@
+import json
 import pathlib
 from collections import defaultdict
 from typing import (
@@ -12,6 +13,7 @@ from typing import (
     Type,
 )
 
+import fastjsonschema
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
@@ -27,7 +29,7 @@ ExpectHandler = Callable[[web.Request], Awaitable[None]]
 
 
 class Swagger(web.UrlDispatcher):
-    __slots__ = ("_app", "validate", "spec", "request_key", "handlers")
+    __slots__ = ("_app", "validate", "spec", "request_key", "handlers", "spec_validate")
 
     def __init__(
         self,
@@ -45,6 +47,14 @@ class Swagger(web.UrlDispatcher):
         self.spec = spec
         self.request_key = request_key
 
+        base_path = pathlib.Path(__file__).parent
+        with open(base_path / "schema/schema.json") as f:
+            schema = json.load(f)
+
+        self.spec_validate = fastjsonschema.compile(
+            schema, formats={"uri-reference": r"^\w+:(\/?\/?)[^\s]+\Z|^#(\/\w+)+"}
+        )
+
         self.handlers: DefaultDict[
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
@@ -52,8 +62,6 @@ class Swagger(web.UrlDispatcher):
         self._app.router.add_route("GET", ui_path, _redirect)
         self._app.router.add_route("GET", f"{ui_path}/", _swagger_home)
         self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
-
-        base_path = pathlib.Path(__file__).parent
         self._app.router.add_static(f"{ui_path}/static", base_path / "swagger_ui")
 
         with open(base_path / "swagger_ui/index.html") as f:

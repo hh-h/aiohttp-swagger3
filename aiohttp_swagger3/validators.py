@@ -7,6 +7,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Pattern, Set, Union
 
 import attr
+import jsonschema
 import strict_rfc3339
 from aiohttp import web
 

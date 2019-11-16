@@ -4,7 +4,6 @@ from typing import Optional, Type, Union
 import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
-from openapi_spec_validator import validate_v3_spec
 
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
@@ -25,7 +24,7 @@ class SwaggerFile(Swagger):
     ) -> None:
         with open(spec_file) as f:
             spec = yaml.safe_load(f)
-        validate_v3_spec(spec)
+        self.spec_validate(self.spec)
 
         super().__init__(app, ui_path, validate, spec, request_key)
         self._app[_SWAGGER_SPECIFICATION] = spec
