@@ -42,6 +42,6 @@ setup(
         "fastjsonschema==2.2.2"
     ],
     dependency_links=[
-        'git+https://github.com/hh-h/python-fastjsonschema@master#egg=fastjsonschema#egg=fastjsonschema==2.2.2',
+        'git+https://github.com/hh-h/python-fastjsonschema@master#egg=fastjsonschema-2.2.2',
     ]
 )
