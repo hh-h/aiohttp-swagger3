@@ -34,5 +34,14 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
     ],
     python_requires='>=3.6',
-    install_requires=install_requires
+    install_requires=[
+        "aiohttp>=3.5,<4.0",
+        "pyyaml>=5.1.0,<6.0",
+        "attrs>=19.3.0,<20.0",
+        "strict_rfc3339>=0.7,<1",
+        "fastjsonschema==2.2.2"
+    ],
+    dependency_links=[
+        'git+https://github.com/hh-h/python-fastjsonschema@master#egg=fastjsonschema#egg=fastjsonschema==2.2.2',
+    ]
 )
