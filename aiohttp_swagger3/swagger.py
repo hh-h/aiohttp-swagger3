@@ -54,6 +54,7 @@ class Swagger(web.UrlDispatcher):
         self.spec_validate = fastjsonschema.compile(
             schema, formats={"uri-reference": r"^\w+:(\/?\/?)[^\s]+\Z|^#(\/\w+)+"}
         )
+        self.spec_validate(self.spec)
 
         self.handlers: DefaultDict[
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]

@@ -24,7 +24,6 @@ class SwaggerFile(Swagger):
     ) -> None:
         with open(spec_file) as f:
             spec = yaml.safe_load(f)
-        self.spec_validate(self.spec)
 
         super().__init__(app, ui_path, validate, spec, request_key)
         self._app[_SWAGGER_SPECIFICATION] = spec

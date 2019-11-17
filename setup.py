@@ -39,9 +39,9 @@ setup(
         "pyyaml>=5.1.0,<6.0",
         "attrs>=19.3.0,<20.0",
         "strict_rfc3339>=0.7,<1",
-        "fastjsonschema==2.2.2"
+        "fastjsonschema"
     ],
     dependency_links=[
-        'git+https://github.com/hh-h/python-fastjsonschema@master#egg=fastjsonschema-2.2.2',
+        'git+https://github.com/hh-h/python-fastjsonschema@master#egg=fastjsonschema',
     ]
 )
