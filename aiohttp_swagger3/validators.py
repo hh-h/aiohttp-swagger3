@@ -526,23 +526,16 @@ class AuthApiKeyCookie(Validator):
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
-class OneOfAuth(Validator):
+class AnyOfAuth(Validator):
     validators: List[Validator]
 
     def validate(self, request: web.Request, raw: bool) -> Dict[str, str]:
-        found = False
-        value: Optional[Dict[str, str]] = None
         for validator in self.validators:
             try:
-                value = validator.validate(request, raw)
+                return validator.validate(request, raw)
             except ValidatorError:
-                continue
-            if found:
-                raise ValidatorError("Only one auth must be provided")
-            found = True
-        if value is None:
-            raise ValidatorError("One auth must be provided")
-        return value
+                pass
+        raise ValidatorError("One auth must be provided")
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
@@ -691,7 +684,7 @@ def security_to_validator(schema: List[Dict], components: Dict) -> Validator:
             else:
                 validator = _security_to_validator(next(iter(security)), components)
             validators.append(validator)
-        return OneOfAuth(validators=validators)
+        return AnyOfAuth(validators=validators)
     else:
         security = schema[0]
         if len(security) > 1:
