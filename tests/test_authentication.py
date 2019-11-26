@@ -236,8 +236,13 @@ async def test_all_of_auth(aiohttp_client, loop):
     error = error_to_json(await resp.text())
     assert error == {"C-API-KEY": "is required"}
 
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"authorization": "is required"}
 
-async def test_one_of_auth(aiohttp_client, loop):
+
+async def test_any_of_auth(aiohttp_client, loop):
     app = web.Application(loop=loop)
     s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
 
@@ -286,14 +291,13 @@ async def test_one_of_auth(aiohttp_client, loop):
     assert await resp.json() == {"authorization": authorization}
 
     resp = await client.get("/r", cookies=cookies, headers=headers)
-    assert resp.status == 400
-    error = error_to_json(await resp.text())
-    assert error == "Only one auth must be provided"
+    assert resp.status == 200
+    assert await resp.json() == {"authorization": authorization}
 
     resp = await client.get("/r")
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == "One auth must be provided"
+    assert error == "no auth has been provided"
 
 
 async def test_missing_basic_word_in_auth(aiohttp_client, loop):
