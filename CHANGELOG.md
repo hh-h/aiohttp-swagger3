@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.5 (27-11-2019)
+- use anyOf instead of oneOf for security validation. Closes [#23](https://github.com/hh-h/aiohttp-swagger3/issues/23)
+
 ## 0.2.4 (16-11-2019)
 - requestBody can be optional. Closes [#19](https://github.com/hh-h/aiohttp-swagger3/issues/19)
 - bump swagger ui to 3.24.2
