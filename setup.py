@@ -20,7 +20,7 @@ setup(
     long_description=readme.read_text("utf-8"),
     long_description_content_type="text/markdown",
     setup_requires=["pytest-runner"],
-    tests_require=["pytest", "pytest-aiohttp"],
+    tests_require=["pytest"],
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
         "Intended Audience :: Developers",
