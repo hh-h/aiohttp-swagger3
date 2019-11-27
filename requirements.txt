@@ -1,5 +1,5 @@
-aiohttp>=3
-pyyaml
-attrs>=19.2.0
-openapi-spec-validator
-strict_rfc3339
+aiohttp==3.6.2
+pyyaml==5.1.2
+attrs==19.3.0
+openapi-spec-validator==0.2.8
+strict_rfc3339==0.7
