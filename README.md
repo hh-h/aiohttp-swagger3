@@ -6,19 +6,16 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-black.svg)](https://github.com/ambv/black)
 [![License](https://img.shields.io/pypi/l/aiohttp-swagger3.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-## !!! Testers are needed !!!
-Feel free to try this library and raise an issue if it does not work as expected, thanks!
-
 # About
 Package for displaying swagger docs and optionally validating/parsing aiohttp requests using swagger specification 3.0 only.  
-It's marked as pre-alpha on pypi.org, but that's because I haven't decided architecture yet. However, we use it in production :)
+Feel free to try this library and raise an issue if it does not work as expected, thanks!
 
 # Disable validation
 Okay, just pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, default is `True`
 
 # Requirements
 - python3.6+
-- aiohttp>=3
+- aiohttp >= 3.6.0
 - pyyaml
 - attrs
 - openapi-spec-validator
