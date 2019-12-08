@@ -158,3 +158,18 @@ async def test_swagger_json_renders_datetime(aiohttp_client, loop):
 
     resp = await client.get("/docs/swagger.json")
     assert resp.status == 200
+
+
+async def test_no_swagger(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs")
+
+    async def handler(request):
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200

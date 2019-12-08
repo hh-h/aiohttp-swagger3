@@ -39,7 +39,10 @@ class SwaggerDocs(Swagger):
             with open(components) as f:
                 spec.update(yaml.safe_load(f))
 
+        validate_v3_spec(spec)
+
         super().__init__(app, ui_path, validate, spec, request_key)
+        self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def _wrap_handler(
         self, method: str, path: str, handler: _SwaggerHandler, *, is_method: bool

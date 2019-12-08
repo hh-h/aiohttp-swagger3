@@ -28,7 +28,7 @@ class SwaggerFile(Swagger):
         validate_v3_spec(spec)
 
         super().__init__(app, ui_path, validate, spec, request_key)
-        self._app[_SWAGGER_SPECIFICATION] = spec
+        self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def add_route(
         self,
