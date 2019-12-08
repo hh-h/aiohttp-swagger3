@@ -173,3 +173,32 @@ async def test_no_swagger(aiohttp_client, loop):
 
     resp = await client.get("/docs/swagger.json")
     assert resp.status == 200
+
+
+async def test_bind_swagger_to_root(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/")
+
+    async def handler(request):
+        """
+        ---
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/")
+    assert resp.status == 200
+
+    resp = await client.get("/swagger.json")
+    assert resp.status == 200
+
+    resp = await client.get("/r")
+    assert resp.status == 200
