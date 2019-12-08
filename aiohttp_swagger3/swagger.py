@@ -39,6 +39,7 @@ class Swagger(web.UrlDispatcher):
     ) -> None:
         if not ui_path.startswith("/"):
             raise Exception("ui_path should start with /")
+        need_redirect = ui_path != "/"
         ui_path = ui_path.rstrip("/")
         self._app = app
         self.validate = validate
@@ -49,7 +50,8 @@ class Swagger(web.UrlDispatcher):
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
 
-        self._app.router.add_route("GET", ui_path, _redirect)
+        if need_redirect:
+            self._app.router.add_route("GET", ui_path, _redirect)
         self._app.router.add_route("GET", f"{ui_path}/", _swagger_home)
         self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
 
