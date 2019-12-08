@@ -236,6 +236,8 @@ class String(Validator):
                 except ValueError:
                     raise ValidatorError("value should be valid ipv6 address")
             elif self.format == StringFormat.Hostname:
+                if not value:
+                    raise ValidatorError("value should be valid hostname")
                 hostname = value[:-1] if value[-1] == "." else value
                 if len(hostname) > 255 or not all(
                     _HOSTNAME_REGEX.match(x) for x in hostname.split(".")

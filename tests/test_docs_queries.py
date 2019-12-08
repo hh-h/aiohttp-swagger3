@@ -474,6 +474,33 @@ async def test_string_formats(aiohttp_client, loop):
         "ipv6": "value should be valid ipv6 address",
     }
 
+    resp = await client.get(
+        "/r",
+        params={
+            "date": "",
+            "datetime": "",
+            "password": "",
+            "byte": "",
+            "binary": "",
+            "email": "",
+            "uuid": "",
+            "hostname": "",
+            "ipv4": "",
+            "ipv6": "",
+        },
+    )
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {
+        "date": "value should be date format",
+        "datetime": "value should be datetime format",
+        "email": "value should be valid email",
+        "uuid": "value should be uuid",
+        "hostname": "value should be valid hostname",
+        "ipv4": "value should be valid ipv4 address",
+        "ipv6": "value should be valid ipv6 address",
+    }
+
 
 async def test_corner_cases(aiohttp_client, loop):
     app = web.Application(loop=loop)
