@@ -453,6 +453,12 @@ class AllOf(Validator):
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+class AuthNone(Validator):
+    def validate(self, request: web.Request, _: bool) -> Dict[str, str]:
+        return {}
+
+
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class AuthBasic(Validator):
     name: str = "authorization"
 
@@ -546,10 +552,10 @@ class AllOfAuth(Validator):
     validators: List[Validator]
 
     def validate(self, request: web.Request, raw: bool) -> Dict[str, str]:
-        value: Dict[str, str] = {}
+        values: Dict[str, str] = {}
         for validator in self.validators:
-            value.update(validator.validate(request, raw))
-        return value
+            values.update(validator.validate(request, raw))
+        return values
 
 
 def _type_to_validator(schema: Dict, components: Dict) -> Validator:
@@ -684,8 +690,10 @@ def security_to_validator(schema: List[Dict], components: Dict) -> Validator:
                         for sec_name in security
                     ]
                 )
-            else:
+            elif len(security) == 1:
                 validator = _security_to_validator(next(iter(security)), components)
+            else:
+                validator = AuthNone()
             validators.append(validator)
         return AnyOfAuth(validators=validators)
     else:
