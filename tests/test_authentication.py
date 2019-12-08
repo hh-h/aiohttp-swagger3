@@ -438,3 +438,38 @@ async def test_complex_auth(aiohttp_client, loop):
     resp = await client.get("/r", **option2)
     assert resp.status == 200
     assert await resp.json() == {"api_key": option2_api_key, "http": option2_http}
+
+
+async def test_optional_any_of_auth(aiohttp_client, loop):
+    app = web.Application(loop=loop)
+    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
+
+    async def handler(request):
+        """
+        ---
+        security:
+          - bearerAuth: []
+          - {}
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        has_auth = "authorization" in request["data"]
+        return web.json_response({"has_auth": has_auth})
+
+    s.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(app)
+
+    authorization = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ1"
+    headers = {"Authorization": f"Bearer {authorization}"}
+
+    resp = await client.get("/r", headers=headers)
+    assert resp.status == 200
+    assert await resp.json() == {"has_auth": True}
+
+    resp = await client.get("/r")
+    assert resp.status == 200
+    assert await resp.json() == {"has_auth": False}
