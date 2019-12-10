@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 (10-12-2019)
+- fixed server error when passed hostname is empty. Closes [#35](https://github.com/hh-h/aiohttp-swagger3/issues/35)
+- fixed KeyError when no swagger routes defined. Closes [#28](https://github.com/hh-h/aiohttp-swagger3/issues/28)
+- added ability to bind Swagger UI to root "/". Closes [#31](https://github.com/hh-h/aiohttp-swagger3/issues/31)
+- added optional authentication support. Closes [#36](https://github.com/hh-h/aiohttp-swagger3/issues/36)
+- swagger UI is now customizable and can be disabled. Closes [#30](https://github.com/hh-h/aiohttp-swagger3/issues/30)
+
 ## 0.2.5 (27-11-2019)
 - use anyOf instead of oneOf for security validation. Closes [#23](https://github.com/hh-h/aiohttp-swagger3/issues/23)
 
