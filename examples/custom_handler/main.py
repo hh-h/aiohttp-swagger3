@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 
 async def create_pet(request: web.Request, body: Dict) -> web.Response:
@@ -53,7 +53,12 @@ async def my_cool_handler(request: web.Request) -> Tuple[Dict, bool]:
 
 def main():
     app = web.Application()
-    s = SwaggerDocs(app, "/docs", title="Swagger Petstore", version="1.0.0")
+    s = SwaggerDocs(
+        app,
+        title="Swagger Petstore",
+        version="1.0.0",
+        swagger_ui_settings=SwaggerUiSettings(path="/docs"),
+    )
     # register your handler before registering routes
     s.register_media_type_handler("my_cool/type", my_cool_handler)
     s.add_routes([web.post("/pets", create_pet)])

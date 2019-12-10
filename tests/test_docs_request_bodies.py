@@ -3,15 +3,10 @@ from typing import Dict, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_body(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_body(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -73,9 +68,10 @@ async def test_body(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     int = 42
     int32 = 32
     int64 = 64
@@ -243,10 +239,7 @@ async def test_body(aiohttp_client, loop):
     }
 
 
-async def test_body_with_additional_properties(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_body_with_additional_properties(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -272,19 +265,17 @@ async def test_body_with_additional_properties(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {"required": 10, "optional": 15, "str": "str", "int": 10}
     resp = await client.post("/r", json=body)
     assert resp.status == 200
     assert await resp.json() == body
 
 
-async def test_body_with_no_additional_properties(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_body_with_no_additional_properties(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -310,9 +301,10 @@ async def test_body_with_no_additional_properties(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {"required": 10, "optional": 15, "str": "str", "int": 10}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
@@ -325,10 +317,7 @@ async def test_body_with_no_additional_properties(aiohttp_client, loop):
     }
 
 
-async def test_body_with_object_additional_properties(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_body_with_object_additional_properties(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -355,19 +344,17 @@ async def test_body_with_object_additional_properties(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {"required": 10, "optional": 15, "str": 999, "int": 10}
     resp = await client.post("/r", json=body)
     assert resp.status == 200
     assert await resp.json() == body
 
 
-async def test_deep_nested(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_deep_nested(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -437,9 +424,10 @@ async def test_deep_nested(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {
         "obj1": {"a": [{"b": "str1"}, {"b": "str2"}]},
         "obj2": {"a": {"b": {"c": "str"}}},
@@ -451,10 +439,7 @@ async def test_deep_nested(aiohttp_client, loop):
     assert await resp.json() == body
 
 
-async def test_nullable(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_nullable(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -527,9 +512,10 @@ async def test_nullable(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {
         "int": 10,
@@ -564,10 +550,7 @@ async def test_nullable(aiohttp_client, loop):
     assert await resp.json() == body
 
 
-async def test_one_of_object(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_one_of_object(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -602,9 +585,10 @@ async def test_one_of_object(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"object": {"id": 10}}
     resp = await client.post("/r", json=body)
@@ -641,10 +625,7 @@ async def test_one_of_object(aiohttp_client, loop):
     assert error == {"body": {"object": "fail to validate oneOf"}}
 
 
-async def test_any_of_object(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_any_of_object(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -683,9 +664,10 @@ async def test_any_of_object(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"object": {"id": 10}}
     resp = await client.post("/r", json=body)
@@ -733,10 +715,7 @@ async def test_any_of_object(aiohttp_client, loop):
     assert error == {"body": {"object": "fail to validate anyOf"}}
 
 
-async def test_all_of_object(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_all_of_object(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -775,9 +754,10 @@ async def test_all_of_object(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"object": {"id": 10, "name": "string", "age": 15, "rank": "123"}}
     resp = await client.post("/r", json=body)
@@ -839,10 +819,7 @@ async def test_all_of_object(aiohttp_client, loop):
     assert error == {"body": {"object": "fail to validate allOf"}}
 
 
-async def test_array_in_object(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_array_in_object(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -867,9 +844,10 @@ async def test_array_in_object(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"array": []}
     resp = await client.post("/r", json=body)
@@ -900,10 +878,7 @@ async def test_array_in_object(aiohttp_client, loop):
     assert error == {"body": {"array": {"2": "value should be type of int"}}}
 
 
-async def test_float_as_int(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_float_as_int(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -931,9 +906,10 @@ async def test_float_as_int(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     int_float = 10
     int_double = 20
@@ -943,10 +919,7 @@ async def test_float_as_int(aiohttp_client, loop):
     assert await resp.json() == body
 
 
-async def test_min_max_properties(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_min_max_properties(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -966,9 +939,10 @@ async def test_min_max_properties(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"str1": "str1", "str2": "str1", "str3": "str1"}
     resp = await client.post(f"/r", json=body)
@@ -995,10 +969,7 @@ async def test_min_max_properties(aiohttp_client, loop):
     assert error == {"body": "number or properties must be less than 5"}
 
 
-async def test_body_with_optional_properties(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_body_with_optional_properties(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1023,9 +994,10 @@ async def test_body_with_optional_properties(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {"required": 10}
     resp = await client.post("/r", json=body)
     assert resp.status == 200
@@ -1037,10 +1009,7 @@ async def test_body_with_optional_properties(aiohttp_client, loop):
     assert await resp.json() == body
 
 
-async def test_media_type_with_charset(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_media_type_with_charset(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1065,9 +1034,10 @@ async def test_media_type_with_charset(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"required": 10}
     resp = await client.post(
@@ -1079,10 +1049,7 @@ async def test_media_type_with_charset(aiohttp_client, loop):
     assert await resp.json() == body
 
 
-async def test_incorrect_json_body(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_incorrect_json_body(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1107,9 +1074,10 @@ async def test_incorrect_json_body(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post(
         "/r", data="{{", headers={"content-type": "application/json"}
@@ -1121,10 +1089,7 @@ async def test_incorrect_json_body(aiohttp_client, loop):
     }
 
 
-async def test_form_data(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_form_data(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1151,9 +1116,10 @@ async def test_form_data(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     integer = 15
     number = 15.5
@@ -1175,8 +1141,7 @@ async def test_form_data(aiohttp_client, loop):
     }
 
 
-async def test_object_can_have_optional_props(aiohttp_client, loop):
-    app = web.Application(loop=loop)
+async def test_object_can_have_optional_props(swagger_docs, aiohttp_client):
 
     routes = web.RouteTableDef()
 
@@ -1208,20 +1173,17 @@ async def test_object_can_have_optional_props(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s = SwaggerDocs(app, "/docs")
-    s.add_routes(routes)
+    swagger = swagger_docs()
+    swagger.add_routes(routes)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post("/r", json={})
     assert resp.status == 200
     assert await resp.json() == {}
 
 
-async def test_no_content_type(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_no_content_type(swagger_docs, aiohttp_client):
     async def handler(request, body: Optional[Dict] = None):
         """
         ---
@@ -1243,19 +1205,17 @@ async def test_no_content_type(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post("/r", skip_auto_headers=("Content-Type",))
     assert resp.status == 200
     assert await resp.json() is None
 
 
-async def test_required_no_content_type(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_required_no_content_type(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1278,9 +1238,10 @@ async def test_required_no_content_type(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post("/r", skip_auto_headers=("Content-Type",))
     assert resp.status == 400
@@ -1288,10 +1249,7 @@ async def test_required_no_content_type(aiohttp_client, loop):
     assert error == {"body": "is required"}
 
 
-async def test_optional_body(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_optional_body(swagger_docs, aiohttp_client):
     async def handler(request, body: Optional[Dict] = None):
         """
         ---
@@ -1313,9 +1271,10 @@ async def test_optional_body(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"required": 10}
     resp = await client.post("/r", json=body)
@@ -1324,10 +1283,7 @@ async def test_optional_body(aiohttp_client, loop):
     assert error == {"body": "no handler for application/json"}
 
 
-async def test_wrong_body(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_wrong_body(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -1350,9 +1306,10 @@ async def test_wrong_body(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body = {"required": 10}
     resp = await client.post("/r", json=body)

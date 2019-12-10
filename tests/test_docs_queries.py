@@ -2,15 +2,10 @@ from typing import List
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_query_array(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_query_array(swagger_docs, aiohttp_client):
     async def handler(request, query1: List[int], query2: List[int] = None):
         """
         ---
@@ -42,9 +37,10 @@ async def test_query_array(aiohttp_client, loop):
         """
         return web.json_response({"query1": query1, "query2": query2})
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     query1 = [1, 2, 3, 4, 5]
     params = {"query1": ",".join(str(x) for x in query1)}
@@ -53,10 +49,7 @@ async def test_query_array(aiohttp_client, loop):
     assert await resp.json() == {"query1": query1, "query2": None}
 
 
-async def test_array(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_array(swagger_docs, aiohttp_client):
     async def handler(request, array: List[int]):
         """
         ---
@@ -78,9 +71,10 @@ async def test_array(aiohttp_client, loop):
         """
         return web.json_response(array)
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     a = [1, 2, -10, 15, 999, 0]
     resp = await client.get("/r", params={"array": ",".join(str(x) for x in a)})
     assert resp.status == 200
@@ -92,10 +86,7 @@ async def test_array(aiohttp_client, loop):
     assert await resp.json() == a
 
 
-async def test_enum(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_enum(swagger_docs, aiohttp_client):
     async def handler(request, integer: int, string: str, number: float):
         """
         ---
@@ -131,9 +122,10 @@ async def test_enum(aiohttp_client, loop):
             {"integer": integer, "string": string, "number": number}
         )
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     integer = 10
     string = "abc"
     number = 10.1
@@ -156,10 +148,7 @@ async def test_enum(aiohttp_client, loop):
     }
 
 
-async def test_primitives(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_primitives(swagger_docs, aiohttp_client):
     async def handler(
         request,
         integer: int,
@@ -245,9 +234,10 @@ async def test_primitives(aiohttp_client, loop):
             }
         )
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     integer = 42
     int32 = 32
     int64 = 64
@@ -282,10 +272,7 @@ async def test_primitives(aiohttp_client, loop):
     }
 
 
-async def test_string_formats(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_string_formats(swagger_docs, aiohttp_client):
     async def handler(
         request,
         date: str,
@@ -393,9 +380,10 @@ async def test_string_formats(aiohttp_client, loop):
             }
         )
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     date = "2017-07-21"
     datetime = "2017-07-21T00:00:00Z"
@@ -502,10 +490,7 @@ async def test_string_formats(aiohttp_client, loop):
     }
 
 
-async def test_corner_cases(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_corner_cases(swagger_docs, aiohttp_client):
     async def handler(request, int32: int, int64: int, float1: float, double: float):
         """
         ---
@@ -548,9 +533,10 @@ async def test_corner_cases(aiohttp_client, loop):
             {"int32": int32, "int64": int64, "float1": float1, "double": double}
         )
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"int32": "abc", "int64": "cca", "float1": "bca", "double": "bba"}
     resp = await client.post(f"/r", params=params)
@@ -564,10 +550,7 @@ async def test_corner_cases(aiohttp_client, loop):
     }
 
 
-async def test_string_pattern(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_string_pattern(swagger_docs, aiohttp_client):
     async def handler(request, string: str):
         """
         ---
@@ -587,9 +570,10 @@ async def test_string_pattern(aiohttp_client, loop):
         """
         return web.json_response({"string": string})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     string = "123"
     resp = await client.get("/r", params={"string": string})
@@ -603,8 +587,7 @@ async def test_string_pattern(aiohttp_client, loop):
     assert error == {"string": "value should match regex pattern '^\\d{3}$'"}
 
 
-async def test_decorated_routes(aiohttp_client, loop):
-    app = web.Application(loop=loop)
+async def test_decorated_routes(swagger_docs, aiohttp_client):
 
     routes = web.RouteTableDef()
 
@@ -626,10 +609,10 @@ async def test_decorated_routes(aiohttp_client, loop):
         """
         return web.json_response({"int32": int32})
 
-    s = SwaggerDocs(app, "/docs")
-    s.add_routes(routes)
+    swagger = swagger_docs()
+    swagger.add_routes(routes)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"int32": 15}
     resp = await client.get("/r", params=params)
@@ -637,10 +620,7 @@ async def test_decorated_routes(aiohttp_client, loop):
     assert await resp.json() == params
 
 
-async def test_missing_query_parameter(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_missing_query_parameter(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -659,19 +639,17 @@ async def test_missing_query_parameter(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     resp = await client.get("/r")
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"variable": "is required"}
 
 
-async def test_wrong_item_in_array(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_wrong_item_in_array(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -692,9 +670,10 @@ async def test_wrong_item_in_array(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"array": ",".join(str(x) for x in [1, "abc", 3, True, 5])}
     resp = await client.post(f"/r", params=params)

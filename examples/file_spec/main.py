@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerFile
+from aiohttp_swagger3 import SwaggerFile, SwaggerUiSettings
 
 
 class PetFactory:
@@ -45,7 +45,11 @@ async def delete_one_pet(request: web.Request, pet_id: int) -> web.Response:
 
 def main():
     app = web.Application()
-    s = SwaggerFile(app, "/docs", "petstore.yaml")
+    s = SwaggerFile(
+        app,
+        spec_file="petstore.yaml",
+        swagger_ui_settings=SwaggerUiSettings(path="/docs"),
+    )
     s.add_routes(
         [
             web.get("/pets", get_all_pets),

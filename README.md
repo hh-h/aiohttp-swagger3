@@ -15,7 +15,7 @@ Okay, just pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, default i
 
 # Requirements
 - python3.6+
-- aiohttp >= 3.6.0
+- aiohttp >= 3.5.4
 - pyyaml
 - attrs
 - openapi-spec-validator
@@ -32,7 +32,7 @@ Okay, just pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, default i
 # Example
 ```python
 from aiohttp import web
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 async def get_one_pet(request: web.Request, pet_id: int) -> web.Response:
     """
@@ -63,7 +63,13 @@ async def get_one_pet(request: web.Request, pet_id: int) -> web.Response:
 
 def main():
     app = web.Application()
-    s = SwaggerDocs(app, '/docs', title="Swagger Petstore", version="1.0.0", components="components.yaml")
+    s = SwaggerDocs(
+        app,
+        swagger_ui_settings=SwaggerUiSettings(path="/docs/"),
+        title="Swagger Petstore",
+        version="1.0.0",
+        components="components.yaml"
+    )
     s.add_routes([
         web.get("/pets/{pet_id}", get_one_pet),
     ])

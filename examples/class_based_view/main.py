@@ -2,7 +2,7 @@ from typing import Dict
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 
 class View(web.View):
@@ -55,7 +55,7 @@ class View(web.View):
 
 def main():
     app = web.Application()
-    s = SwaggerDocs(app, "/docs")
+    s = SwaggerDocs(app, swagger_ui_settings=SwaggerUiSettings(path="/docs"))
     s.add_routes([web.view("/r/{param_id}", View)])
     web.run_app(app)
 

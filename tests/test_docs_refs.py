@@ -2,13 +2,8 @@ from typing import Dict
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
 
-
-async def test_ref_parameter(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_ref_parameter(swagger_docs_with_components, aiohttp_client):
     async def handler(request, month: int):
         """
         ---
@@ -23,9 +18,10 @@ async def test_ref_parameter(aiohttp_client, loop):
         """
         return web.json_response({"month": month})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"month": 5}
     resp = await client.get("/r", params=params)
@@ -33,10 +29,7 @@ async def test_ref_parameter(aiohttp_client, loop):
     assert await resp.json() == params
 
 
-async def test_ref(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_ref(swagger_docs_with_components, aiohttp_client):
     async def handler(request, body: Dict):
         """
         ---
@@ -54,9 +47,10 @@ async def test_ref(aiohttp_client, loop):
         """
         return web.json_response(body)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     body = {"name": "pet", "age": 15}
     resp = await client.post("/r", json=body)
     assert resp.status == 200

@@ -538,13 +538,19 @@ class AnyOfAuth(Validator):
     validators: List[Validator]
 
     def validate(self, request: web.Request, raw: bool) -> Dict[str, str]:
+        values: Dict[str, str] = {}
+        valid = False
         for validator in self.validators:
             try:
                 value: Dict[str, str] = validator.validate(request, raw)
-                return value
+                if value:
+                    values.update(value)
+                valid = True
             except ValidatorError:
                 continue
-        raise ValidatorError("no auth has been provided")
+        if not valid:
+            raise ValidatorError("no auth has been provided")
+        return values
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)

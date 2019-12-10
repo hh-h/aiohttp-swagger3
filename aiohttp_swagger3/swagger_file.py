@@ -1,4 +1,5 @@
 import functools
+import warnings
 from typing import Optional, Type, Union
 
 import yaml
@@ -9,6 +10,7 @@ from openapi_spec_validator import validate_v3_spec
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
+from .swagger_ui_settings import SwaggerUiSettings
 
 
 class SwaggerFile(Swagger):
@@ -17,17 +19,33 @@ class SwaggerFile(Swagger):
     def __init__(
         self,
         app: web.Application,
-        ui_path: str,
-        spec_file: str,
+        ui_path: Optional[str] = None,
+        spec_file: str = "",
         *,
         validate: bool = True,
         request_key: str = "data",
+        swagger_ui_settings: Optional[SwaggerUiSettings] = None,
     ) -> None:
+        if not spec_file:
+            raise Exception("spec file with swagger schema must be provided")
         with open(spec_file) as f:
             spec = yaml.safe_load(f)
         validate_v3_spec(spec)
 
-        super().__init__(app, ui_path, validate, spec, request_key)
+        if swagger_ui_settings is None and ui_path is not None:
+            warnings.warn(
+                "ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
+                FutureWarning,
+            )
+            swagger_ui_settings = SwaggerUiSettings(path=ui_path)
+
+        super().__init__(
+            app,
+            validate=validate,
+            spec=spec,
+            request_key=request_key,
+            swagger_ui_settings=swagger_ui_settings,
+        )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def add_route(

@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 
 async def handler(request):
@@ -26,7 +26,11 @@ async def handler(request):
 
 def main():
     app = web.Application()
-    s = SwaggerDocs(app, "/docs", components="components.yaml")
+    s = SwaggerDocs(
+        app,
+        components="components.yaml",
+        swagger_ui_settings=SwaggerUiSettings(path="/docs"),
+    )
     s.add_routes([web.get("/", handler, allow_head=False)])
     web.run_app(app)
 

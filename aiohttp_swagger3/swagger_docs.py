@@ -1,4 +1,5 @@
 import functools
+import warnings
 from collections import defaultdict
 from typing import Dict, Optional, Type, Union
 
@@ -10,6 +11,7 @@ from openapi_spec_validator import validate_v3_spec
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
+from .swagger_ui_settings import SwaggerUiSettings
 
 
 class SwaggerDocs(Swagger):
@@ -18,7 +20,7 @@ class SwaggerDocs(Swagger):
     def __init__(
         self,
         app: web.Application,
-        ui_path: str,
+        ui_path: Optional[str] = None,
         *,
         validate: bool = True,
         request_key: str = "data",
@@ -26,6 +28,7 @@ class SwaggerDocs(Swagger):
         version: str = "1.0.0",
         description: Optional[str] = None,
         components: Optional[str] = None,
+        swagger_ui_settings: Optional[SwaggerUiSettings] = None,
     ) -> None:
         spec: Dict = {
             "openapi": "3.0.0",
@@ -41,7 +44,20 @@ class SwaggerDocs(Swagger):
 
         validate_v3_spec(spec)
 
-        super().__init__(app, ui_path, validate, spec, request_key)
+        if swagger_ui_settings is None and ui_path is not None:
+            warnings.warn(
+                "ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
+                FutureWarning,
+            )
+            swagger_ui_settings = SwaggerUiSettings(path=ui_path)
+
+        super().__init__(
+            app,
+            validate=validate,
+            spec=spec,
+            request_key=request_key,
+            swagger_ui_settings=swagger_ui_settings,
+        )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def _wrap_handler(

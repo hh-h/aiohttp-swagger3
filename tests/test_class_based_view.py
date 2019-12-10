@@ -2,12 +2,8 @@ from typing import Dict, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerFile
 
-
-async def test_class_based_view(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-
+async def test_class_based_view(swagger_docs, aiohttp_client):
     class View(web.View):
         async def get(self, param_id: int):
             """
@@ -56,10 +52,10 @@ async def test_class_based_view(aiohttp_client, loop):
             """
             return web.json_response({"param_id": param_id, "body": body})
 
-    s = SwaggerDocs(app, "/docs")
-    s.add_routes([web.view("/r/{param_id}", View)])
+    swagger = swagger_docs()
+    swagger.add_routes([web.view("/r/{param_id}", View)])
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/r/10")
     assert resp.status == 200
@@ -71,9 +67,7 @@ async def test_class_based_view(aiohttp_client, loop):
     assert await resp.json() == {"param_id": 20, "body": body}
 
 
-async def test_decorated_class_based_view(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-
+async def test_decorated_class_based_view(swagger_docs, aiohttp_client):
     routes = web.RouteTableDef()
 
     @routes.view("/r/{param_id}")
@@ -124,10 +118,10 @@ async def test_decorated_class_based_view(aiohttp_client, loop):
             """
             return web.json_response({"param_id": param_id, "body": body})
 
-    s = SwaggerDocs(app, "/docs")
-    s.add_routes(routes)
+    swagger = swagger_docs()
+    swagger.add_routes(routes)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/r/10")
     assert resp.status == 200
@@ -139,10 +133,7 @@ async def test_decorated_class_based_view(aiohttp_client, loop):
     assert await resp.json() == {"param_id": 20, "body": body}
 
 
-async def test_class_based_spec_file(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
-
+async def test_class_based_spec_file(swagger_file, aiohttp_client):
     class Pets(web.View):
         async def get(self, limit: Optional[int] = None):
             pets = []
@@ -153,9 +144,10 @@ async def test_class_based_spec_file(aiohttp_client, loop):
         async def post(self, body: Dict):
             return web.json_response(body, status=201)
 
-    s.add_routes([web.view("/pets", Pets)])
+    swagger = swagger_file()
+    swagger.add_routes([web.view("/pets", Pets)])
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/pets", params={"limit": 1})
     assert resp.status == 200
