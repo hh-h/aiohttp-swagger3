@@ -1,11 +1,7 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
 
-
-async def test_custom_request_key(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-
+async def test_custom_request_key(swagger_docs, aiohttp_client):
     routes = web.RouteTableDef()
 
     @routes.post("/r/{path}")
@@ -51,10 +47,10 @@ async def test_custom_request_key(aiohttp_client, loop):
         assert request["test_key_321"]["body"] == body
         return web.json_response()
 
-    s = SwaggerDocs(app, "/docs", request_key="test_key_321")
-    s.add_routes(routes)
+    swagger = swagger_docs(request_key="test_key_321")
+    swagger.add_routes(routes)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"query": "str"}
     headers = {"header": "str"}

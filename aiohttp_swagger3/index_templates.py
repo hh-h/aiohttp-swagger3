@@ -1,3 +1,7 @@
+import string
+
+SWAGGER_UI_TEMPLATE = string.Template(
+    """
 <!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +42,7 @@
     <script>
     window.onload = function() {
       // Begin Swagger UI call region
-      const ui = SwaggerUIBundle({
+      const ui = SwaggerUIBundle({...{
         url: "./swagger.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
@@ -50,7 +54,7 @@
           SwaggerUIBundle.plugins.DownloadUrl
         ],
         layout: "StandaloneLayout"
-      });
+      }, ...${settings}});
       // End Swagger UI call region
 
       window.ui = ui
@@ -58,3 +62,5 @@
   </script>
   </body>
 </html>
+"""
+)

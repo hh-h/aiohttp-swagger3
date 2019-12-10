@@ -2,13 +2,8 @@ from functools import wraps
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
 
-
-async def test_decorated_handlers(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_decorated_handlers(swagger_docs, aiohttp_client):
     def decorator(fn):
         @wraps(fn)
         async def wrapper(*args, **kwargs):
@@ -35,19 +30,17 @@ async def test_decorated_handlers(aiohttp_client, loop):
         """
         return web.json_response({"param_id": param_id})
 
-    s.add_route("GET", "/r/{param_id}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r/{param_id}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/r/10")
     assert resp.status == 200
     assert await resp.json() == {"param_id": 10}
 
 
-async def test_path(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_path(swagger_docs, aiohttp_client):
     async def handler(request, param_id: int):
         """
         ---
@@ -66,9 +59,10 @@ async def test_path(aiohttp_client, loop):
         """
         return web.json_response({"param_id": param_id})
 
-    s.add_route("GET", "/r/{param_id}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r/{param_id}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/r/10")
     assert resp.status == 200

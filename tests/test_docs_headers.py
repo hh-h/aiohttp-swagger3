@@ -1,14 +1,9 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_header(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_header(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -27,9 +22,10 @@ async def test_header(aiohttp_client, loop):
         """
         return web.json_response({"x-request-id": request["data"]["x-request-id"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     headers = {"x-request-id": "some_request_id"}
     resp = await client.get("/r", headers=headers)
@@ -37,10 +33,7 @@ async def test_header(aiohttp_client, loop):
     assert await resp.json() == headers
 
 
-async def test_header_always_lower_case(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_header_always_lower_case(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -60,9 +53,10 @@ async def test_header_always_lower_case(aiohttp_client, loop):
         assert "X-REQUEST-ID" not in request["data"]
         return web.json_response({"x-request-id": request["data"]["x-request-id"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     header_name = "X-REQUEST-ID"
     header_value = "some_request_id"
@@ -72,10 +66,7 @@ async def test_header_always_lower_case(aiohttp_client, loop):
     assert await resp.json() == {header_name.lower(): header_value}
 
 
-async def test_missing_header_parameter(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_missing_header_parameter(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -94,19 +85,17 @@ async def test_missing_header_parameter(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     resp = await client.get("/r")
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"variable": "is required"}
 
 
-async def test_optional_header(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_optional_header(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -125,9 +114,10 @@ async def test_optional_header(aiohttp_client, loop):
         user_id = request["data"].get("x-user-id", 50)
         return web.json_response({"x-user-id": user_id})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/r")
     assert resp.status == 200

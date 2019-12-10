@@ -1,15 +1,10 @@
 import pytest
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_basic_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_basic_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -24,9 +19,10 @@ async def test_basic_auth(aiohttp_client, loop):
         assert "authorization" in request["data"]
         return web.json_response({"authorization": request["data"]["authorization"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     authorization = "ZGVtbzpwQDU1dzByZA=="
     headers = {"Authorization": f"Basic {authorization}"}
@@ -36,10 +32,7 @@ async def test_basic_auth(aiohttp_client, loop):
     assert await resp.json() == {"authorization": authorization}
 
 
-async def test_bearer_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_bearer_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -54,9 +47,10 @@ async def test_bearer_auth(aiohttp_client, loop):
         assert "authorization" in request["data"]
         return web.json_response({"authorization": request["data"]["authorization"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     authorization = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ1"
     headers = {"Authorization": f"Bearer {authorization}"}
@@ -66,10 +60,7 @@ async def test_bearer_auth(aiohttp_client, loop):
     assert await resp.json() == {"authorization": authorization}
 
 
-async def test_api_key_header_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_api_key_header_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -85,9 +76,10 @@ async def test_api_key_header_auth(aiohttp_client, loop):
         assert "x-api-key" in request["data"]
         return web.json_response({"api_key": request["data"]["x-api-key"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ2"
     headers = {"X-API-KEY": api_key}
@@ -107,10 +99,7 @@ async def test_api_key_header_auth(aiohttp_client, loop):
     assert error == {"x-api-key": "value length should be more than 1"}
 
 
-async def test_api_key_query_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_api_key_query_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -125,9 +114,10 @@ async def test_api_key_query_auth(aiohttp_client, loop):
         assert "api_key" in request["data"]
         return web.json_response({"api_key": request["data"]["api_key"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ3"
     params = {"api_key": api_key}
@@ -147,10 +137,7 @@ async def test_api_key_query_auth(aiohttp_client, loop):
     assert error == {"api_key": "value length should be more than 1"}
 
 
-async def test_api_key_cookie_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_api_key_cookie_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -165,9 +152,10 @@ async def test_api_key_cookie_auth(aiohttp_client, loop):
         assert "C-API-KEY" in request["data"]
         return web.json_response({"api_key": request["data"]["C-API-KEY"]})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
     cookies = {"C-API-KEY": api_key}
@@ -187,10 +175,7 @@ async def test_api_key_cookie_auth(aiohttp_client, loop):
     assert error == {"C-API-KEY": "value length should be more than 1"}
 
 
-async def test_all_of_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_all_of_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -212,9 +197,10 @@ async def test_all_of_auth(aiohttp_client, loop):
             }
         )
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
     cookies = {"C-API-KEY": api_key}
@@ -242,10 +228,7 @@ async def test_all_of_auth(aiohttp_client, loop):
     assert error == {"authorization": "is required"}
 
 
-async def test_any_of_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_any_of_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -258,23 +241,18 @@ async def test_any_of_auth(aiohttp_client, loop):
             description: OK.
 
         """
-        assert not (
-            "C-API-KEY" in request["data"] and "authorization" in request["data"]
-        )
         r = {}
         if "C-API-KEY" in request["data"]:
-            assert "authorization" not in request["data"]
             r["api_key"] = request["data"]["C-API-KEY"]
-        else:
-            assert "authorization" in request["data"]
-            assert "C-API-KEY" not in request["data"]
+        if "authorization" in request["data"]:
             r["authorization"] = request["data"]["authorization"]
 
         return web.json_response(r)
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
     cookies = {"C-API-KEY": api_key}
@@ -292,7 +270,7 @@ async def test_any_of_auth(aiohttp_client, loop):
 
     resp = await client.get("/r", cookies=cookies, headers=headers)
     assert resp.status == 200
-    assert await resp.json() == {"authorization": authorization}
+    assert await resp.json() == {"authorization": authorization, "api_key": api_key}
 
     resp = await client.get("/r")
     assert resp.status == 400
@@ -300,10 +278,7 @@ async def test_any_of_auth(aiohttp_client, loop):
     assert error == "no auth has been provided"
 
 
-async def test_missing_basic_word_in_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_missing_basic_word_in_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -317,9 +292,10 @@ async def test_missing_basic_word_in_auth(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     authorization = "ZGVtbzpwQDU1dzByZA=="
     headers = {"Authorization": authorization}
@@ -330,10 +306,9 @@ async def test_missing_basic_word_in_auth(aiohttp_client, loop):
     assert error == {"authorization": "value should start with 'Basic' word"}
 
 
-async def test_missing_bearer_word_in_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_missing_bearer_word_in_auth(
+    swagger_docs_with_components, aiohttp_client
+):
     async def handler(request):
         """
         ---
@@ -347,9 +322,10 @@ async def test_missing_bearer_word_in_auth(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     authorization = "ZGVtbzpwQDU1dzByZA=="
     headers = {"Authorization": authorization}
@@ -360,10 +336,7 @@ async def test_missing_bearer_word_in_auth(aiohttp_client, loop):
     assert error == {"authorization": "value should start with 'Bearer' word"}
 
 
-async def test_unknown_security(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_unknown_security(swagger_docs_with_components):
     async def handler(request):
         """
         ---
@@ -377,17 +350,15 @@ async def test_unknown_security(aiohttp_client, loop):
         """
         return web.json_response()
 
+    swagger = swagger_docs_with_components()
     with pytest.raises(Exception) as exc_info:
-        s.add_route("GET", "/r", handler)
+        swagger.add_route("GET", "/r", handler)
     assert "security schema wrongAuth must be defined in components" == str(
         exc_info.value
     )
 
 
-async def test_complex_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_complex_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -411,9 +382,10 @@ async def test_complex_auth(aiohttp_client, loop):
         authorization = request["data"]["authorization"]
         return web.json_response({"http": authorization, "api_key": api_key})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     option1_http = "111ZGVtbzpwQDU1dzByZA=="
     option1_api_key = "111eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ4"
@@ -440,10 +412,7 @@ async def test_complex_auth(aiohttp_client, loop):
     assert await resp.json() == {"api_key": option2_api_key, "http": option2_http}
 
 
-async def test_optional_any_of_auth(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs", components="tests/testdata/components.yaml")
-
+async def test_optional_any_of_auth(swagger_docs_with_components, aiohttp_client, loop):
     async def handler(request):
         """
         ---
@@ -459,9 +428,10 @@ async def test_optional_any_of_auth(aiohttp_client, loop):
         has_auth = "authorization" in request["data"]
         return web.json_response({"has_auth": has_auth})
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     authorization = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ1"
     headers = {"Authorization": f"Bearer {authorization}"}

@@ -2,15 +2,10 @@ from typing import Dict, List, Optional, Union
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_minimum_maximum(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_minimum_maximum(swagger_docs, aiohttp_client):
     async def handler(
         request,
         path_int: int,
@@ -89,9 +84,10 @@ async def test_minimum_maximum(aiohttp_client, loop):
             }
         )
 
-    s.add_route("POST", "/r/{path_int}/{path_float}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r/{path_int}/{path_float}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     int_param = 15
     float_param = 15.5
@@ -170,10 +166,7 @@ async def test_minimum_maximum(aiohttp_client, loop):
     }
 
 
-async def test_exclusive_minimum_maximum(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_exclusive_minimum_maximum(swagger_docs, aiohttp_client):
     async def handler(
         request,
         path_int: int,
@@ -264,9 +257,10 @@ async def test_exclusive_minimum_maximum(aiohttp_client, loop):
             }
         )
 
-    s.add_route("POST", "/r/{path_int}/{path_float}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r/{path_int}/{path_float}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     int_param = 10
     float_param = 10.1
@@ -303,10 +297,7 @@ async def test_exclusive_minimum_maximum(aiohttp_client, loop):
     }
 
 
-async def test_int32_bounds(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_int32_bounds(swagger_docs, aiohttp_client):
     async def handler(request, path: int, query: int, body: Dict):
         """
         ---
@@ -346,9 +337,10 @@ async def test_int32_bounds(aiohttp_client, loop):
         """
         return web.json_response({"query": query, "path": path, "body": body})
 
-    s.add_route("POST", "/r/{path}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r/{path}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     body_param = -2_147_483_649
     body = {"int": body_param}
@@ -373,10 +365,7 @@ async def test_int32_bounds(aiohttp_client, loop):
     assert error == {"query": msg, "body": {"int": msg}, "path": msg}
 
 
-async def test_min_max_length(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_min_max_length(swagger_docs, aiohttp_client):
     async def handler(request, header: str, path: str, query: str, body: Dict):
         """
         ---
@@ -429,9 +418,10 @@ async def test_min_max_length(aiohttp_client, loop):
             {"header": header, "query": query, "path": path, "body": body}
         )
 
-    s.add_route("POST", "/r/{path}", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r/{path}", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     header_param = "string"
     headers = {"header": header_param}
@@ -482,10 +472,7 @@ async def test_min_max_length(aiohttp_client, loop):
     assert error == {"query": msg, "body": {"str": msg}, "header": msg, "path": msg}
 
 
-async def test_one_of_basic(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_one_of_basic(swagger_docs, aiohttp_client):
     async def handler(request, int_or_bool: Union[int, bool], body: Dict):
         """
         ---
@@ -520,9 +507,10 @@ async def test_one_of_basic(aiohttp_client, loop):
         """
         return web.json_response({"int_or_bool": int_or_bool, "body": body})
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     params = {"int_or_bool": 10}
     body = {"int_or_bool": True}
     resp = await client.post("/r", params=params, json=body)
@@ -546,10 +534,7 @@ async def test_one_of_basic(aiohttp_client, loop):
     }
 
 
-async def test_default(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_default(swagger_docs, aiohttp_client):
     async def handler(
         request, integer: int, number: float, string: str, boolean: bool, body: Dict
     ):
@@ -616,9 +601,10 @@ async def test_default(aiohttp_client, loop):
             }
         )
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     resp = await client.post("/r", json={})
     assert resp.status == 200
     assert await resp.json() == {
@@ -630,10 +616,7 @@ async def test_default(aiohttp_client, loop):
     }
 
 
-async def test_optional(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_optional(swagger_docs, aiohttp_client):
     async def handler(
         request,
         body: Dict,
@@ -699,9 +682,10 @@ async def test_optional(aiohttp_client, loop):
 
         return web.json_response(resp)
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     resp = await client.post("/r", json={})
     assert resp.status == 200
     assert await resp.json() == {"body": {}}
@@ -725,10 +709,7 @@ async def test_optional(aiohttp_client, loop):
     }
 
 
-async def test_min_max_items(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_min_max_items(swagger_docs, aiohttp_client):
     async def handler(request, header: List[int], query: List[int], body: Dict):
         """
         ---
@@ -777,9 +758,10 @@ async def test_min_max_items(aiohttp_client, loop):
         """
         return web.json_response({"query": query, "header": header, "body": body})
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     header_param = [1, 2, 3]
     headers = {"header": ",".join(str(x) for x in header_param)}
@@ -820,10 +802,7 @@ async def test_min_max_items(aiohttp_client, loop):
     assert error == {"query": msg, "body": {"array": msg}, "header": msg}
 
 
-async def test_unique_items(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_unique_items(swagger_docs, aiohttp_client):
     async def handler(request, header: List[int], query: List[int], body: Dict):
         """
         ---
@@ -869,9 +848,10 @@ async def test_unique_items(aiohttp_client, loop):
         """
         return web.json_response({"query": query, "header": header, "body": body})
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     header_param = [1, 2, 3]
     headers = {"header": ",".join(str(x) for x in header_param)}

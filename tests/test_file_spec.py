@@ -2,13 +2,8 @@ from typing import Dict, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerFile
 
-
-async def test_spec_file(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
-
+async def test_spec_file(swagger_file, aiohttp_client):
     async def get_all_pets(request, limit: Optional[int] = None):
         pets = []
         for i in range(limit or 3):
@@ -27,7 +22,8 @@ async def test_spec_file(aiohttp_client, loop):
             {"code": 10, "message": f"pet with ID '{pet_id}' not found"}, status=500
         )
 
-    s.add_routes(
+    swagger = swagger_file()
+    swagger.add_routes(
         [
             web.get("/pets", get_all_pets),
             web.get("/pets/{pet_id}", get_one_pet),
@@ -35,7 +31,7 @@ async def test_spec_file(aiohttp_client, loop):
         ]
     )
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.get("/pets", params={"limit": 1})
     assert resp.status == 200
@@ -67,16 +63,14 @@ async def test_spec_file(aiohttp_client, loop):
     assert await resp.json() == {"code": 10, "message": f"pet with ID '100' not found"}
 
 
-async def test_route_out_of_spec_file(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
-
+async def test_route_out_of_spec_file(swagger_file, aiohttp_client):
     async def handler(request):
         return web.json_response()
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_file()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post("/r", json={"array": "whatever"})
     assert resp.status == 200

@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 routes = web.RouteTableDef()
 
@@ -30,7 +30,7 @@ async def get_one_pet(request: web.Request, pet_id: int) -> web.Response:
 
 def main():
     app = web.Application()
-    s = SwaggerDocs(app, "/docs")
+    s = SwaggerDocs(app, swagger_ui_settings=SwaggerUiSettings(path="/docs"))
     s.add_routes(routes)
     web.run_app(app)
 

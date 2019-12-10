@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
+from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
 
 
 class PetFactory:
@@ -126,10 +126,10 @@ def main():
     app = web.Application()
     s = SwaggerDocs(
         app,
-        "/docs",
         title="Swagger Petstore",
         version="1.0.0",
         components="components.yaml",
+        swagger_ui_settings=SwaggerUiSettings(path="/docs"),
     )
     s.add_routes(
         [

@@ -2,15 +2,10 @@ from typing import List, Optional
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs
-
 from .helpers import error_to_json
 
 
-async def test_cookies(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_cookies(swagger_docs, aiohttp_client):
     async def handler(
         request, array: List[int], integer: int, string: str, boolean: bool
     ):
@@ -53,9 +48,10 @@ async def test_cookies(aiohttp_client, loop):
             {"array": array, "integer": integer, "string": string, "boolean": boolean}
         )
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     c1 = [1, 2, 3, 4, 5]
     c2 = 100
@@ -77,10 +73,7 @@ async def test_cookies(aiohttp_client, loop):
     }
 
 
-async def test_missing_cookies(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_missing_cookies(swagger_docs, aiohttp_client):
     async def cookie_handler(
         request,
         integer: int,
@@ -124,9 +117,10 @@ async def test_missing_cookies(aiohttp_client, loop):
             {"array": array, "integer": integer, "string": string, "boolean": boolean}
         )
 
-    s.add_route("POST", "/r", cookie_handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", cookie_handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     resp = await client.post(f"/r")
     assert resp.status == 200
@@ -138,10 +132,7 @@ async def test_missing_cookies(aiohttp_client, loop):
     }
 
 
-async def test_missing_cookie_parameter(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_missing_cookie_parameter(swagger_docs, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -160,19 +151,17 @@ async def test_missing_cookie_parameter(aiohttp_client, loop):
         """
         return web.json_response()
 
-    s.add_route("GET", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("GET", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
     resp = await client.get("/r")
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"variable": "is required"}
 
 
-async def test_fail_validation(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-    s = SwaggerDocs(app, "/docs")
-
+async def test_fail_validation(swagger_docs, aiohttp_client):
     async def handler(request, int32: int):
         """
         ---
@@ -192,9 +181,10 @@ async def test_fail_validation(aiohttp_client, loop):
         """
         return web.json_response({"int32": int32})
 
-    s.add_route("POST", "/r", handler)
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     cookies = {"int32": "abc"}
     resp = await client.post(f"/r", cookies=cookies)

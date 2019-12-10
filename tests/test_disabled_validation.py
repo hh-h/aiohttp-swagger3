@@ -1,11 +1,7 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerFile
 
-
-async def test_validation_false(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-
+async def test_validation_false(swagger_docs, swagger_ui_settings, aiohttp_client):
     routes = web.RouteTableDef()
 
     @routes.post("/r")
@@ -28,10 +24,10 @@ async def test_validation_false(aiohttp_client, loop):
         assert request.rel_url.query["query"] == "str"
         return web.json_response()
 
-    s = SwaggerDocs(app, "/docs", validate=False)
-    s.add_routes(routes)
+    swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings(), validate=False)
+    swagger.add_routes(routes)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"query": "str"}
     resp = await client.post("/r", params=params)
@@ -60,18 +56,18 @@ async def test_validation_false(aiohttp_client, loop):
     }
 
 
-async def test_spec_file_validation_false(aiohttp_client, loop):
-    app = web.Application(loop=loop)
-
+async def test_spec_file_validation_false(
+    swagger_file, swagger_ui_settings, aiohttp_client
+):
     async def handler(request):
         assert "data" not in request
         assert request.rel_url.query["query"] == "str"
         return web.json_response()
 
-    s = SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml", validate=False)
-    s.add_get("/pets", handler)
+    swagger = swagger_file(swagger_ui_settings=swagger_ui_settings(), validate=False)
+    swagger.add_get("/pets", handler)
 
-    client = await aiohttp_client(app)
+    client = await aiohttp_client(swagger._app)
 
     params = {"query": "str"}
     resp = await client.get("/pets", params=params)
