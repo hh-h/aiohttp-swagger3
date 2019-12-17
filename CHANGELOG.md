@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1 (17-12-2019)
+- added ReDoc UI. Closes [#33](https://github.com/hh-h/aiohttp-swagger3/issues/33)
+
 ## 0.3.0 (10-12-2019)
 - fixed server error when passed hostname is empty. Closes [#35](https://github.com/hh-h/aiohttp-swagger3/issues/35)
 - fixed KeyError when no swagger routes defined. Closes [#28](https://github.com/hh-h/aiohttp-swagger3/issues/28)
