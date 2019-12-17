@@ -58,6 +58,9 @@ async def test_custom_media_type(swagger_docs, aiohttp_client):
 
 
 async def test_missing_custom_media_type(swagger_docs):
+    async def custom_handler(request: web.Request) -> Tuple[bool, bool]:
+        return True, True
+
     async def handler(request, body: Dict):
         """
         ---
@@ -76,6 +79,16 @@ async def test_missing_custom_media_type(swagger_docs):
         return web.json_response(body)
 
     swagger = swagger_docs()
+    with pytest.raises(Exception) as exc_info:
+        swagger.add_route("POST", "/r", handler)
+    assert "register handler for custom/handler first" == str(exc_info.value)
+
+    swagger.register_media_type_handler("*/handler1", custom_handler)
+    with pytest.raises(Exception) as exc_info:
+        swagger.add_route("POST", "/r", handler)
+    assert "missing handler for media type */*" == str(exc_info.value)
+
+    swagger.register_media_type_handler("custom/handler1", custom_handler)
     with pytest.raises(Exception) as exc_info:
         swagger.add_route("POST", "/r", handler)
     assert "register handler for custom/handler first" == str(exc_info.value)
@@ -115,3 +128,63 @@ async def test_file_upload(swagger_docs, aiohttp_client):
     resp = await client.post("/r", data=data)
     assert resp.status == 200
     assert await resp.read() == data
+
+
+async def test_asterisk_custom_handlers(swagger_docs, aiohttp_client):
+    async def custom_handler(request: web.Request) -> Tuple[str, bool]:
+        return (await request.read()).decode(), True
+
+    async def handler(request, body: str):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            custom/handler:
+              schema:
+                type: string
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.Response(body=body)
+
+    data = "test"
+
+    swagger = swagger_docs()
+    swagger.register_media_type_handler("*/*", custom_handler)
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post(
+        "/r", data=data, headers={"content-type": "custom/handler"}
+    )
+    assert resp.status == 200
+    assert (await resp.read()).decode() == data
+
+    swagger = swagger_docs()
+    swagger.register_media_type_handler("custom/*", custom_handler)
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post(
+        "/r", data=data, headers={"content-type": "custom/handler"}
+    )
+    assert resp.status == 200
+    assert (await resp.read()).decode() == data
+
+    swagger = swagger_docs()
+    swagger.register_media_type_handler("*/handler", custom_handler)
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post(
+        "/r", data=data, headers={"content-type": "custom/handler"}
+    )
+    assert resp.status == 200
+    assert (await resp.read()).decode() == data

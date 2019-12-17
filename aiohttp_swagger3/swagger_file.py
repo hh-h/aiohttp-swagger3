@@ -7,6 +7,7 @@ from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 from openapi_spec_validator import validate_v3_spec
 
+from .redoc_ui_settings import ReDocUiSettings
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
@@ -25,6 +26,7 @@ class SwaggerFile(Swagger):
         validate: bool = True,
         request_key: str = "data",
         swagger_ui_settings: Optional[SwaggerUiSettings] = None,
+        redoc_ui_settings: Optional[ReDocUiSettings] = None,
     ) -> None:
         if not spec_file:
             raise Exception("spec file with swagger schema must be provided")
@@ -45,6 +47,7 @@ class SwaggerFile(Swagger):
             spec=spec,
             request_key=request_key,
             swagger_ui_settings=swagger_ui_settings,
+            redoc_ui_settings=redoc_ui_settings,
         )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 
