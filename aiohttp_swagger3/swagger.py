@@ -17,8 +17,16 @@ from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
 from .handlers import application_json, x_www_form_urlencoded
-from .index_templates import SWAGGER_UI_TEMPLATE
-from .routes import _SWAGGER_INDEX_HTML, _redirect, _swagger_home, _swagger_spec
+from .index_templates import REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
+from .redoc_ui_settings import ReDocUiSettings
+from .routes import (
+    _REDOC_UI_INDEX_HTML,
+    _SWAGGER_UI_INDEX_HTML,
+    _redirect,
+    _redoc_ui,
+    _swagger_spec,
+    _swagger_ui,
+)
 from .swagger_ui_settings import SwaggerUiSettings
 
 if TYPE_CHECKING:
@@ -40,6 +48,7 @@ class Swagger(web.UrlDispatcher):
         spec: Dict,
         request_key: str,
         swagger_ui_settings: Optional[SwaggerUiSettings],
+        redoc_ui_settings: Optional[ReDocUiSettings],
     ) -> None:
         self._app = app
         self.validate = validate
@@ -49,6 +58,15 @@ class Swagger(web.UrlDispatcher):
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
 
+        if (
+            swagger_ui_settings is not None
+            and redoc_ui_settings is not None
+            and swagger_ui_settings.path == redoc_ui_settings.path
+        ):
+            raise Exception("cannot bind two UIs on the same path")
+
+        base_path = pathlib.Path(__file__).parent
+
         if swagger_ui_settings is not None:
             ui_path = swagger_ui_settings.path
             if not ui_path.startswith("/"):
@@ -57,14 +75,34 @@ class Swagger(web.UrlDispatcher):
             ui_path = ui_path.rstrip("/")
             if need_redirect:
                 self._app.router.add_route("GET", ui_path, _redirect)
-            self._app.router.add_route("GET", f"{ui_path}/", _swagger_home)
+            self._app.router.add_route("GET", f"{ui_path}/", _swagger_ui)
             self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
 
-            base_path = pathlib.Path(__file__).parent
-            self._app.router.add_static(f"{ui_path}/static", base_path / "swagger_ui")
+            self._app.router.add_static(
+                f"{ui_path}/swagger_ui_static", base_path / "swagger_ui"
+            )
 
-            self._app[_SWAGGER_INDEX_HTML] = SWAGGER_UI_TEMPLATE.substitute(
+            self._app[_SWAGGER_UI_INDEX_HTML] = SWAGGER_UI_TEMPLATE.substitute(
                 {"settings": json.dumps(swagger_ui_settings.to_settings())}
+            )
+
+        if redoc_ui_settings is not None:
+            ui_path = redoc_ui_settings.path
+            if not ui_path.startswith("/"):
+                raise Exception("path should start with /")
+            need_redirect = ui_path != "/"
+            ui_path = ui_path.rstrip("/")
+            if need_redirect:
+                self._app.router.add_route("GET", ui_path, _redirect)
+            self._app.router.add_route("GET", f"{ui_path}/", _redoc_ui)
+            self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
+
+            self._app.router.add_static(
+                f"{ui_path}/redoc_ui_static", base_path / "redoc_ui"
+            )
+
+            self._app[_REDOC_UI_INDEX_HTML] = REDOC_UI_TEMPLATE.substitute(
+                {"settings": json.dumps(redoc_ui_settings.to_settings())}
             )
 
         self.register_media_type_handler("application/json", application_json)
@@ -148,10 +186,12 @@ class Swagger(web.UrlDispatcher):
         if typ not in self.handlers:
             if "*" not in self.handlers:
                 raise Exception(f"register handler for {media_type} first")
-            elif "*" not in self.handlers["*"]:
-                raise Exception("missing handler for media type */*")
-            else:
+            elif subtype not in self.handlers["*"]:
+                if "*" not in self.handlers["*"]:
+                    raise Exception("missing handler for media type */*")
                 return self.handlers["*"]["*"]
+            else:
+                return self.handlers["*"][subtype]
         if subtype not in self.handlers[typ]:
             if "*" not in self.handlers[typ]:
                 raise Exception(f"register handler for {media_type} first")

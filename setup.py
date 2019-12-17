@@ -11,7 +11,12 @@ setup(
     name="aiohttp-swagger3",
     version=__version__,
     packages=["aiohttp_swagger3"],
-    package_data={"aiohttp_swagger3": ["swagger_ui/*"]},
+    package_data={
+        "aiohttp_swagger3": [
+            "swagger_ui/*",
+            "redoc_ui/*",
+            "redoc_ui/fonts/{montserrat,roboto}/*"],
+    },
     url="https://github.com/hh-h/aiohttp-swagger3",
     license="Apache 2",
     author="Valetov Konstantin",
@@ -27,6 +32,7 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Development Status :: 4 - Beta",
         "Operating System :: POSIX",
         "Operating System :: MacOS :: MacOS X",

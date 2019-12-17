@@ -1,7 +1,12 @@
 import pytest
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerFile, SwaggerUiSettings
+from aiohttp_swagger3 import (
+    ReDocUiSettings,
+    SwaggerDocs,
+    SwaggerFile,
+    SwaggerUiSettings,
+)
 
 pytest_plugins = ["aiohttp.pytest_plugin"]
 
@@ -14,6 +19,16 @@ def swagger_ui_settings():
         return SwaggerUiSettings(**kwargs)
 
     return _swagger_ui_settings
+
+
+@pytest.fixture
+def redoc_ui_settings():
+    def _redoc_ui_settings(**kwargs):
+        if "path" not in kwargs:
+            kwargs["path"] = "/docs"
+        return ReDocUiSettings(**kwargs)
+
+    return _redoc_ui_settings
 
 
 @pytest.fixture

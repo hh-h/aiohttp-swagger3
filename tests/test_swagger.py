@@ -60,27 +60,17 @@ async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
     }
 
 
-async def test_index_html(swagger_docs, swagger_ui_settings, aiohttp_client):
-    async def handler(request, param_id: int):
-        """
-        ---
-        parameters:
-
-          - name: param_id
-            in: path
-            required: true
-            schema:
-              type: integer
-
-        responses:
-          '200':
-            description: OK.
-
-        """
-        return web.json_response({"param_id": param_id})
-
+async def test_swagger_ui_index_html(swagger_docs, swagger_ui_settings, aiohttp_client):
     swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings())
-    swagger.add_route("GET", "/r/{param_id}", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/docs/")
+    assert resp.status == 200
+
+
+async def test_redoc_ui_index_html(swagger_docs, redoc_ui_settings, aiohttp_client):
+    swagger = swagger_docs(redoc_ui_settings=redoc_ui_settings())
 
     client = await aiohttp_client(swagger._app)
 
@@ -117,9 +107,15 @@ async def test_redirect(swagger_docs, swagger_ui_settings, aiohttp_client):
     assert "/docs/" == resp.headers.get(hdrs.LOCATION) or resp.headers.get(hdrs.URI)
 
 
-async def test_incorrect_ui_path(swagger_docs, swagger_ui_settings):
+async def test_incorrect_swagger_ui_path(swagger_docs, swagger_ui_settings):
     with pytest.raises(Exception) as exc_info:
         swagger_docs(swagger_ui_settings=swagger_ui_settings(path="docs"))
+    assert str(exc_info.value) == "path should start with /"
+
+
+async def test_incorrect_redoc_ui_path(swagger_docs, redoc_ui_settings):
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(redoc_ui_settings=redoc_ui_settings(path="docs"))
     assert str(exc_info.value) == "path should start with /"
 
 
@@ -237,3 +233,79 @@ async def test_swagger_file_no_spec():
     with pytest.raises(Exception) as exc_info:
         SwaggerFile(app)
     assert str(exc_info.value) == "spec file with swagger schema must be provided"
+
+
+async def test_two_uis_one_path(swagger_ui_settings, redoc_ui_settings):
+    app = web.Application()
+    with pytest.raises(Exception) as exc_info:
+        SwaggerDocs(
+            app,
+            swagger_ui_settings=swagger_ui_settings(),
+            redoc_ui_settings=redoc_ui_settings(),
+        )
+    assert str(exc_info.value) == "cannot bind two UIs on the same path"
+
+
+async def test_two_uis(
+    swagger_docs, swagger_ui_settings, redoc_ui_settings, aiohttp_client
+):
+    swagger = swagger_docs(
+        swagger_ui_settings=swagger_ui_settings(path="/swagger"),
+        redoc_ui_settings=redoc_ui_settings(path="/redoc"),
+    )
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/swagger/")
+    assert resp.status == 200
+
+    resp = await client.get("/redoc/")
+    assert resp.status == 200
+
+
+async def test_redoc_ui_expand_responses_validator(swagger_docs, redoc_ui_settings):
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="all"))
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses=""))
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="200"))
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="200,300"))
+
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="abc"))
+    assert (
+        str(exc_info.value)
+        == "expandResponses must be either 'all' or comma-separated list of http codes, got 'abc'"
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="100,bca"))
+    assert (
+        str(exc_info.value)
+        == "expandResponses must be either 'all' or comma-separated list of http codes, got 'bca'"
+    )
+
+
+async def test_incorrect_path(swagger_docs, swagger_ui_settings):
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(swagger_ui_settings=swagger_ui_settings(path="test"))
+    assert str(exc_info.value) == "path should start with /"
+
+
+async def test_redoc_ui_json_sample_expand_level_validator(
+    swagger_docs, redoc_ui_settings
+):
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="all"))
+    swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel=1))
+
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="abc"))
+    assert (
+        str(exc_info.value)
+        == "jsonSampleExpandLevel must be either 'all' or integer, got 'abc'"
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="5"))
+    assert (
+        str(exc_info.value)
+        == "jsonSampleExpandLevel must be either 'all' or integer, got '5'"
+    )
