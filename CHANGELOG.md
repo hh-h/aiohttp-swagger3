@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3 (18-12-2019)
+- added missing fonts for ReDoc UI
+
 ## 0.3.2 (18-12-2019)
 - migrated to fastjsonschema
 
