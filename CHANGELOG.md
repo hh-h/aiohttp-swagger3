@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.2 (18-12-2019)
+- migrated to fastjsonschema
+
 ## 0.3.1 (17-12-2019)
 - added ReDoc UI. Closes [#33](https://github.com/hh-h/aiohttp-swagger3/issues/33)
 
