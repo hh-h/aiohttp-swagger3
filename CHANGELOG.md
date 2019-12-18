@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.4 (18-12-2019)
+- required files must be in wheel too
+
 ## 0.3.3 (18-12-2019)
 - added missing fonts for ReDoc UI
 
