@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.5 (18-12-2019)
+- one more attempt to fix fonts
+
 ## 0.3.4 (18-12-2019)
 - required files must be in wheel too
 
