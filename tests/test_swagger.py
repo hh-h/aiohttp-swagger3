@@ -51,6 +51,8 @@ async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
                             "name": "param_id",
                             "required": True,
                             "schema": {"type": "integer"},
+                            "style": "simple",
+                            "explode": False,
                         }
                     ],
                     "responses": {"200": {"description": "OK."}},
@@ -309,3 +311,94 @@ async def test_redoc_ui_json_sample_expand_level_validator(
         str(exc_info.value)
         == "jsonSampleExpandLevel must be either 'all' or integer, got '5'"
     )
+
+
+async def test_default_serialization(swagger_docs, swagger_ui_settings, aiohttp_client):
+    async def handler(request):
+        """
+        ---
+        parameters:
+
+          - name: path_param
+            in: path
+            required: true
+            schema:
+              type: integer
+
+          - name: query_param
+            in: query
+            required: true
+            schema:
+              type: integer
+
+          - name: header_param
+            in: header
+            required: true
+            schema:
+              type: integer
+
+          - name: cookie_param
+            in: cookie
+            required: true
+            schema:
+              type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings())
+    swagger.add_route("GET", "/r/{path_param}", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/docs/swagger.json")
+    assert resp.status == 200
+    assert await resp.json() == {
+        "openapi": "3.0.0",
+        "info": {"title": "OpenAPI3", "version": "1.0.0"},
+        "paths": {
+            "/r/{path_param}": {
+                "get": {
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "path_param",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                            "style": "simple",
+                            "explode": False,
+                        },
+                        {
+                            "in": "query",
+                            "name": "query_param",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                            "style": "form",
+                            "explode": True,
+                        },
+                        {
+                            "in": "header",
+                            "name": "header_param",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                            "style": "simple",
+                            "explode": False,
+                        },
+                        {
+                            "in": "cookie",
+                            "name": "cookie_param",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                            "style": "form",
+                            "explode": True,
+                        },
+                    ],
+                    "responses": {"200": {"description": "OK."}},
+                }
+            }
+        },
+    }

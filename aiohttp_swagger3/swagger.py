@@ -13,6 +13,7 @@ from typing import (
     Type,
 )
 
+import fastjsonschema
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
@@ -38,7 +39,7 @@ ExpectHandler = Callable[[web.Request], Awaitable[None]]
 
 
 class Swagger(web.UrlDispatcher):
-    __slots__ = ("_app", "validate", "spec", "request_key", "handlers")
+    __slots__ = ("_app", "validate", "spec", "request_key", "handlers", "spec_validate")
 
     def __init__(
         self,
@@ -66,6 +67,13 @@ class Swagger(web.UrlDispatcher):
             raise Exception("cannot bind two UIs on the same path")
 
         base_path = pathlib.Path(__file__).parent
+        with open(base_path / "schema/schema.json") as f:
+            schema = json.load(f)
+
+        self.spec_validate = fastjsonschema.compile(
+            schema, formats={"uri-reference": r"^\w+:(\/?\/?)[^\s]+\Z|^#(\/\w+)+"}
+        )
+        self.spec_validate(self.spec)
 
         if swagger_ui_settings is not None:
             ui_path = swagger_ui_settings.path

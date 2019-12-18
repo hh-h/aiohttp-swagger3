@@ -13,6 +13,7 @@ setup(
     packages=["aiohttp_swagger3"],
     package_data={
         "aiohttp_swagger3": [
+            "schema/schema.json",
             "swagger_ui/*",
             "redoc_ui/*",
             "redoc_ui/fonts/{montserrat,roboto}/*"],

@@ -48,6 +48,8 @@ async def test_validation_false(swagger_docs, swagger_ui_settings, aiohttp_clien
                         "in": "query",
                         "required": True,
                         "schema": {"type": "string"},
+                        "style": "form",
+                        "explode": True,
                     }
                 ],
                 "responses": {"200": {"description": "OK."}},

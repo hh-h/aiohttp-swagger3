@@ -6,7 +6,6 @@ from typing import Dict, Optional, Type, Union
 import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
-from openapi_spec_validator import validate_v3_spec
 
 from .redoc_ui_settings import ReDocUiSettings
 from .routes import _SWAGGER_SPECIFICATION
@@ -44,8 +43,6 @@ class SwaggerDocs(Swagger):
             with open(components) as f:
                 spec.update(yaml.safe_load(f))
 
-        validate_v3_spec(spec)
-
         if swagger_ui_settings is None and ui_path is not None:
             warnings.warn(
                 "ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
@@ -71,7 +68,7 @@ class SwaggerDocs(Swagger):
         *_, spec = handler.__doc__.split("---")
         method_spec = yaml.safe_load(spec)
         self.spec["paths"][path][method] = method_spec
-        validate_v3_spec(self.spec)
+        self.spec_validate(self.spec)
         self._app[_SWAGGER_SPECIFICATION] = self.spec
         if not self.validate:
             return handler

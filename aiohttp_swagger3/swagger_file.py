@@ -5,7 +5,6 @@ from typing import Optional, Type, Union
 import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
-from openapi_spec_validator import validate_v3_spec
 
 from .redoc_ui_settings import ReDocUiSettings
 from .routes import _SWAGGER_SPECIFICATION
@@ -32,7 +31,6 @@ class SwaggerFile(Swagger):
             raise Exception("spec file with swagger schema must be provided")
         with open(spec_file) as f:
             spec = yaml.safe_load(f)
-        validate_v3_spec(spec)
 
         if swagger_ui_settings is None and ui_path is not None:
             warnings.warn(
