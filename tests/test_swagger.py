@@ -286,12 +286,6 @@ async def test_redoc_ui_expand_responses_validator(swagger_docs, redoc_ui_settin
     )
 
 
-async def test_incorrect_path(swagger_docs, swagger_ui_settings):
-    with pytest.raises(Exception) as exc_info:
-        swagger_docs(swagger_ui_settings=swagger_ui_settings(path="test"))
-    assert str(exc_info.value) == "path should start with /"
-
-
 async def test_redoc_ui_json_sample_expand_level_validator(
     swagger_docs, redoc_ui_settings
 ):
@@ -402,3 +396,24 @@ async def test_default_serialization(swagger_docs, swagger_ui_settings, aiohttp_
             }
         },
     }
+
+
+async def test_redoc_ui_fonts(swagger_docs, redoc_ui_settings, aiohttp_client):
+    swagger = swagger_docs(redoc_ui_settings=redoc_ui_settings())
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/docs/redoc_ui_static/redoc.standalone.js")
+    assert resp.status == 200
+
+    resp = await client.get(
+        "/docs/redoc_ui_static/fonts/"
+        "montserrat/montserrat-v14-cyrillic-ext_vietnamese_latin-ext_latin_cyrillic-300.woff2"
+    )
+    assert resp.status == 200
+
+    resp = await client.get(
+        "/docs/redoc_ui_static/fonts/"
+        "roboto/roboto-v20-greek-ext_cyrillic-ext_vietnamese_latin-ext_latin_greek_cyrillic-300.woff2"
+    )
+    assert resp.status == 200

@@ -11,13 +11,6 @@ setup(
     name="aiohttp-swagger3",
     version=__version__,
     packages=["aiohttp_swagger3"],
-    package_data={
-        "aiohttp_swagger3": [
-            "schema/schema.json",
-            "swagger_ui/*",
-            "redoc_ui/*",
-            "redoc_ui/fonts/{montserrat,roboto}/*"],
-    },
     url="https://github.com/hh-h/aiohttp-swagger3",
     license="Apache 2",
     author="Valetov Konstantin",
