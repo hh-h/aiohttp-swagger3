@@ -61,7 +61,13 @@ class SwaggerDocs(Swagger):
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def _wrap_handler(
-        self, method: str, path: str, handler: _SwaggerHandler, *, is_method: bool
+        self,
+        method: str,
+        path: str,
+        handler: _SwaggerHandler,
+        *,
+        is_method: bool,
+        validate: bool,
     ) -> _SwaggerHandler:
         if not handler.__doc__ or "---" not in handler.__doc__:
             return handler
@@ -70,7 +76,7 @@ class SwaggerDocs(Swagger):
         self.spec["paths"][path][method] = method_spec
         self.spec_validate(self.spec)
         self._app[_SWAGGER_SPECIFICATION] = self.spec
-        if not self.validate:
+        if not validate:
             return handler
         route = SwaggerRoute(method, path, handler, swagger=self)
         if is_method:
@@ -87,7 +93,12 @@ class SwaggerDocs(Swagger):
         *,
         name: Optional[str] = None,
         expect_handler: Optional[ExpectHandler] = None,
+        validate: Optional[bool] = None,
     ) -> web.AbstractRoute:
+        if validate is None:
+            need_validation: bool = self.validate
+        else:
+            need_validation = False if not self.validate else validate
         if isinstance(handler, type) and issubclass(handler, AbstractView):
             for meth in hdrs.METH_ALL:
                 meth = meth.lower()
@@ -96,7 +107,13 @@ class SwaggerDocs(Swagger):
                     setattr(
                         handler,
                         meth,
-                        self._wrap_handler(meth, path, handler_, is_method=True),
+                        self._wrap_handler(
+                            meth,
+                            path,
+                            handler_,
+                            is_method=True,
+                            validate=need_validation,
+                        ),
                     )
         else:
             if method == hdrs.METH_ANY:
@@ -108,10 +125,16 @@ class SwaggerDocs(Swagger):
                     hdrs.METH_DELETE,
                 ):
                     meth = meth.lower()
-                    handler = self._wrap_handler(meth, path, handler, is_method=False)
+                    handler = self._wrap_handler(
+                        meth, path, handler, is_method=False, validate=need_validation,
+                    )
             else:
                 handler = self._wrap_handler(
-                    method.lower(), path, handler, is_method=False
+                    method.lower(),
+                    path,
+                    handler,
+                    is_method=False,
+                    validate=need_validation,
                 )
 
         return self._app.router.add_route(
