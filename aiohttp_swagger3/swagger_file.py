@@ -57,8 +57,13 @@ class SwaggerFile(Swagger):
         *,
         name: Optional[str] = None,
         expect_handler: Optional[ExpectHandler] = None,
+        validate: Optional[bool] = None,
     ) -> web.AbstractRoute:
-        if self.validate and path in self.spec["paths"]:
+        if validate is None:
+            need_validation: bool = self.validate
+        else:
+            need_validation = False if not self.validate else validate
+        if need_validation and path in self.spec["paths"]:
             if isinstance(handler, type) and issubclass(handler, AbstractView):
                 for meth in hdrs.METH_ALL:
                     meth = meth.lower()
