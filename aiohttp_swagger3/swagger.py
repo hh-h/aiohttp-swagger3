@@ -19,7 +19,6 @@ from aiohttp.abc import AbstractView
 
 from .handlers import application_json, x_www_form_urlencoded
 from .index_templates import REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
-from .redoc_ui_settings import ReDocUiSettings
 from .routes import (
     _REDOC_UI_INDEX_HTML,
     _SWAGGER_UI_INDEX_HTML,
@@ -28,7 +27,7 @@ from .routes import (
     _swagger_spec,
     _swagger_ui,
 )
-from .swagger_ui_settings import SwaggerUiSettings
+from .ui_settings import ReDocUiSettings, SwaggerUiSettings
 
 if TYPE_CHECKING:
     from .swagger_route import SwaggerRoute
