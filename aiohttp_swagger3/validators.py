@@ -4,7 +4,7 @@ import ipaddress
 import operator
 import re
 import uuid
-from typing import Any, Dict, List, Optional, Pattern, Set, Union
+from typing import Any, Dict, List, Optional, Pattern, Set, Type, Union
 
 import attr
 import strict_rfc3339
@@ -21,9 +21,19 @@ class _MissingType:
 MISSING = _MissingType()
 
 
+@attr.attrs(slots=True, frozen=True, auto_attribs=True)
+class DiscriminatorObject:
+    property_name: str
+    mapping: Dict[str, str]
+
+
 @attr.attrs(slots=True, auto_attribs=True)
 class ValidatorError(Exception):
     error: Union[str, Dict]
+
+
+class DiscriminatorValidationError(Exception):
+    pass
 
 
 @attr.attrs(slots=True, frozen=True, auto_attribs=True)
@@ -338,7 +348,17 @@ class Array(Validator):
         return items
 
 
-@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+def to_discriminator(data: Optional[Dict]) -> Optional[DiscriminatorObject]:
+    if data is None:
+        return None
+    return DiscriminatorObject(
+        property_name=data["propertyName"], mapping=data.get("mapping", {})
+    )
+
+
+@attr.attrs(
+    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
+)
 class Object(Validator):
     properties: Dict[str, Validator]
     required: Set[str]
@@ -406,10 +426,45 @@ class Object(Validator):
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
-class OneOf(Validator):
+class Discriminator(Validator):
     validators: List[Validator]
+    discriminator: Optional[DiscriminatorObject] = attr.attrib(
+        converter=to_discriminator
+    )
+    mapping: Dict[str, int]
 
     def validate(self, raw_value: Any, raw: bool) -> Any:
+        if self.discriminator is None:
+            raise DiscriminatorValidationError
+        if not isinstance(raw_value, dict):
+            raise ValidatorError("value should be type of dict")
+        schema_name = raw_value.get(self.discriminator.property_name)
+        if schema_name is None:
+            raise ValidatorError({self.discriminator.property_name: "is required"})
+        validator_index = self.mapping.get(schema_name)
+        if validator_index is None:
+            mapping_schema_name = self.discriminator.mapping.get(schema_name)
+            if mapping_schema_name is None:
+                keys = list(self.discriminator.mapping.keys() | self.mapping.keys())
+                raise ValidatorError(
+                    {self.discriminator.property_name: f"must be one of {keys}"}
+                )
+            validator_index = self.mapping[mapping_schema_name]
+        try:
+            return self.validators[validator_index].validate(raw_value, raw)
+        except ValidatorError:
+            raise DiscriminatorValidationError
+
+
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+class OneOf(Discriminator):
+    def validate(self, raw_value: Any, raw: bool) -> Any:
+        if self.discriminator is not None:
+            try:
+                return super().validate(raw_value, raw)
+            except DiscriminatorValidationError:
+                raise ValidatorError("fail to validate oneOf")
+
         found = False
         value = None
         for validator in self.validators:
@@ -426,10 +481,14 @@ class OneOf(Validator):
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
-class AnyOf(Validator):
-    validators: List[Validator]
-
+class AnyOf(Discriminator):
     def validate(self, raw_value: Any, raw: bool) -> Any:
+        if self.discriminator is not None:
+            try:
+                return super().validate(raw_value, raw)
+            except DiscriminatorValidationError:
+                raise ValidatorError("fail to validate anyOf")
+
         for validator in self.validators:
             try:
                 return validator.validate(raw_value, raw)
@@ -643,20 +702,44 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
         # #/components/schemas/Pet
         *_, section, obj = schema["$ref"].split("/")
         schema = components[section][obj]
-    if "oneOf" in schema:
-        return OneOf(
-            validators=[schema_to_validator(sch, components) for sch in schema["oneOf"]]
+    if "oneOf" in schema or "anyOf" in schema or "allOf" in schema:
+        if "oneOf" in schema:
+            cls: Type[Discriminator] = OneOf
+            type_ = "oneOf"
+        elif "anyOf" in schema:
+            cls = AnyOf
+            type_ = "anyOf"
+        else:
+            return AllOf(
+                validators=[
+                    schema_to_validator(sch, components) for sch in schema["allOf"]
+                ],
+            )
+
+        validators = []
+        discriminator = schema.get("discriminator")
+        mapping: Dict[str, int] = {}
+        schema_names: Set[str] = set()
+        for i, sch in enumerate(schema[type_]):
+            validators.append(schema_to_validator(sch, components))
+            if discriminator is not None and "$ref" in sch:
+                # #/components/schemas/Pet
+                *_, obj = sch["$ref"].split("/")
+                mapping[obj] = i
+                schema_names.add(obj)
+        if discriminator is not None and "mapping" in discriminator:
+            for key, value in discriminator["mapping"].items():
+                if value.startswith("#"):
+                    value = value.split("/")[-1]
+                    discriminator["mapping"][key] = value
+                if value not in schema_names:
+                    raise Exception(f"schema '{value}' must be defined in components")
+        return cls(
+            validators=[schema_to_validator(sch, components) for sch in schema[type_]],
+            discriminator=schema.get("discriminator"),
+            mapping=mapping,
         )
-    elif "anyOf" in schema:
-        return AnyOf(
-            validators=[schema_to_validator(sch, components) for sch in schema["anyOf"]]
-        )
-    elif "allOf" in schema:
-        return AllOf(
-            validators=[schema_to_validator(sch, components) for sch in schema["allOf"]]
-        )
-    else:
-        return _type_to_validator(schema, components)
+    return _type_to_validator(schema, components)
 
 
 def _security_to_validator(sec_name: str, components: Dict) -> Validator:
