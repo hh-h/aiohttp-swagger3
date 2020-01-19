@@ -1,0 +1,39 @@
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - petType
+      properties:
+        petType:
+          type: string
+
+    Cat:
+      allOf:
+      - $ref: '#/components/schemas/Pet'
+      - type: object
+        required:
+          - name
+        properties:
+          name:
+            type: string
+
+    Dog:
+      allOf:
+      - $ref: '#/components/schemas/Pet'
+      - type: object
+        required:
+          - bark
+        properties:
+          bark:
+            type: string
+
+    Lizard:
+      allOf:
+      - $ref: '#/components/schemas/Pet'
+      - type: object
+        required:
+          - lovesRocks
+        properties:
+          lovesRocks:
+            type: boolean
