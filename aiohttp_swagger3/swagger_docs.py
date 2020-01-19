@@ -7,11 +7,10 @@ import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
-from .redoc_ui_settings import ReDocUiSettings
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
-from .swagger_ui_settings import SwaggerUiSettings
+from .ui_settings import ReDocUiSettings, SwaggerUiSettings
 
 
 class SwaggerDocs(Swagger):
