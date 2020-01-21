@@ -1,4 +1,5 @@
 __all__ = (
+    "RapiDocUiSettings",
     "ReDocUiSettings",
     "SwaggerDocs",
     "SwaggerFile",
@@ -10,4 +11,4 @@ __author__ = "Valetov Konstantin"
 
 from .swagger_docs import SwaggerDocs
 from .swagger_file import SwaggerFile
-from .ui_settings import ReDocUiSettings, SwaggerUiSettings
+from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings

@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 from aiohttp import hdrs, web
 
@@ -121,6 +123,12 @@ async def test_incorrect_redoc_ui_path(swagger_docs, redoc_ui_settings):
     assert str(exc_info.value) == "path should start with /"
 
 
+async def test_incorrect_rapidoc_ui_path(swagger_docs, rapidoc_ui_settings):
+    with pytest.raises(Exception) as exc_info:
+        swagger_docs(rapidoc_ui_settings=rapidoc_ui_settings(path="docs"))
+    assert str(exc_info.value) == "path should start with /"
+
+
 async def test_swagger_json_renders_datetime(
     swagger_docs, swagger_ui_settings, aiohttp_client
 ):
@@ -237,7 +245,9 @@ async def test_swagger_file_no_spec():
     assert str(exc_info.value) == "spec file with swagger schema must be provided"
 
 
-async def test_two_uis_one_path(swagger_ui_settings, redoc_ui_settings):
+async def test_two_uis_one_path(
+    swagger_ui_settings, redoc_ui_settings, rapidoc_ui_settings
+):
     app = web.Application()
     with pytest.raises(Exception) as exc_info:
         SwaggerDocs(
@@ -247,13 +257,34 @@ async def test_two_uis_one_path(swagger_ui_settings, redoc_ui_settings):
         )
     assert str(exc_info.value) == "cannot bind two UIs on the same path"
 
+    with pytest.raises(Exception) as exc_info:
+        SwaggerDocs(
+            app,
+            swagger_ui_settings=swagger_ui_settings(),
+            rapidoc_ui_settings=rapidoc_ui_settings(),
+        )
+    assert str(exc_info.value) == "cannot bind two UIs on the same path"
 
-async def test_two_uis(
-    swagger_docs, swagger_ui_settings, redoc_ui_settings, aiohttp_client
+    with pytest.raises(Exception) as exc_info:
+        SwaggerDocs(
+            app,
+            rapidoc_ui_settings=rapidoc_ui_settings(),
+            redoc_ui_settings=redoc_ui_settings(),
+        )
+    assert str(exc_info.value) == "cannot bind two UIs on the same path"
+
+
+async def test_all_uis(
+    swagger_docs,
+    swagger_ui_settings,
+    redoc_ui_settings,
+    rapidoc_ui_settings,
+    aiohttp_client,
 ):
     swagger = swagger_docs(
         swagger_ui_settings=swagger_ui_settings(path="/swagger"),
         redoc_ui_settings=redoc_ui_settings(path="/redoc"),
+        rapidoc_ui_settings=rapidoc_ui_settings(path="/rapidoc"),
     )
 
     client = await aiohttp_client(swagger._app)
@@ -262,6 +293,9 @@ async def test_two_uis(
     assert resp.status == 200
 
     resp = await client.get("/redoc/")
+    assert resp.status == 200
+
+    resp = await client.get("/rapidoc/")
     assert resp.status == 200
 
 
@@ -398,7 +432,7 @@ async def test_default_serialization(swagger_docs, swagger_ui_settings, aiohttp_
     }
 
 
-async def test_redoc_ui_fonts(swagger_docs, redoc_ui_settings, aiohttp_client):
+async def test_redoc_ui_static_files(swagger_docs, redoc_ui_settings, aiohttp_client):
     swagger = swagger_docs(redoc_ui_settings=redoc_ui_settings())
 
     client = await aiohttp_client(swagger._app)
@@ -417,3 +451,82 @@ async def test_redoc_ui_fonts(swagger_docs, redoc_ui_settings, aiohttp_client):
         "roboto/roboto-v20-greek-ext_cyrillic-ext_vietnamese_latin-ext_latin_greek_cyrillic-300.woff2"
     )
     assert resp.status == 200
+
+
+async def test_rapidoc_ui_static_files(
+    swagger_docs, rapidoc_ui_settings, aiohttp_client
+):
+    swagger = swagger_docs(rapidoc_ui_settings=rapidoc_ui_settings())
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/docs/rapidoc_ui_static/rapidoc-min.js")
+    assert resp.status == 200
+
+    resp = await client.get("/docs/rapidoc_ui_static/rapidoc-regular.woff2")
+    assert resp.status == 200
+
+    resp = await client.get("/docs/rapidoc_ui_static/roboto-mono-bold.woff2")
+    assert resp.status == 200
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    list(
+        itertools.product(
+            (
+                "bg_color",
+                "text_color",
+                "nav_bg_color",
+                "nav_text_color",
+                "nav_hover_bg_color",
+                "nav_hover_text_color",
+                "nav_accent_color",
+            ),
+            ("#test", "asdlkalsdk", "#12", "#AAAAAAA", "#fffff"),
+        ),
+    ),
+)
+async def test_rapidoc_ui_hex_color_validator_invalid(
+    field, value, rapidoc_ui_settings
+):
+    with pytest.raises(Exception) as exc_info:
+        rapidoc_ui_settings(**{field: value})
+    assert str(exc_info.value) == f"{field} must be valid HEX color"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    list(
+        itertools.product(
+            (
+                "bg_color",
+                "text_color",
+                "nav_bg_color",
+                "nav_text_color",
+                "nav_hover_bg_color",
+                "nav_hover_text_color",
+                "nav_accent_color",
+            ),
+            ("#333", "#AAAA", "#FFFff4", "#bbbbbbbb"),
+        ),
+    ),
+)
+async def test_rapidoc_ui_hex_color_validator(field, value, rapidoc_ui_settings):
+    rapidoc_ui_settings(**{field: value})
+
+
+async def test_rapidoc_ui_bg_color_default(rapidoc_ui_settings):
+    rus = rapidoc_ui_settings(theme="light")
+    assert rus.bg_color == "#fff"
+
+    rus = rapidoc_ui_settings(theme="dark")
+    assert rus.bg_color == "#333"
+
+
+async def test_rapidoc_ui_text_color_default(rapidoc_ui_settings):
+    rus = rapidoc_ui_settings(theme="light")
+    assert rus.text_color == "#444"
+
+    rus = rapidoc_ui_settings(theme="dark")
+    assert rus.text_color == "#bbb"

@@ -10,7 +10,7 @@ from aiohttp.abc import AbstractView
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
-from .ui_settings import ReDocUiSettings, SwaggerUiSettings
+from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
 
 class SwaggerDocs(Swagger):
@@ -29,6 +29,7 @@ class SwaggerDocs(Swagger):
         components: Optional[str] = None,
         swagger_ui_settings: Optional[SwaggerUiSettings] = None,
         redoc_ui_settings: Optional[ReDocUiSettings] = None,
+        rapidoc_ui_settings: Optional[RapiDocUiSettings] = None,
     ) -> None:
         spec: Dict = {
             "openapi": "3.0.0",
@@ -56,6 +57,7 @@ class SwaggerDocs(Swagger):
             request_key=request_key,
             swagger_ui_settings=swagger_ui_settings,
             redoc_ui_settings=redoc_ui_settings,
+            rapidoc_ui_settings=rapidoc_ui_settings,
         )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 

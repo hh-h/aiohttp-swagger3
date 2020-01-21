@@ -2,6 +2,7 @@ import pytest
 from aiohttp import web
 
 from aiohttp_swagger3 import (
+    RapiDocUiSettings,
     ReDocUiSettings,
     SwaggerDocs,
     SwaggerFile,
@@ -29,6 +30,16 @@ def redoc_ui_settings():
         return ReDocUiSettings(**kwargs)
 
     return _redoc_ui_settings
+
+
+@pytest.fixture
+def rapidoc_ui_settings():
+    def _rapidoc_ui_settings(**kwargs):
+        if "path" not in kwargs:
+            kwargs["path"] = "/docs"
+        return RapiDocUiSettings(**kwargs)
+
+    return _rapidoc_ui_settings
 
 
 @pytest.fixture
