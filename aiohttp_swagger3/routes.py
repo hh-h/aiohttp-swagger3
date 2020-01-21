@@ -4,6 +4,7 @@ from typing import Any
 
 from aiohttp import web
 
+_RAPIDOC_UI_INDEX_HTML = "AIOHTTP_SWAGGER3_RAPIDOC_INDEX_HTML"
 _REDOC_UI_INDEX_HTML = "AIOHTTP_SWAGGER3_REDOC_INDEX_HTML"
 _SWAGGER_UI_INDEX_HTML = "AIOHTTP_SWAGGER3_SWAGGER_INDEX_HTML"
 _SWAGGER_SPECIFICATION = "AIOHTTP_SWAGGER3_SWAGGER_SPECIFICATION"
@@ -25,6 +26,12 @@ async def _swagger_ui(request: web.Request) -> web.Response:
 async def _redoc_ui(request: web.Request) -> web.Response:
     return web.Response(
         text=request.app[_REDOC_UI_INDEX_HTML], content_type="text/html"
+    )
+
+
+async def _rapidoc_ui(request: web.Request) -> web.Response:
+    return web.Response(
+        text=request.app[_RAPIDOC_UI_INDEX_HTML], content_type="text/html"
     )
 
 

@@ -9,6 +9,7 @@ from typing import (
     DefaultDict,
     Dict,
     Optional,
+    Set,
     Tuple,
     Type,
 )
@@ -18,16 +19,18 @@ from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
 from .handlers import application_json, x_www_form_urlencoded
-from .index_templates import REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
+from .index_templates import RAPIDOC_UI_TEMPLATE, REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
 from .routes import (
+    _RAPIDOC_UI_INDEX_HTML,
     _REDOC_UI_INDEX_HTML,
     _SWAGGER_UI_INDEX_HTML,
+    _rapidoc_ui,
     _redirect,
     _redoc_ui,
     _swagger_spec,
     _swagger_ui,
 )
-from .ui_settings import ReDocUiSettings, SwaggerUiSettings
+from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
 if TYPE_CHECKING:
     from .swagger_route import SwaggerRoute
@@ -49,6 +52,7 @@ class Swagger(web.UrlDispatcher):
         request_key: str,
         swagger_ui_settings: Optional[SwaggerUiSettings],
         redoc_ui_settings: Optional[ReDocUiSettings],
+        rapidoc_ui_settings: Optional[RapiDocUiSettings],
     ) -> None:
         self._app = app
         self.validate = validate
@@ -58,12 +62,14 @@ class Swagger(web.UrlDispatcher):
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
 
-        if (
-            swagger_ui_settings is not None
-            and redoc_ui_settings is not None
-            and swagger_ui_settings.path == redoc_ui_settings.path
-        ):
-            raise Exception("cannot bind two UIs on the same path")
+        uis = (rapidoc_ui_settings, redoc_ui_settings, swagger_ui_settings)
+        paths: Set[str] = set()
+        for ui in uis:
+            if ui is None:
+                continue
+            if ui.path in paths:
+                raise Exception("cannot bind two UIs on the same path")
+            paths.add(ui.path)
 
         base_path = pathlib.Path(__file__).parent
         with open(base_path / "schema/schema.json") as f:
@@ -110,6 +116,25 @@ class Swagger(web.UrlDispatcher):
 
             self._app[_REDOC_UI_INDEX_HTML] = REDOC_UI_TEMPLATE.substitute(
                 {"settings": json.dumps(redoc_ui_settings.to_settings())}
+            )
+
+        if rapidoc_ui_settings is not None:
+            ui_path = rapidoc_ui_settings.path
+            if not ui_path.startswith("/"):
+                raise Exception("path should start with /")
+            need_redirect = ui_path != "/"
+            ui_path = ui_path.rstrip("/")
+            if need_redirect:
+                self._app.router.add_route("GET", ui_path, _redirect)
+            self._app.router.add_route("GET", f"{ui_path}/", _rapidoc_ui)
+            self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
+
+            self._app.router.add_static(
+                f"{ui_path}/rapidoc_ui_static", base_path / "rapidoc_ui"
+            )
+
+            self._app[_RAPIDOC_UI_INDEX_HTML] = RAPIDOC_UI_TEMPLATE.substitute(
+                {"settings": json.dumps(rapidoc_ui_settings.to_settings())}
             )
 
         self.register_media_type_handler("application/json", application_json)

@@ -99,3 +99,31 @@ REDOC_UI_TEMPLATE = string.Template(
 </html>
 """
 )
+
+RAPIDOC_UI_TEMPLATE = string.Template(
+    """
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="./rapidoc_ui_static/fonts.css" >
+    <script type="module" src="./rapidoc_ui_static/rapidoc-min.js"></script>
+  </head>
+  <body>
+    <rapi-doc
+      id='rapidoc-ui'
+      spec-url='./swagger.json'
+      regular-font='Rapidoc Regular'
+      mono-font='Roboto Mono'
+    > </rapi-doc>
+    <script>
+      const docEl = document.getElementById('rapidoc-ui');
+      const settings = ${settings}
+      for (const key in settings) {
+        docEl.setAttribute(key, settings[key]);
+      }
+    </script>
+  </body>
+</html>
+"""
+)

@@ -18,6 +18,7 @@ setup(
             "redoc_ui/*",
             "redoc_ui/fonts/montserrat/*",
             "redoc_ui/fonts/roboto/*",
+            "rapidoc_ui/*",
         ],
     },
     url="https://github.com/hh-h/aiohttp-swagger3",
