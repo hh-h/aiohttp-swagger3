@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.6 (21-01-2020)
+- added ability to disable validation per route. Closes [#29](https://github.com/hh-h/aiohttp-swagger3/issues/29)
+- added discriminator support. Closes [#34](https://github.com/hh-h/aiohttp-swagger3/issues/34)
+- added RapiDoc UI. Closes [#39](https://github.com/hh-h/aiohttp-swagger3/issues/39)
+
 ## 0.3.5 (18-12-2019)
 - one more attempt to fix fonts
 
