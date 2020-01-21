@@ -7,18 +7,26 @@
 [![License](https://img.shields.io/pypi/l/aiohttp-swagger3.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 # About
-Package for displaying swagger docs and optionally validating/parsing aiohttp requests using swagger specification 3.0 only.  
-Feel free to try this library and raise an issue if it does not work as expected, thanks!
+Package for displaying swagger docs via different UI backends and optionally validating/parsing aiohttp requests using swagger specification 3.0, known as OpenAPI3.  
+
+# UI backends
+Multiple UI backends can be used or UI backend can be disabled at all if only needed validation without being able to view documentation.  
+## Supported UI backends ##  
+* Swagger UI - https://github.com/swagger-api/swagger-ui
+* ReDoc - https://github.com/Redocly/redoc
+* RapiDoc - https://github.com/mrin9/RapiDoc  
 
 # Disable validation
-Okay, just pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, default is `True`
+Pass `validate=False` to `SwaggerDocs`/`SwaggerFile` class, the default is `True`  
+Also, sometimes validation has to be disabled for a route, to do this you have to pass `validate=False` during the initialization of the route.  
+ex. `web.post("/route", handler, validate=False)`, the default is `True`
 
 # Requirements
 - python3.6+
 - aiohttp >= 3.5.4
 - pyyaml
 - attrs
-- openapi-spec-validator
+- python-fastjsonschema
 - strict_rfc3339
 
 # Limitations
