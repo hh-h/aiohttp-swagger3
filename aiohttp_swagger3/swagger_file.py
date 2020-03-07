@@ -1,5 +1,4 @@
 import functools
-import warnings
 from typing import Optional, Type, Union
 
 import yaml
@@ -18,7 +17,6 @@ class SwaggerFile(Swagger):
     def __init__(
         self,
         app: web.Application,
-        ui_path: Optional[str] = None,
         spec_file: str = "",
         *,
         validate: bool = True,
@@ -31,13 +29,6 @@ class SwaggerFile(Swagger):
             raise Exception("spec file with swagger schema must be provided")
         with open(spec_file) as f:
             spec = yaml.safe_load(f)
-
-        if swagger_ui_settings is None and ui_path is not None:
-            warnings.warn(
-                "ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
-                FutureWarning,
-            )
-            swagger_ui_settings = SwaggerUiSettings(path=ui_path)
 
         super().__init__(
             app,
