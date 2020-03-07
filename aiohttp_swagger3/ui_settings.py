@@ -24,6 +24,48 @@ class _UiSettings:
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class SwaggerUiSettings(_UiSettings):
+    """Settings for `Swagger UI <https://swagger.io/tools/swagger-ui/>`_, see: `configuration <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md>`_
+
+    :param str layout: The name of a component available via the plugin system to use as the top-level
+        layout for Swagger UI. It must be either ``BaseLayout`` or ``StandaloneLayout``. Default ``StandaloneLayout``.
+    :param bool deepLinking: If set to ``True``, enables deep linking for tags and operations. See the
+        `Deep Linking documentation <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/deep-linking.md>`_
+        for more information. Default ``True``.
+    :param bool displayOperationId: Controls the display of operationId in operations list. Default ``False``.
+    :param int defaultModelsExpandDepth: The default expansion depth for models
+        (set to ``-1`` completely hide the models). Default ``1``.
+    :param int defaultModelExpandDepth: The default expansion depth for the model on the
+        model-example section. Default ``1``.
+    :param int defaultModelRendering: Controls how the model is shown when the API is first rendered.
+        It must be either ``example`` or ``model``. Default ``example``.
+    :param bool displayRequestDuration: Controls the display of the request duration (in milliseconds) for
+        "Try it out" requests. Default ``False``.
+    :param str docExpansion: Controls the default expansion setting for the operations and tags.
+        It can be ``list`` (expands only the tags), ``full`` (expands the tags and operations) or
+        ``none`` (expands nothing). Default ``list``.
+    :param bool filter: If set, enables filtering. The top bar will show an edit box that you can use to filter
+        the tagged operations that are shown. Default ``False``.
+    :param bool showExtensions: Controls the display of vendor extension (x-) fields and values for
+        Operations, Parameters, and Schema. Default ``False``.
+    :param bool showCommonExtensions:  Controls the display of extensions (pattern, maxLength,
+        minLength, maximum, minimum) fields and values for Parameters. Default ``False``.
+    :param list supportedSubmitMethods: List of HTTP methods that have the "Try it out" feature enabled.
+        An empty array disables "Try it out" for all operations. This does not filter the operations from the display.
+        Available methods: ``get``, ``put``, ``post``, ``delete``, ``options``, ``head``, ``patch``, ``trace``.
+        By default all methods are enabled.
+    :param str validatorUrl: By default, Swagger UI attempts to validate specs against swagger.io's online validator.
+        You can use this parameter to set a different validator URL, for example for locally deployed
+        validators (Validator Badge). Setting it to ``None`` will disable validation.
+        Default ``https://validator.swagger.io/validator``.
+    :param bool withCredentials: If set to ``True``, enables passing credentials,
+        `as defined in the Fetch standard <https://fetch.spec.whatwg.org/#credentials>`_,
+        in CORS requests that are sent by the browser. Note that Swagger UI cannot currently set cookies cross-domain
+        (see `swagger-js#1163 <https://github.com/swagger-api/swagger-js/issues/1163>`_) - as a result,
+        you will have to rely on browser-supplied cookies (which this setting enables sending) that
+        Swagger UI cannot control. Default ``False``.
+
+    """
+
     # plugin
     layout: str = attr.attrib(
         default="StandaloneLayout",
@@ -88,6 +130,45 @@ class SwaggerUiSettings(_UiSettings):
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class ReDocUiSettings(_UiSettings):
+    """Settings for `ReDoc UI <https://redocly.github.io/redoc/>`_, see: `ReDoc options <https://github.com/Redocly/redoc#redoc-options-object>`_
+
+    :param bool disableSearch: Disable search indexing and search box. Default ``False``.
+    :param bool expandDefaultServerVariables: Enable expanding default server variables. Default ``False``.
+    :param str expandResponses: Specify which responses to expand by default by response codes. Values should be passed
+        as comma-separated list without spaces e.g. ``200,201``. Special value ``all`` expands all responses by default.
+        Be careful: this option can slow-down documentation rendering time. Default is empty string.
+    :param bool hideDownloadButton: Do not show "Download" spec button. **THIS DOESN'T MAKE YOUR SPEC PRIVATE**,
+        it just hides the button. Default ``False``.
+    :param bool hideHostname: If set, the protocol and hostname is not shown in the operation
+        definition. Default ``False``.
+    :param bool hideLoading: Do not show loading animation. Useful for small docs. Default ``False``.
+    :param bool hideSingleRequestSampleTab: Do not show the request sample tab for requests with only one sample.
+        Default ``False``.
+    :param int,str jsonSampleExpandLevel: Set the default expand level for JSON payload samples (responses and
+        request body). Special value ``all`` expands all levels. Default ``2``.
+    :param bool menuToggle: If ``True`` clicking second time on expanded menu item will collapse it. Default ``True``.
+    :param bool nativeScrollbars: Use native scrollbar for sidemenu instead of perfect-scroll (scrolling performance
+        optimization for big specs). Default ``False``.
+    :param bool noAutoAuth: Do not inject Authentication section automatically. Default ``False``.
+    :param bool onlyRequiredInSamples: Shows only required fields in request samples. Default ``False``.
+    :param bool pathInMiddlePanel: Show path link and HTTP verb in the middle panel instead of the right one.
+        Default ``False``.
+    :param bool requiredPropsFirst: Show required properties first ordered in the same order as in ``required`` array.
+        Default ``False``.
+    :param int scrollYOffset: If set, specifies a vertical scroll-offset. This is often useful when there are fixed
+        positioned elements at the top of the page, such as navbars, headers, etc. Default ``0``.
+    :param bool showExtensions: Show vendor extensions ("x-" fields). Extensions used by ReDoc are ignored.
+        Default ``False``.
+    :param bool sortPropsAlphabetically: Sort properties alphabetically. Default ``False``.
+    :param bool suppressWarnings: If set, warnings are not rendered at the top of documentation
+        (they still are logged to the console). Default ``False``.
+    :param int payloadSampleIdx: If set, payload sample will be inserted at this index or last. Indexes start from 0.
+        Default ``0``.
+    :param bool untrustedSpec: If set, the spec is considered untrusted and all HTML/markdown is sanitized to prevent
+        XSS. Disabled by default for performance reasons. **Enable this option if you work with untrusted user data!**
+        Default ``False``.
+    """
+
     disableSearch: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
     )
@@ -179,9 +260,69 @@ class ReDocUiSettings(_UiSettings):
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class RapiDocUiSettings(_UiSettings):
+    """Settings for `RapiDoc UI <https://mrin9.github.io/RapiDoc/index.html>`_, see: `RapiDoc API <https://mrin9.github.io/RapiDoc/api.html>`_
+
+    :param bool sort_tags: List APIs sorted by tags. Default ``False``.
+    :param str sort_endpoints_by: Sort endpoints within each tags by ``path`` or ``method``. Default ``path``.
+    :param str heading_text: Heading Text on top-left corner. (Optional)
+    :param str theme: Is the base theme, which is used for calculating colors for various UI components.
+        ``theme``, ``bg-color`` and ``text-color`` are the base attributes for generating a custom theme.
+        It can be either ``light`` or ``dark``. Default ``light``.
+    :param str bg_color: Hex color code for main background. Default ``#fff`` if ``theme`` is ``light``,
+        ``#333`` otherwise.
+    :param str text_color: Hex color code for text. Default ``#444`` if ``theme`` is ``light``, ``#bbb`` otherwise.
+    :param str header_color: Hex color code for the header's background. Default ``#444444``.
+    :param str primary_color: Hex color code on various controls such as buttons, tabs. Default ``#FF791A``.
+    :param str nav_bg_color: Navigation bar's background color. (optional)
+    :param str nav_text_color: Navigation bar's Text color. (optional)
+    :param str nav_hover_bg_color: Background color of the navigation item on mouse-over. (optional)
+    :param str nav_hover_text_color: Text color of the navigation item on mouse-over. (optional)
+    :param str nav_accent_color: Current selected item indicator. (optional)
+    :param str layout: Layout helps in placement of request/response sections. In ``column`` layout, request & response
+        sections are placed one below the other, In ``row`` layout they are placed side by side. This attribute is
+        applicable only when the device width is more than 768px and the render-style is ``view``. Default ``row``.
+    :param str render_style: Determines display of api-docs. Currently there are two modes supported. ``read`` - more
+        suitable for reading and ``view`` more friendly for quick exploring. Default ``view``.
+    :param str schema_style: Two different ways to display object-schemas in the responses and request bodies.
+        It must be either ``tree`` or ``table``. Default ``tree``.
+    :param int schema_expand_level: Schema's are expanded by default, use this attribute to control how many levels
+        in the schema should be expanded. Default ``999``.
+    :param bool schema_description_expanded: Constraint and descriptions information of fields in the schema are
+        collapsed to show only the first line. Set it to ``True`` if you want them to fully expanded. Default ``False``.
+    :param str default_schema_tab: The schemas are displayed in two tabs - ``model`` and ``example``. This option
+        allows you to pick the default tab that you would like to be active. Default ``model``.
+    :param bool show_info: Show/hide the documents info section. Default ``True``.
+    :param bool show_header: Show/hide the header. If you dont want your user to open any other api spec,
+        other than the current one, then set this attribute to ``False``. Default ``True``.
+    :param bool allow_authentication: Authentication feature, allows the user to select one of the authentication
+        mechanism that's available in the spec. Default ``True``.
+    :param bool allow_spec_url_load: If set to ``False``, user will not be able to load any spec url from the UI.
+        Default ``True``.
+    :param bool allow_spec_file_load: If set to ``False``, user will not be able to load any spec file from the local
+        drive. This attribute is applicable only when the device width is more than 768px, else this feature is not
+        available. Default ``True``.
+    :param bool allow_search: If set to ``False``, user will not be able to search APIs. Default ``True``.
+    :param bool allow_try: 'TRY' feature allows you to make REST calls to the API server. To disable this feature set
+        it to ``False``. Default ``True``.
+    :param bool allow_server_selection: If set to ``False``, user will not be able to select API server. The URL
+        specified in the server-url attribute will be used if set, else the first server in the API specification file
+        will be used. Default ``True``.
+    :param str api_key_name: Name of the API key that will be send while trying out the APIs. Default ``Authorization``.
+    :param str api_key_value: Value of the API key that will be send while trying out the APIs. This can also be
+        provided/overwritten from UI. (optional)
+    :param str api_key_location: Determines how you want to send the api-key. It must be either ``header`` or ``query``.
+        Default ``header``.
+    :param str server_url: OpenAPI spec has a provision for providing the server url. (optional)
+    :param str default_api_server: If you have multiple api-server listed in the spec, use this attribute to select the
+        default API server, where all the API calls will goto. This can be changed later from the UI. (optional)
+    """
+
     # General
     sort_tags: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
+    )
+    sort_endpoints_by: str = attr.attrib(
+        default="path", validator=attr.validators.in_(("path", "method")),
     )
     heading_text: Optional[str] = attr.attrib(
         default=None,
@@ -239,10 +380,6 @@ class RapiDocUiSettings(_UiSettings):
     default_schema_tab: str = attr.attrib(
         default="model", validator=attr.validators.in_(("model", "example")),
     )
-    api_list_style: str = attr.attrib(
-        default="group-by-tag",
-        validator=attr.validators.in_(("group-by-tag", "group-by-path")),
-    )
     # Hide/Show Sections
     show_info: bool = attr.attrib(
         default=True, validator=attr.validators.instance_of(bool)
@@ -266,9 +403,6 @@ class RapiDocUiSettings(_UiSettings):
         default=True, validator=attr.validators.instance_of(bool)
     )
     allow_server_selection: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_api_list_style_selection: bool = attr.attrib(
         default=True, validator=attr.validators.instance_of(bool)
     )
     # API Server

@@ -12,6 +12,19 @@ from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
 
 class SwaggerFile(Swagger):
+    """This class should be used if you want to use swagger scheme.
+
+    :param aiohttp.web.Application app: aiohttp's Application instance
+    :param str spec_file: path to swagger file scheme
+    :param bool validate: if ``False``, request validation is disabled, default ``True``
+    :param str request_key: key name under which the data will be stored in ``request``
+                            after validation, default ``data``
+    :param swagger_ui_settings: class:`SwaggerUiSettings` (optional)
+    :param redoc_ui_settings: class:`ReDocUiSettings` (optional)
+    :param rapidoc_ui_settings: class:`RapiDocUiSettings` (optional)
+
+    """
+
     __slots__ = ()
 
     def __init__(
