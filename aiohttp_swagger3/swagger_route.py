@@ -1,7 +1,7 @@
 import cgi
 import json
 from types import FunctionType
-from typing import Awaitable, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
 
 from aiohttp import web
 
@@ -15,6 +15,12 @@ from .validators import (
 )
 
 _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
+
+
+class RequestValidationFailed(web.HTTPBadRequest):
+    def __init__(self, errors: Dict, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.errors = errors
 
 
 def _get_fn_parameters(fn: _SwaggerHandler) -> Tuple[str, ...]:
@@ -216,5 +222,5 @@ class SwaggerRoute:
                         params[param.name] = value
 
         if errors:
-            raise web.HTTPBadRequest(reason=json.dumps(errors))
+            raise RequestValidationFailed(reason=json.dumps(errors), errors=errors)
         return params
