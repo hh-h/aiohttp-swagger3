@@ -208,36 +208,6 @@ async def test_no_ui(swagger_docs, aiohttp_client):
     assert resp.status == 404
 
 
-async def test_both_paths(swagger_ui_settings, aiohttp_client):
-    app = web.Application()
-    swagger = SwaggerDocs(
-        app, "/docs1", swagger_ui_settings=swagger_ui_settings(path="/docs2")
-    )
-
-    client = await aiohttp_client(swagger._app)
-
-    resp = await client.get("/docs1/")
-    assert resp.status == 404
-
-    resp = await client.get("/docs2/")
-    assert resp.status == 200
-
-
-async def test_deprecated_ui_path():
-    app = web.Application()
-    with pytest.warns(
-        FutureWarning,
-        match="ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
-    ):
-        SwaggerDocs(app, "/docs")
-
-    with pytest.warns(
-        FutureWarning,
-        match="ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
-    ):
-        SwaggerFile(app, "/docs", "tests/testdata/petstore.yaml")
-
-
 async def test_swagger_file_no_spec():
     app = web.Application()
     with pytest.raises(Exception) as exc_info:

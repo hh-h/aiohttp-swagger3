@@ -1,5 +1,4 @@
 import functools
-import warnings
 from collections import defaultdict
 from typing import Dict, Optional, Type, Union
 
@@ -19,7 +18,6 @@ class SwaggerDocs(Swagger):
     def __init__(
         self,
         app: web.Application,
-        ui_path: Optional[str] = None,
         *,
         validate: bool = True,
         request_key: str = "data",
@@ -42,13 +40,6 @@ class SwaggerDocs(Swagger):
         if components:
             with open(components) as f:
                 spec.update(yaml.safe_load(f))
-
-        if swagger_ui_settings is None and ui_path is not None:
-            warnings.warn(
-                "ui_path is deprecated and will be removed in 0.4.0, use swagger_ui_settings instead.",
-                FutureWarning,
-            )
-            swagger_ui_settings = SwaggerUiSettings(path=ui_path)
 
         super().__init__(
             app,
