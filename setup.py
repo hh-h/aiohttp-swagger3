@@ -2,7 +2,7 @@ from aiohttp_swagger3 import __version__
 from pathlib import Path, PurePath
 from setuptools import setup
 
-readme = Path(__file__).with_name("README.md")
+readme = Path(__file__).with_name("README.rst")
 
 with open(PurePath(__file__).parent / "requirements.txt") as f:
     install_requires = f.read().splitlines()
@@ -27,7 +27,7 @@ setup(
     author_email="forjob@thetrue.name",
     description="validation for aiohttp swagger openAPI 3",
     long_description=readme.read_text("utf-8"),
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     classifiers=[

@@ -18,6 +18,11 @@ _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
 
 
 class RequestValidationFailed(web.HTTPBadRequest):
+    """This exception can be caught in a aiohttp middleware.
+
+    :param dict errors: This dict stores validation errors.
+    """
+
     def __init__(self, errors: Dict, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.errors = errors
