@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.4.0 (07-03-2020)
+------------------
+
+- raise custom exception when validation fails. Closes `#49 <https://github.com/hh-h/aiohttp-swagger3/issues/49>`_
+- finally added documentation
+- bump Swagger UI to 3.25.0
+- bump RapiDoc UI to 7.4.0
+- bump ReDoc UI to v2.0.0-rc23
+- removed deprecated ``up_path`` parameter from ``SwaggerDocs`` and ``SwaggerFile``
+
 0.3.6 (21-01-2020)
 ------------------
 
