@@ -117,6 +117,11 @@ Example
 More
 `examples <https://github.com/hh-h/aiohttp-swagger3/tree/master/examples>`_
 
+How it helps
+============
+
+.. image:: https://raw.githubusercontent.com/hh-h/aiohttp-swagger3/master/docs/_static/comparison.png
+
 Features
 ========
 
