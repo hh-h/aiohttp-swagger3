@@ -82,7 +82,11 @@ class SwaggerRoute:
                     param = components[section][obj]
                 parameter = Parameter(
                     param["name"],
-                    schema_to_validator(param["schema"], components),
+                    schema_to_validator(
+                        param["schema"],
+                        components,
+                        custom_formats=self._swagger.custom_formats,
+                    ),
                     param.get("required", False),
                 )
                 if param["in"] == "query":
@@ -102,7 +106,11 @@ class SwaggerRoute:
                 value = body["content"][media_type]
                 self.bp[media_type] = Parameter(
                     "body",
-                    schema_to_validator(value["schema"], components),
+                    schema_to_validator(
+                        value["schema"],
+                        components,
+                        custom_formats=self._swagger.custom_formats,
+                    ),
                     body.get("required", False),
                 )
         self.params = set(_get_fn_parameters(self.handler))

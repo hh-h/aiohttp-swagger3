@@ -6,6 +6,7 @@ import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
+from aiohttp_swagger3.validators import CUSTOM_FORMATS_TYPE
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
@@ -44,6 +45,7 @@ class SwaggerDocs(Swagger):
         swagger_ui_settings: Optional[SwaggerUiSettings] = None,
         redoc_ui_settings: Optional[ReDocUiSettings] = None,
         rapidoc_ui_settings: Optional[RapiDocUiSettings] = None,
+        custom_formats: CUSTOM_FORMATS_TYPE = None,
     ) -> None:
         spec: Dict = {
             "openapi": "3.0.0",
@@ -65,6 +67,7 @@ class SwaggerDocs(Swagger):
             swagger_ui_settings=swagger_ui_settings,
             redoc_ui_settings=redoc_ui_settings,
             rapidoc_ui_settings=rapidoc_ui_settings,
+            custom_formats=custom_formats,
         )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 

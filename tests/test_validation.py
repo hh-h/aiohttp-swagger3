@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from aiohttp import web
 
 
@@ -132,3 +134,49 @@ async def test_route_validation_false(
     params = {"query": "str"}
     resp = await client.get("/r", params=params)
     assert resp.status == 200
+
+
+async def test_custom_formats(swagger_docs, swagger_ui_settings, aiohttp_client):
+    def test_validator(value: str) -> Tuple[bool, str]:
+        if value == "correct":
+            return True, ""
+        return False, 'value not equal to "correct"'
+
+    routes = web.RouteTableDef()
+
+    @routes.post("/r")
+    async def handler(request):
+        """
+            ---
+            parameters:
+
+              - name: query
+                in: query
+                required: true
+                schema:
+                  type: string
+                  format: test_format
+
+            responses:
+              '200':
+                description: OK.
+            """
+        assert request.rel_url.query["query"] == "correct"
+        return web.json_response()
+
+    custom_formats = {"test_format": test_validator}
+    swagger = swagger_docs(
+        swagger_ui_settings=swagger_ui_settings(),
+        validate=True,
+        custom_formats=custom_formats,
+    )
+    swagger.add_routes(routes)
+
+    client = await aiohttp_client(swagger._app)
+
+    params = {"query": "correct"}
+    resp = await client.post("/r", params=params)
+    assert resp.status == 200
+    params = {"query": "incorrect"}
+    resp = await client.post("/r", params=params)
+    assert resp.status == 400

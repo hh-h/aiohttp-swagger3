@@ -4,7 +4,7 @@ import ipaddress
 import operator
 import re
 import uuid
-from typing import Any, Dict, List, Optional, Pattern, Set, Type, Union
+from typing import Any, Dict, List, Optional, Pattern, Set, Type, Union, Tuple, Callable
 
 import attr
 import strict_rfc3339
@@ -181,15 +181,19 @@ def _re_compile(pattern: Optional[str]) -> Optional[Pattern]:
     return re.compile(pattern)
 
 
+CUSTOM_FORMATS_TYPE = Optional[Dict[str, Callable[[str], Tuple[bool, str]]]]
+
+
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class String(Validator):
-    format: StringFormat = attr.attrib(converter=StringFormat)
+    format: str = attr.attrib()
     pattern: Optional[Pattern] = attr.attrib(converter=_re_compile)
     minLength: Optional[int] = None
     maxLength: Optional[int] = None
     enum: Optional[List[str]] = None
     nullable: bool = False
     default: Optional[str] = None
+    custom_formats: Optional[Dict[str, Callable[[str], Tuple[bool, str]]]] = None
 
     def validate(
         self, raw_value: Union[None, str, bytes, _MissingType], raw: bool
@@ -215,41 +219,41 @@ class String(Validator):
             raise ValidatorError(f"value should be one of {self.enum}")
 
         if self.format not in (
-            StringFormat.Default,
-            StringFormat.Password,
-            StringFormat.Binary,
+            StringFormat.Default.value,
+            StringFormat.Password.value,
+            StringFormat.Binary.value,
         ):
             assert isinstance(value, str)
-            if self.format == StringFormat.Uuid:
+            if self.format == StringFormat.Uuid.value:
                 try:
                     uuid.UUID(value)
                 except ValueError:
                     raise ValidatorError("value should be uuid")
-            elif self.format == StringFormat.Datetime:
+            elif self.format == StringFormat.Datetime.value:
                 if not strict_rfc3339.validate_rfc3339(value):
                     raise ValidatorError("value should be datetime format")
-            elif self.format == StringFormat.Date:
+            elif self.format == StringFormat.Date.value:
                 if not strict_rfc3339.validate_rfc3339(f"{value}T00:00:00Z"):
                     raise ValidatorError("value should be date format")
-            elif self.format == StringFormat.Email:
+            elif self.format == StringFormat.Email.value:
                 if not _EMAIL_REGEX.match(value):
                     raise ValidatorError("value should be valid email")
-            elif self.format == StringFormat.Byte:
+            elif self.format == StringFormat.Byte.value:
                 try:
                     base64.b64decode(value)
                 except ValueError:
                     raise ValidatorError("value should be base64-encoded string")
-            elif self.format == StringFormat.IPv4:
+            elif self.format == StringFormat.IPv4.value:
                 try:
                     ipaddress.IPv4Address(value)
                 except ValueError:
                     raise ValidatorError("value should be valid ipv4 address")
-            elif self.format == StringFormat.IPv6:
+            elif self.format == StringFormat.IPv6.value:
                 try:
                     ipaddress.IPv6Address(value)
                 except ValueError:
                     raise ValidatorError("value should be valid ipv6 address")
-            elif self.format == StringFormat.Hostname:
+            elif self.format == StringFormat.Hostname.value:
                 if not value:
                     raise ValidatorError("value should be valid hostname")
                 hostname = value[:-1] if value[-1] == "." else value
@@ -257,9 +261,15 @@ class String(Validator):
                     _HOSTNAME_REGEX.match(x) for x in hostname.split(".")
                 ):
                     raise ValidatorError("value should be valid hostname")
+            elif self.custom_formats:
+                if self.format in self.custom_formats:
+                    validator = self.custom_formats[self.format]
+                    is_valid, error_message = validator(value)
+                    if not is_valid:
+                        raise ValidatorError(error_message)
 
         if (
-            self.format != StringFormat.Binary
+            self.format != StringFormat.Binary.value
             and self.pattern
             and not self.pattern.search(value)
         ):
@@ -627,7 +637,9 @@ class AllOfAuth(Validator):
         return values
 
 
-def _type_to_validator(schema: Dict, components: Dict) -> Validator:
+def _type_to_validator(
+    schema: Dict, components: Dict, *, custom_formats: CUSTOM_FORMATS_TYPE
+) -> Validator:
     if "type" not in schema:
         raise KeyError("type is required")
     if schema["type"] == "integer":
@@ -654,13 +666,14 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
         )
     elif schema["type"] == "string":
         return String(
-            format=schema.get("format", StringFormat.Default),
+            format=schema.get("format", StringFormat.Default.value),
             nullable=schema.get("nullable", False),
             minLength=schema.get("minLength"),
             maxLength=schema.get("maxLength"),
             enum=schema.get("enum"),
             default=schema.get("default"),
             pattern=schema.get("pattern"),
+            custom_formats=custom_formats,
         )
     elif schema["type"] == "boolean":
         return Boolean(
@@ -669,7 +682,9 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
     elif schema["type"] == "array":
         return Array(
             nullable=schema.get("nullable", False),
-            validator=schema_to_validator(schema["items"], components),
+            validator=schema_to_validator(
+                schema["items"], components, custom_formats=custom_formats
+            ),
             uniqueItems=schema.get("uniqueItems", False),
             minItems=schema.get("minItems"),
             maxItems=schema.get("maxItems"),
@@ -677,13 +692,13 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
     elif schema["type"] == "object":
         # TODO move this logic to class?
         properties = {
-            k: schema_to_validator(v, components)
+            k: schema_to_validator(v, components, custom_formats=custom_formats)
             for k, v in schema.get("properties", {}).items()
         }
         raw_additional_properties = schema.get("additionalProperties", True)
         if isinstance(raw_additional_properties, dict):
             additional_properties = schema_to_validator(
-                raw_additional_properties, components
+                raw_additional_properties, components, custom_formats=custom_formats
             )
         else:
             additional_properties = raw_additional_properties
@@ -699,7 +714,9 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
         raise Exception(f"Unknown type '{schema['type']}'")
 
 
-def schema_to_validator(schema: Dict, components: Dict) -> Validator:
+def schema_to_validator(
+    schema: Dict, components: Dict, *, custom_formats: CUSTOM_FORMATS_TYPE,
+) -> Validator:
     if "$ref" in schema:
         if not components:
             raise Exception("file with components definitions is missing")
@@ -716,7 +733,8 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
         else:
             return AllOf(
                 validators=[
-                    schema_to_validator(sch, components) for sch in schema["allOf"]
+                    schema_to_validator(sch, components, custom_formats=custom_formats)
+                    for sch in schema["allOf"]
                 ],
             )
 
@@ -725,7 +743,9 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
         mapping: Dict[str, int] = {}
         schema_names: Set[str] = set()
         for i, sch in enumerate(schema[type_]):
-            validators.append(schema_to_validator(sch, components))
+            validators.append(
+                schema_to_validator(sch, components, custom_formats=custom_formats)
+            )
             if discriminator is not None and "$ref" in sch:
                 # #/components/schemas/Pet
                 *_, obj = sch["$ref"].split("/")
@@ -739,11 +759,14 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
                 if value not in schema_names:
                     raise Exception(f"schema '{value}' must be defined in components")
         return cls(
-            validators=[schema_to_validator(sch, components) for sch in schema[type_]],
+            validators=[
+                schema_to_validator(sch, components, custom_formats=custom_formats)
+                for sch in schema[type_]
+            ],
             discriminator=schema.get("discriminator"),
             mapping=mapping,
         )
-    return _type_to_validator(schema, components)
+    return _type_to_validator(schema, components, custom_formats=custom_formats)
 
 
 def _security_to_validator(sec_name: str, components: Dict) -> Validator:

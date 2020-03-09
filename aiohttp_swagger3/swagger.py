@@ -18,6 +18,7 @@ import fastjsonschema
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
+from aiohttp_swagger3.validators import CUSTOM_FORMATS_TYPE
 from .handlers import application_json, x_www_form_urlencoded
 from .index_templates import RAPIDOC_UI_TEMPLATE, REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
 from .routes import (
@@ -41,7 +42,15 @@ ExpectHandler = Callable[[web.Request], Awaitable[None]]
 
 
 class Swagger(web.UrlDispatcher):
-    __slots__ = ("_app", "validate", "spec", "request_key", "handlers", "spec_validate")
+    __slots__ = (
+        "_app",
+        "validate",
+        "spec",
+        "request_key",
+        "handlers",
+        "spec_validate",
+        "custom_formats",
+    )
 
     def __init__(
         self,
@@ -53,11 +62,13 @@ class Swagger(web.UrlDispatcher):
         swagger_ui_settings: Optional[SwaggerUiSettings],
         redoc_ui_settings: Optional[ReDocUiSettings],
         rapidoc_ui_settings: Optional[RapiDocUiSettings],
+        custom_formats: CUSTOM_FORMATS_TYPE = None,
     ) -> None:
         self._app = app
         self.validate = validate
         self.spec = spec
         self.request_key = request_key
+        self.custom_formats = custom_formats
         self.handlers: DefaultDict[
             str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
         ] = defaultdict(dict)
