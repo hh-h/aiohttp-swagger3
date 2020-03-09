@@ -65,6 +65,10 @@ class StringFormat(enum.Enum):
     IPv4 = "ipv4"
     IPv6 = "ipv6"
 
+    @classmethod
+    def _missing_(cls, value: object) -> "StringFormat":
+        return StringFormat.Default
+
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Integer(Validator):
