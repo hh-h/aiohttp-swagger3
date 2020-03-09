@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.1 (09-03-2020)
+------------------
+
+- allow for unknown string formats. Closes `#51 <https://github.com/hh-h/aiohttp-swagger3/issues/51>`_
+
 0.4.0 (07-03-2020)
 ------------------
 
