@@ -1,2 +1,2 @@
+-r requirements.txt
 sphinx==2.4.4
-attrs==19.3.0
