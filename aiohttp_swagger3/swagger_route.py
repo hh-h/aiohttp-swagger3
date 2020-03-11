@@ -3,13 +3,14 @@ import json
 from types import FunctionType
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
 
+import attr
 from aiohttp import web
 
 from .context import COMPONENTS
-from .parameter import Parameter
 from .swagger import Swagger
 from .validators import (
     MISSING,
+    Validator,
     ValidatorError,
     schema_to_validator,
     security_to_validator,
@@ -35,6 +36,13 @@ def _get_fn_parameters(fn: _SwaggerHandler) -> Tuple[str, ...]:
         arg_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
         return func.__code__.co_varnames[:arg_count]
     return _get_fn_parameters(func.__closure__[0].cell_contents)
+
+
+@attr.attrs(slots=True, auto_attribs=True)
+class Parameter:
+    name: str
+    validator: Validator
+    required: bool
 
 
 class SwaggerRoute:
