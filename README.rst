@@ -48,6 +48,7 @@ Requirements
 - attrs == 19.3.0
 - python-fastjsonschema == 2.14.3
 - strict\_rfc3339 == 0.7
+- contextvars == 2.4 (for python 3.6 only)
 
 Limitations
 ===========
@@ -101,21 +102,20 @@ Example
 
     def main():
         app = web.Application()
-        s = SwaggerDocs(
+        swagger = SwaggerDocs(
             app,
             swagger_ui_settings=SwaggerUiSettings(path="/docs/"),
             title="Swagger Petstore",
             version="1.0.0",
             components="components.yaml"
         )
-        s.add_routes([
+        swagger.add_routes([
             web.get("/pets/{pet_id}", get_one_pet),
         ])
         app['storage'] = {}
         web.run_app(app)
 
-More
-`examples <https://github.com/hh-h/aiohttp-swagger3/tree/master/examples>`_
+More `examples <https://github.com/hh-h/aiohttp-swagger3/tree/master/examples>`_
 
 How it helps
 ============
@@ -132,24 +132,18 @@ Features
 - pattern
 - required
 - enum
-- minimum
-- maximum
-- exclusiveMinimum
-- exclusiveMaximum
-- minLength
-- maxLength
-- minItems
-- maxItems
+- minimum, maximum
+- exclusiveMinimum, exclusiveMaximum
+- minLength, maxLength
+- minItems, maxItems
 - uniqueItems
-- minProperties
-- maxProperties
+- minProperties, maxProperties
 - default (only primitives)
 - additionalProperties
 - nullable
-- allOf
-- oneOf
-- anyOf
-- string formats: date, date-time, password, byte, binary, email, uuid, hostname, ipv4, ipv6
+- allOf, oneOf, anyOf
+- string formats: date, date-time, byte, email, uuid, hostname, ipv4, ipv6
+- custom string format validators
 
 TODO (raise an issue if needed)
 ===============================
