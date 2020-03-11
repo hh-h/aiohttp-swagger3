@@ -275,7 +275,7 @@ async def test_any_of_auth(swagger_docs_with_components, aiohttp_client):
     resp = await client.get("/r")
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == "no auth has been provided"
+    assert error == {"authorization": "no auth has been provided"}
 
 
 async def test_missing_basic_word_in_auth(swagger_docs_with_components, aiohttp_client):
