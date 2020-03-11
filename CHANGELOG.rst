@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.2 (11-03-2020)
+------------------
+
+- added ability to register custom string formats. Closes `#53 <https://github.com/hh-h/aiohttp-swagger3/issues/53>`_
+
 0.4.1 (09-03-2020)
 ------------------
 
