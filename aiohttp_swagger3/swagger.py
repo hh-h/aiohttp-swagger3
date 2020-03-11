@@ -12,6 +12,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    Union,
 )
 
 import fastjsonschema
@@ -91,62 +92,9 @@ class Swagger(web.UrlDispatcher):
         )
         self.spec_validate(self.spec)
 
-        if swagger_ui_settings is not None:
-            ui_path = swagger_ui_settings.path
-            if not ui_path.startswith("/"):
-                raise Exception("path should start with /")
-            need_redirect = ui_path != "/"
-            ui_path = ui_path.rstrip("/")
-            if need_redirect:
-                self._app.router.add_route("GET", ui_path, _redirect)
-            self._app.router.add_route("GET", f"{ui_path}/", _swagger_ui)
-            self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
-
-            self._app.router.add_static(
-                f"{ui_path}/swagger_ui_static", base_path / "swagger_ui"
-            )
-
-            self._app[_SWAGGER_UI_INDEX_HTML] = SWAGGER_UI_TEMPLATE.substitute(
-                {"settings": json.dumps(swagger_ui_settings.to_settings())}
-            )
-
-        if redoc_ui_settings is not None:
-            ui_path = redoc_ui_settings.path
-            if not ui_path.startswith("/"):
-                raise Exception("path should start with /")
-            need_redirect = ui_path != "/"
-            ui_path = ui_path.rstrip("/")
-            if need_redirect:
-                self._app.router.add_route("GET", ui_path, _redirect)
-            self._app.router.add_route("GET", f"{ui_path}/", _redoc_ui)
-            self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
-
-            self._app.router.add_static(
-                f"{ui_path}/redoc_ui_static", base_path / "redoc_ui"
-            )
-
-            self._app[_REDOC_UI_INDEX_HTML] = REDOC_UI_TEMPLATE.substitute(
-                {"settings": json.dumps(redoc_ui_settings.to_settings())}
-            )
-
-        if rapidoc_ui_settings is not None:
-            ui_path = rapidoc_ui_settings.path
-            if not ui_path.startswith("/"):
-                raise Exception("path should start with /")
-            need_redirect = ui_path != "/"
-            ui_path = ui_path.rstrip("/")
-            if need_redirect:
-                self._app.router.add_route("GET", ui_path, _redirect)
-            self._app.router.add_route("GET", f"{ui_path}/", _rapidoc_ui)
-            self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
-
-            self._app.router.add_static(
-                f"{ui_path}/rapidoc_ui_static", base_path / "rapidoc_ui"
-            )
-
-            self._app[_RAPIDOC_UI_INDEX_HTML] = RAPIDOC_UI_TEMPLATE.substitute(
-                {"settings": json.dumps(rapidoc_ui_settings.to_settings())}
-            )
+        for ui in uis:
+            if ui is not None:
+                self._register_ui(ui)
 
         STRING_FORMATS.set({})
         if self.validate:
@@ -165,6 +113,44 @@ class Swagger(web.UrlDispatcher):
             self.register_string_format_validator("uuid", sf_uuid_validator)
 
         super().__init__()
+
+    def _register_ui(
+        self, ui_settings: Union[SwaggerUiSettings, ReDocUiSettings, RapiDocUiSettings]
+    ) -> None:
+        ui_path = ui_settings.path
+        if not ui_path.startswith("/"):
+            raise Exception("path should start with /")
+        need_redirect = ui_path != "/"
+        ui_path = ui_path.rstrip("/")
+        if need_redirect:
+            self._app.router.add_route("GET", ui_path, _redirect)
+
+        if isinstance(ui_settings, SwaggerUiSettings):
+            ui_handler = _swagger_ui
+            ui_template = SWAGGER_UI_TEMPLATE
+            ui_index_html = _SWAGGER_UI_INDEX_HTML
+            dir_name = "swagger_ui"
+        elif isinstance(ui_settings, ReDocUiSettings):
+            ui_handler = _redoc_ui
+            ui_template = REDOC_UI_TEMPLATE
+            ui_index_html = _REDOC_UI_INDEX_HTML
+            dir_name = "redoc_ui"
+        else:
+            ui_handler = _rapidoc_ui
+            ui_template = RAPIDOC_UI_TEMPLATE
+            ui_index_html = _RAPIDOC_UI_INDEX_HTML
+            dir_name = "rapidoc_ui"
+        self._app.router.add_route("GET", f"{ui_path}/", ui_handler)
+        self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
+
+        base_path = pathlib.Path(__file__).parent
+        self._app.router.add_static(
+            f"{ui_path}/{dir_name}_static", base_path / dir_name
+        )
+
+        self._app[ui_index_html] = ui_template.substitute(
+            {"settings": json.dumps(ui_settings.to_settings())}
+        )
 
     async def _handle_swagger_call(
         self, route: "SwaggerRoute", request: web.Request
