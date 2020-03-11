@@ -24,7 +24,7 @@ class _UiSettings:
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class SwaggerUiSettings(_UiSettings):
-    """Settings for `Swagger UI <https://swagger.io/tools/swagger-ui/>`_, see: `configuration <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md>`_
+    """Settings for `Swagger UI <https://swagger.io/tools/swagger-ui/>`_, see: `configuration <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md>`__
 
     :param str layout: The name of a component available via the plugin system to use as the top-level
         layout for Swagger UI. It must be either ``BaseLayout`` or ``StandaloneLayout``. Default ``StandaloneLayout``.
@@ -129,7 +129,7 @@ class SwaggerUiSettings(_UiSettings):
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class ReDocUiSettings(_UiSettings):
-    """Settings for `ReDoc UI <https://redocly.github.io/redoc/>`_, see: `ReDoc options <https://github.com/Redocly/redoc#redoc-options-object>`_
+    """Settings for `ReDoc UI <https://redocly.github.io/redoc/>`_, see: `ReDoc options <https://github.com/Redocly/redoc#redoc-options-object>`__
 
     :param bool disableSearch: Disable search indexing and search box. Default ``False``.
     :param bool expandDefaultServerVariables: Enable expanding default server variables. Default ``False``.
@@ -259,7 +259,7 @@ class ReDocUiSettings(_UiSettings):
     slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
 )
 class RapiDocUiSettings(_UiSettings):
-    """Settings for `RapiDoc UI <https://mrin9.github.io/RapiDoc/index.html>`_, see: `RapiDoc API <https://mrin9.github.io/RapiDoc/api.html>`_
+    """Settings for `RapiDoc UI <https://mrin9.github.io/RapiDoc/index.html>`_, see: `RapiDoc API <https://mrin9.github.io/RapiDoc/api.html>`__
 
     :param bool sort_tags: List APIs sorted by tags. Default ``False``.
     :param str sort_endpoints_by: Sort endpoints within each tags by ``path`` or ``method``. Default ``path``.

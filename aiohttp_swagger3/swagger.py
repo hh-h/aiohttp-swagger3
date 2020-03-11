@@ -216,6 +216,33 @@ class Swagger(web.UrlDispatcher):
         media_type: str,
         handler: Callable[[web.Request], Awaitable[Tuple[Any, bool]]],
     ) -> None:
+        """This method allows registering custom handler for a media type
+
+        Please, see `example <https://github.com/hh-h/aiohttp-swagger3/blob/master/examples/custom_media_type_handler/main.py>`__
+
+        .. warning::
+
+           `register_media_type_handler` must be called before adding route with media type
+
+           ✘
+
+           .. code-block:: python
+
+              swagger = SwaggerDocs(app)
+              swagger.add_post("/r", handler)
+              swagger.register_media_type_handler("custom/handler", custom_handler)
+
+           ✔
+
+           .. code-block:: python
+
+              swagger = SwaggerDocs(app)
+              swagger.register_media_type_handler("custom/handler", custom_handler)
+              swagger.add_post("/r", handler)
+
+        :param str media_type: The name of custom string format
+        :param handler: The handler function that will be executed for the media type
+        """
         typ, subtype = media_type.split("/")
         self.handlers[typ][subtype] = handler
 
@@ -224,7 +251,7 @@ class Swagger(web.UrlDispatcher):
     ) -> None:
         """This method allows registering a custom validator for string format
 
-        Please, see `example <https://github.com/hh-h/aiohttp-swagger3/blob/master/examples/custom_string_format/main.py>`_
+        Please, see `example <https://github.com/hh-h/aiohttp-swagger3/blob/master/examples/custom_string_format/main.py>`__
 
         :param str string_format: The name of custom string format
         :param validator: The validator function that should be used for
