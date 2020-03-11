@@ -5,6 +5,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
 
 from aiohttp import web
 
+from .context import COMPONENTS
 from .parameter import Parameter
 from .swagger import Swagger
 from .validators import (
@@ -69,8 +70,9 @@ class SwaggerRoute:
         body = method_section.get("requestBody")
         security = method_section.get("security")
         components = self._swagger.spec.get("components", {})
+        COMPONENTS.set(components)
         if security is not None:
-            parameter = Parameter("", security_to_validator(security, components), True)
+            parameter = Parameter("", security_to_validator(security), True)
             self.auth = parameter
         if parameters is not None:
             for param in parameters:
@@ -82,7 +84,7 @@ class SwaggerRoute:
                     param = components[section][obj]
                 parameter = Parameter(
                     param["name"],
-                    schema_to_validator(param["schema"], components),
+                    schema_to_validator(param["schema"]),
                     param.get("required", False),
                 )
                 if param["in"] == "query":
@@ -98,11 +100,11 @@ class SwaggerRoute:
         if body is not None:
             for media_type, value in body["content"].items():
                 # check that we have handler for media_type
-                self._swagger.get_media_type_handler(media_type)
+                self._swagger._get_media_type_handler(media_type)
                 value = body["content"][media_type]
                 self.bp[media_type] = Parameter(
                     "body",
-                    schema_to_validator(value["schema"], components),
+                    schema_to_validator(value["schema"]),
                     body.get("required", False),
                 )
         self.params = set(_get_fn_parameters(self.handler))
@@ -158,7 +160,7 @@ class SwaggerRoute:
                 if media_type not in self.bp:
                     errors["body"] = f"no handler for {media_type}"
                 else:
-                    handler = self._swagger.get_media_type_handler(media_type)
+                    handler = self._swagger._get_media_type_handler(media_type)
                     param = self.bp[media_type]
                     try:
                         v, has_raw = await handler(request)

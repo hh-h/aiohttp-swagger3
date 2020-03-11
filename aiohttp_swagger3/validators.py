@@ -1,17 +1,13 @@
-import base64
 import enum
-import ipaddress
 import operator
 import re
-import uuid
 from typing import Any, Dict, List, Optional, Pattern, Set, Type, Union
 
 import attr
-import strict_rfc3339
 from aiohttp import web
 
-_EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
-_HOSTNAME_REGEX = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+from .context import COMPONENTS, STRING_FORMATS
+from .exceptions import DiscriminatorValidationError, ValidatorError
 
 
 class _MissingType:
@@ -25,15 +21,6 @@ MISSING = _MissingType()
 class DiscriminatorObject:
     property_name: str
     mapping: Dict[str, str]
-
-
-@attr.attrs(slots=True, auto_attribs=True)
-class ValidatorError(Exception):
-    error: Union[str, Dict]
-
-
-class DiscriminatorValidationError(Exception):
-    pass
 
 
 @attr.attrs(slots=True, frozen=True, auto_attribs=True)
@@ -50,24 +37,6 @@ class IntegerFormat(enum.Enum):
 class NumberFormat(enum.Enum):
     Float = "float"
     Double = "double"
-
-
-class StringFormat(enum.Enum):
-    Default = "default"
-    Date = "date"
-    Datetime = "date-time"
-    Password = "password"
-    Byte = "byte"
-    Binary = "binary"
-    Email = "email"
-    Uuid = "uuid"
-    Hostname = "hostname"
-    IPv4 = "ipv4"
-    IPv6 = "ipv6"
-
-    @classmethod
-    def _missing_(cls, value: object) -> "StringFormat":
-        return StringFormat.Default
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
@@ -183,8 +152,8 @@ def _re_compile(pattern: Optional[str]) -> Optional[Pattern]:
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class String(Validator):
-    format: StringFormat = attr.attrib(converter=StringFormat)
     pattern: Optional[Pattern] = attr.attrib(converter=_re_compile)
+    format: Optional[str] = None
     minLength: Optional[int] = None
     maxLength: Optional[int] = None
     enum: Optional[List[str]] = None
@@ -214,55 +183,12 @@ class String(Validator):
         if self.enum is not None and value not in self.enum:
             raise ValidatorError(f"value should be one of {self.enum}")
 
-        if self.format not in (
-            StringFormat.Default,
-            StringFormat.Password,
-            StringFormat.Binary,
-        ):
-            assert isinstance(value, str)
-            if self.format == StringFormat.Uuid:
-                try:
-                    uuid.UUID(value)
-                except ValueError:
-                    raise ValidatorError("value should be uuid")
-            elif self.format == StringFormat.Datetime:
-                if not strict_rfc3339.validate_rfc3339(value):
-                    raise ValidatorError("value should be datetime format")
-            elif self.format == StringFormat.Date:
-                if not strict_rfc3339.validate_rfc3339(f"{value}T00:00:00Z"):
-                    raise ValidatorError("value should be date format")
-            elif self.format == StringFormat.Email:
-                if not _EMAIL_REGEX.match(value):
-                    raise ValidatorError("value should be valid email")
-            elif self.format == StringFormat.Byte:
-                try:
-                    base64.b64decode(value)
-                except ValueError:
-                    raise ValidatorError("value should be base64-encoded string")
-            elif self.format == StringFormat.IPv4:
-                try:
-                    ipaddress.IPv4Address(value)
-                except ValueError:
-                    raise ValidatorError("value should be valid ipv4 address")
-            elif self.format == StringFormat.IPv6:
-                try:
-                    ipaddress.IPv6Address(value)
-                except ValueError:
-                    raise ValidatorError("value should be valid ipv6 address")
-            elif self.format == StringFormat.Hostname:
-                if not value:
-                    raise ValidatorError("value should be valid hostname")
-                hostname = value[:-1] if value[-1] == "." else value
-                if len(hostname) > 255 or not all(
-                    _HOSTNAME_REGEX.match(x) for x in hostname.split(".")
-                ):
-                    raise ValidatorError("value should be valid hostname")
+        if self.format is not None:
+            string_formats = STRING_FORMATS.get()
+            if isinstance(value, str) and self.format in string_formats:
+                string_formats[self.format](value)
 
-        if (
-            self.format != StringFormat.Binary
-            and self.pattern
-            and not self.pattern.search(value)
-        ):
+        if self.pattern and not self.pattern.search(value):
             raise ValidatorError(
                 f"value should match regex pattern '{self.pattern.pattern}'"
             )
@@ -627,7 +553,7 @@ class AllOfAuth(Validator):
         return values
 
 
-def _type_to_validator(schema: Dict, components: Dict) -> Validator:
+def _type_to_validator(schema: Dict) -> Validator:
     if "type" not in schema:
         raise KeyError("type is required")
     if schema["type"] == "integer":
@@ -654,7 +580,7 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
         )
     elif schema["type"] == "string":
         return String(
-            format=schema.get("format", StringFormat.Default),
+            format=schema.get("format"),
             nullable=schema.get("nullable", False),
             minLength=schema.get("minLength"),
             maxLength=schema.get("maxLength"),
@@ -669,7 +595,7 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
     elif schema["type"] == "array":
         return Array(
             nullable=schema.get("nullable", False),
-            validator=schema_to_validator(schema["items"], components),
+            validator=schema_to_validator(schema["items"]),
             uniqueItems=schema.get("uniqueItems", False),
             minItems=schema.get("minItems"),
             maxItems=schema.get("maxItems"),
@@ -677,14 +603,11 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
     elif schema["type"] == "object":
         # TODO move this logic to class?
         properties = {
-            k: schema_to_validator(v, components)
-            for k, v in schema.get("properties", {}).items()
+            k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()
         }
         raw_additional_properties = schema.get("additionalProperties", True)
         if isinstance(raw_additional_properties, dict):
-            additional_properties = schema_to_validator(
-                raw_additional_properties, components
-            )
+            additional_properties = schema_to_validator(raw_additional_properties)
         else:
             additional_properties = raw_additional_properties
         return Object(
@@ -699,8 +622,9 @@ def _type_to_validator(schema: Dict, components: Dict) -> Validator:
         raise Exception(f"Unknown type '{schema['type']}'")
 
 
-def schema_to_validator(schema: Dict, components: Dict) -> Validator:
+def schema_to_validator(schema: Dict) -> Validator:
     if "$ref" in schema:
+        components = COMPONENTS.get()
         if not components:
             raise Exception("file with components definitions is missing")
         # #/components/schemas/Pet
@@ -715,9 +639,7 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
             type_ = "anyOf"
         else:
             return AllOf(
-                validators=[
-                    schema_to_validator(sch, components) for sch in schema["allOf"]
-                ],
+                validators=[schema_to_validator(sch) for sch in schema["allOf"]],
             )
 
         validators = []
@@ -725,7 +647,7 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
         mapping: Dict[str, int] = {}
         schema_names: Set[str] = set()
         for i, sch in enumerate(schema[type_]):
-            validators.append(schema_to_validator(sch, components))
+            validators.append(schema_to_validator(sch))
             if discriminator is not None and "$ref" in sch:
                 # #/components/schemas/Pet
                 *_, obj = sch["$ref"].split("/")
@@ -739,11 +661,11 @@ def schema_to_validator(schema: Dict, components: Dict) -> Validator:
                 if value not in schema_names:
                     raise Exception(f"schema '{value}' must be defined in components")
         return cls(
-            validators=[schema_to_validator(sch, components) for sch in schema[type_]],
+            validators=[schema_to_validator(sch) for sch in schema[type_]],
             discriminator=schema.get("discriminator"),
             mapping=mapping,
         )
-    return _type_to_validator(schema, components)
+    return _type_to_validator(schema)
 
 
 def _security_to_validator(sec_name: str, components: Dict) -> Validator:
@@ -770,7 +692,8 @@ def _security_to_validator(sec_name: str, components: Dict) -> Validator:
         raise Exception(f"Unsupported auth type {sec_def['type']}")
 
 
-def security_to_validator(schema: List[Dict], components: Dict) -> Validator:
+def security_to_validator(schema: List[Dict]) -> Validator:
+    components = COMPONENTS.get()
     if "securitySchemes" not in components:
         raise Exception("securitySchemes must be defined in components")
     if len(schema) > 1:
@@ -789,14 +712,12 @@ def security_to_validator(schema: List[Dict], components: Dict) -> Validator:
                 validator = AuthNone()
             validators.append(validator)
         return AnyOfAuth(validators=validators)
-    else:
-        security = schema[0]
-        if len(security) > 1:
-            return AllOfAuth(
-                validators=[
-                    _security_to_validator(sec_name, components)
-                    for sec_name in security
-                ]
-            )
-        else:
-            return _security_to_validator(next(iter(security)), components)
+
+    security = schema[0]
+    if len(security) == 1:
+        return _security_to_validator(next(iter(security)), components)
+    return AllOfAuth(
+        validators=[
+            _security_to_validator(sec_name, components) for sec_name in security
+        ]
+    )

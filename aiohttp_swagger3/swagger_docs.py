@@ -26,7 +26,6 @@ class SwaggerDocs(Swagger):
     :param swagger_ui_settings: class:`SwaggerUiSettings` (optional)
     :param redoc_ui_settings: class:`ReDocUiSettings` (optional)
     :param rapidoc_ui_settings: class:`RapiDocUiSettings` (optional)
-
     """
 
     __slots__ = ()

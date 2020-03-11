@@ -63,7 +63,6 @@ class SwaggerUiSettings(_UiSettings):
         (see `swagger-js#1163 <https://github.com/swagger-api/swagger-js/issues/1163>`_) - as a result,
         you will have to rely on browser-supplied cookies (which this setting enables sending) that
         Swagger UI cannot control. Default ``False``.
-
     """
 
     # plugin

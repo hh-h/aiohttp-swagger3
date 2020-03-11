@@ -3,3 +3,4 @@ pyyaml==5.3
 attrs==19.3.0
 fastjsonschema==2.14.3
 strict_rfc3339==0.7
+contextvars==2.4;python_version<"3.7"
