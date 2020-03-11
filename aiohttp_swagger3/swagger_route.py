@@ -129,7 +129,11 @@ class SwaggerRoute:
             try:
                 values = self.auth.validator.validate(request, True)
             except ValidatorError as e:
-                raise web.HTTPBadRequest(reason=json.dumps(e.error))
+                if isinstance(e.error, str):
+                    errors["authorization"] = e.error
+                else:
+                    errors = e.error
+                raise RequestValidationFailed(reason=json.dumps(errors), errors=errors)
 
             for key, value in values.items():
                 request[request_key][key] = value
