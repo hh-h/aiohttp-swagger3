@@ -5,7 +5,9 @@ Classes
 ^^^^^^^
 
 .. autoclass:: aiohttp_swagger3.swagger_docs.SwaggerDocs
+  :members: register_string_format_validator
 .. autoclass:: aiohttp_swagger3.swagger_file.SwaggerFile
+  :members: register_string_format_validator
 
 UI backends
 ^^^^^^^^^^^

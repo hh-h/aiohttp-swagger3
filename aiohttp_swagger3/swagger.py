@@ -18,6 +18,7 @@ import fastjsonschema
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
+from .context import STRING_FORMATS
 from .handlers import application_json, x_www_form_urlencoded
 from .index_templates import RAPIDOC_UI_TEMPLATE, REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
 from .routes import (
@@ -29,6 +30,16 @@ from .routes import (
     _redoc_ui,
     _swagger_spec,
     _swagger_ui,
+)
+from .string_formats import (
+    sf_byte_validator,
+    sf_date_time_validator,
+    sf_date_validator,
+    sf_email_validator,
+    sf_hostname_validator,
+    sf_ipv4_validator,
+    sf_ipv6_validator,
+    sf_uuid_validator,
 )
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
@@ -137,10 +148,21 @@ class Swagger(web.UrlDispatcher):
                 {"settings": json.dumps(rapidoc_ui_settings.to_settings())}
             )
 
-        self.register_media_type_handler("application/json", application_json)
-        self.register_media_type_handler(
-            "application/x-www-form-urlencoded", x_www_form_urlencoded
-        )
+        STRING_FORMATS.set({})
+        if self.validate:
+            self.register_media_type_handler("application/json", application_json)
+            self.register_media_type_handler(
+                "application/x-www-form-urlencoded", x_www_form_urlencoded
+            )
+
+            self.register_string_format_validator("byte", sf_byte_validator)
+            self.register_string_format_validator("date-time", sf_date_time_validator)
+            self.register_string_format_validator("date", sf_date_validator)
+            self.register_string_format_validator("email", sf_email_validator)
+            self.register_string_format_validator("hostname", sf_hostname_validator)
+            self.register_string_format_validator("ipv4", sf_ipv4_validator)
+            self.register_string_format_validator("ipv6", sf_ipv6_validator)
+            self.register_string_format_validator("uuid", sf_uuid_validator)
 
         super().__init__()
 
@@ -211,7 +233,21 @@ class Swagger(web.UrlDispatcher):
         typ, subtype = media_type.split("/")
         self.handlers[typ][subtype] = handler
 
-    def get_media_type_handler(
+    def register_string_format_validator(
+        self, string_format: str, validator: Callable[[str], None]
+    ) -> None:
+        """This method allows registering a custom validator for string format
+
+        Please, see `example <https://github.com/hh-h/aiohttp-swagger3/blob/master/examples/custom_string_format/main.py>`_
+
+        :param str string_format: The name of custom string format
+        :param validator: The validator function that should be used for
+            validating passed string format
+        """
+        sf_validators = STRING_FORMATS.get()
+        sf_validators[string_format] = validator
+
+    def _get_media_type_handler(
         self, media_type: str
     ) -> Callable[[web.Request], Awaitable[Tuple[Any, bool]]]:
         typ, subtype = media_type.split("/")

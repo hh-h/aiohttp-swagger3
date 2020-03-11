@@ -676,31 +676,7 @@ async def test_wrong_item_in_array(swagger_docs, aiohttp_client):
     client = await aiohttp_client(swagger._app)
 
     params = {"array": ",".join(str(x) for x in [1, "abc", 3, True, 5])}
-    resp = await client.post(f"/r", params=params)
+    resp = await client.post("/r", params=params)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"array": {"1": "value should be type of int"}}
-
-
-async def test_unknown_string_format(swagger_docs, aiohttp_client):
-    async def handler(request):
-        """
-        ---
-        parameters:
-
-          - name: array
-            in: query
-            required: true
-            schema:
-              type: string
-              format: something_unknown
-
-        responses:
-          '200':
-            description: OK.
-
-        """
-        return web.json_response()
-
-    swagger = swagger_docs()
-    swagger.add_route("GET", "/r", handler)
