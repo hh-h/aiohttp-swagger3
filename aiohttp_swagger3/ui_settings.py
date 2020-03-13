@@ -232,7 +232,7 @@ class ReDocUiSettings(_UiSettings):
     # noinspection PyUnresolvedReferences
     @expandResponses.validator
     def _expand_responses_validator(self, _: "attr.Attribute[str]", value: str) -> None:
-        if value == "all" or value == "":
+        if value in ("all", ""):
             return
         raw_codes = value.split(",")
         for raw_code in raw_codes:

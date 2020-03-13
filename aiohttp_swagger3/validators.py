@@ -49,6 +49,11 @@ class Integer(Validator):
     enum: Optional[List[int]] = None
     nullable: bool = False
     default: Optional[int] = None
+    enum_set: Optional[Set[int]] = attr.attrib(init=False)
+
+    @enum_set.default
+    def _enum_set_default(self) -> Optional[Set[int]]:
+        return None if self.enum is None else set(self.enum)
 
     def validate(
         self, raw_value: Union[None, int, str, _MissingType], raw: bool
@@ -88,7 +93,7 @@ class Integer(Validator):
             if op(value, self.maximum):
                 msg = "" if self.exclusiveMaximum else " or equal to"
                 raise ValidatorError(f"value should be less than{msg} {self.maximum}")
-        if self.enum is not None and value not in self.enum:
+        if self.enum_set is not None and value not in self.enum_set:
             raise ValidatorError(f"value should be one of {self.enum}")
         return value
 
@@ -103,6 +108,11 @@ class Number(Validator):
     enum: Optional[List[float]] = None
     nullable: bool = False
     default: Optional[float] = None
+    enum_set: Optional[Set[float]] = attr.attrib(init=False)
+
+    @enum_set.default
+    def _enum_set_default(self) -> Optional[Set[float]]:
+        return None if self.enum is None else set(self.enum)
 
     def validate(
         self, raw_value: Union[None, int, float, str, _MissingType], raw: bool
@@ -139,7 +149,7 @@ class Number(Validator):
             if op(value, self.maximum):
                 msg = "" if self.exclusiveMaximum else " or equal to"
                 raise ValidatorError(f"value should be less than{msg} {self.maximum}")
-        if self.enum is not None and value not in self.enum:
+        if self.enum_set is not None and value not in self.enum_set:
             raise ValidatorError(f"value should be one of {self.enum}")
         return value
 
@@ -159,6 +169,11 @@ class String(Validator):
     enum: Optional[List[str]] = None
     nullable: bool = False
     default: Optional[str] = None
+    enum_set: Optional[Set[str]] = attr.attrib(init=False)
+
+    @enum_set.default
+    def _enum_set_default(self) -> Optional[Set[str]]:
+        return None if self.enum is None else set(self.enum)
 
     def validate(
         self, raw_value: Union[None, str, bytes, _MissingType], raw: bool
@@ -180,7 +195,7 @@ class String(Validator):
             raise ValidatorError(f"value length should be more than {self.minLength}")
         if self.maxLength is not None and len(value) > self.maxLength:
             raise ValidatorError(f"value length should be less than {self.maxLength}")
-        if self.enum is not None and value not in self.enum:
+        if self.enum_set is not None and value not in self.enum_set:
             raise ValidatorError(f"value should be one of {self.enum}")
 
         if self.format is not None:
@@ -304,7 +319,7 @@ class Object(Validator):
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of dict")
-        elif not isinstance(raw_value, dict):
+        if not isinstance(raw_value, dict):
             if isinstance(raw_value, _MissingType):
                 return raw_value
             raise ValidatorError("value should be type of dict")
@@ -553,73 +568,95 @@ class AllOfAuth(Validator):
         return values
 
 
+def to_integer(schema: Dict) -> Integer:
+    return Integer(
+        nullable=schema.get("nullable", False),
+        minimum=schema.get("minimum"),
+        maximum=schema.get("maximum"),
+        exclusiveMinimum=schema.get("exclusiveMinimum", False),
+        exclusiveMaximum=schema.get("exclusiveMaximum", False),
+        enum=schema.get("enum"),
+        format=schema.get("format", IntegerFormat.Int64),
+        default=schema.get("default"),
+    )
+
+
+def to_number(schema: Dict) -> Number:
+    return Number(
+        nullable=schema.get("nullable", False),
+        minimum=schema.get("minimum"),
+        maximum=schema.get("maximum"),
+        exclusiveMinimum=schema.get("exclusiveMinimum", False),
+        exclusiveMaximum=schema.get("exclusiveMaximum", False),
+        enum=schema.get("enum"),
+        format=schema.get("format", NumberFormat.Double),
+        default=schema.get("default"),
+    )
+
+
+def to_string(schema: Dict) -> String:
+    return String(
+        format=schema.get("format"),
+        nullable=schema.get("nullable", False),
+        minLength=schema.get("minLength"),
+        maxLength=schema.get("maxLength"),
+        enum=schema.get("enum"),
+        default=schema.get("default"),
+        pattern=schema.get("pattern"),
+    )
+
+
+def to_boolean(schema: Dict) -> Boolean:
+    return Boolean(
+        nullable=schema.get("nullable", False), default=schema.get("default")
+    )
+
+
+def to_array(schema: Dict) -> Array:
+    return Array(
+        nullable=schema.get("nullable", False),
+        validator=schema_to_validator(schema["items"]),
+        uniqueItems=schema.get("uniqueItems", False),
+        minItems=schema.get("minItems"),
+        maxItems=schema.get("maxItems"),
+    )
+
+
+def to_object(schema: Dict) -> Object:
+    properties = {
+        k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()
+    }
+    raw_additional_properties = schema.get("additionalProperties", True)
+    if isinstance(raw_additional_properties, dict):
+        additional_properties = schema_to_validator(raw_additional_properties)
+    else:
+        additional_properties = raw_additional_properties
+    return Object(
+        nullable=schema.get("nullable", False),
+        properties=properties,
+        required=set(schema.get("required", [])),
+        minProperties=schema.get("minProperties"),
+        maxProperties=schema.get("maxProperties"),
+        additionalProperties=additional_properties,
+    )
+
+
+_TYPE_TO_FACTORY = {
+    "integer": to_integer,
+    "number": to_number,
+    "string": to_string,
+    "boolean": to_boolean,
+    "array": to_array,
+    "object": to_object,
+}
+
+
 def _type_to_validator(schema: Dict) -> Validator:
     if "type" not in schema:
         raise KeyError("type is required")
-    if schema["type"] == "integer":
-        return Integer(
-            nullable=schema.get("nullable", False),
-            minimum=schema.get("minimum"),
-            maximum=schema.get("maximum"),
-            exclusiveMinimum=schema.get("exclusiveMinimum", False),
-            exclusiveMaximum=schema.get("exclusiveMaximum", False),
-            enum=schema.get("enum"),
-            format=schema.get("format", IntegerFormat.Int64),
-            default=schema.get("default"),
-        )
-    elif schema["type"] == "number":
-        return Number(
-            nullable=schema.get("nullable", False),
-            minimum=schema.get("minimum"),
-            maximum=schema.get("maximum"),
-            exclusiveMinimum=schema.get("exclusiveMinimum", False),
-            exclusiveMaximum=schema.get("exclusiveMaximum", False),
-            enum=schema.get("enum"),
-            format=schema.get("format", NumberFormat.Double),
-            default=schema.get("default"),
-        )
-    elif schema["type"] == "string":
-        return String(
-            format=schema.get("format"),
-            nullable=schema.get("nullable", False),
-            minLength=schema.get("minLength"),
-            maxLength=schema.get("maxLength"),
-            enum=schema.get("enum"),
-            default=schema.get("default"),
-            pattern=schema.get("pattern"),
-        )
-    elif schema["type"] == "boolean":
-        return Boolean(
-            nullable=schema.get("nullable", False), default=schema.get("default")
-        )
-    elif schema["type"] == "array":
-        return Array(
-            nullable=schema.get("nullable", False),
-            validator=schema_to_validator(schema["items"]),
-            uniqueItems=schema.get("uniqueItems", False),
-            minItems=schema.get("minItems"),
-            maxItems=schema.get("maxItems"),
-        )
-    elif schema["type"] == "object":
-        # TODO move this logic to class?
-        properties = {
-            k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()
-        }
-        raw_additional_properties = schema.get("additionalProperties", True)
-        if isinstance(raw_additional_properties, dict):
-            additional_properties = schema_to_validator(raw_additional_properties)
-        else:
-            additional_properties = raw_additional_properties
-        return Object(
-            nullable=schema.get("nullable", False),
-            properties=properties,
-            required=set(schema.get("required", [])),
-            minProperties=schema.get("minProperties"),
-            maxProperties=schema.get("maxProperties"),
-            additionalProperties=additional_properties,
-        )
-    else:
+    if schema["type"] not in _TYPE_TO_FACTORY:
         raise Exception(f"Unknown type '{schema['type']}'")
+    return _TYPE_TO_FACTORY[schema["type"]](schema)
 
 
 def schema_to_validator(schema: Dict) -> Validator:
@@ -675,21 +712,18 @@ def _security_to_validator(sec_name: str, components: Dict) -> Validator:
     if sec_def["type"] == "http":
         if sec_def["scheme"] == "basic":
             return AuthBasic()
-        elif sec_def["scheme"] == "bearer":
+        if sec_def["scheme"] == "bearer":
             return AuthBearer()
-        else:
-            raise Exception(f"Unknown scheme {sec_def['scheme']} in {sec_name}")
-    elif sec_def["type"] == "apiKey":
+        raise Exception(f"Unknown scheme {sec_def['scheme']} in {sec_name}")
+    if sec_def["type"] == "apiKey":
         if sec_def["in"] == "header":
             return AuthApiKeyHeader(name=sec_def["name"].lower())
-        elif sec_def["in"] == "query":
+        if sec_def["in"] == "query":
             return AuthApiKeyQuery(name=sec_def["name"])
-        elif sec_def["in"] == "cookie":
+        if sec_def["in"] == "cookie":
             return AuthApiKeyCookie(name=sec_def["name"])
-        else:
-            raise Exception(f"Unknown value of in {sec_def['in']} in {sec_name}")
-    else:
-        raise Exception(f"Unsupported auth type {sec_def['type']}")
+        raise Exception(f"Unknown value of in {sec_def['in']} in {sec_name}")
+    raise Exception(f"Unsupported auth type {sec_def['type']}")
 
 
 def security_to_validator(schema: List[Dict]) -> Validator:
