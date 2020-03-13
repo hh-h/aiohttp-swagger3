@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.3 (13-03-2020)
+------------------
+
+- some optimizations, it should parse request a little bit faster
+
 0.4.2 (11-03-2020)
 ------------------
 
