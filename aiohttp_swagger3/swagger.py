@@ -267,12 +267,11 @@ class Swagger(web.UrlDispatcher):
         if typ not in self.handlers:
             if "*" not in self.handlers:
                 raise Exception(f"register handler for {media_type} first")
-            elif subtype not in self.handlers["*"]:
+            if subtype not in self.handlers["*"]:
                 if "*" not in self.handlers["*"]:
                     raise Exception("missing handler for media type */*")
                 return self.handlers["*"]["*"]
-            else:
-                return self.handlers["*"][subtype]
+            return self.handlers["*"][subtype]
         if subtype not in self.handlers[typ]:
             if "*" not in self.handlers[typ]:
                 raise Exception(f"register handler for {media_type} first")
