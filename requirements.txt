@@ -1,6 +1,6 @@
-aiohttp>=3.6.2
-pyyaml>=5.3
-attrs>=19.3.0
-fastjsonschema>=2.14.3
-strict_rfc3339>=0.7
-contextvars>=2.4;python_version<"3.7"
+aiohttp>=3.6.2,<3.7
+pyyaml>=5.3,<5.4
+attrs>=19.3.0,<19.4
+fastjsonschema>=2.14.3,<2.15
+strict_rfc3339>=0.7,<0.8
+contextvars>=2.4,<2.5;python_version<"3.7"
