@@ -8,7 +8,7 @@ __all__ = (
     "ValidatorError",
     "__version__",
 )
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 __author__ = "Valetov Konstantin"
 
 from .exceptions import ValidatorError
