@@ -63,7 +63,7 @@ async def test_cookies(swagger_docs, aiohttp_client):
         "string": c3,
         "boolean": str(c4).lower(),
     }
-    resp = await client.post(f"/r", cookies=cookies)
+    resp = await client.post("/r", cookies=cookies)
     assert resp.status == 200
     assert await resp.json() == {
         "array": c1,
@@ -122,7 +122,7 @@ async def test_missing_cookies(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(f"/r")
+    resp = await client.post("/r")
     assert resp.status == 200
     assert await resp.json() == {
         "array": None,
@@ -187,7 +187,7 @@ async def test_fail_validation(swagger_docs, aiohttp_client):
     client = await aiohttp_client(swagger._app)
 
     cookies = {"int32": "abc"}
-    resp = await client.post(f"/r", cookies=cookies)
+    resp = await client.post("/r", cookies=cookies)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"int32": "value should be type of int"}

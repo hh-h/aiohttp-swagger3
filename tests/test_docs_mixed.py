@@ -769,7 +769,7 @@ async def test_min_max_items(swagger_docs, aiohttp_client):
     body = {"array": body_param}
     query_param = [1, 2, 3]
     params = {"query": ",".join(str(x) for x in query_param)}
-    resp = await client.post(f"/r", headers=headers, params=params, json=body)
+    resp = await client.post("/r", headers=headers, params=params, json=body)
     assert resp.status == 200
     assert await resp.json() == {
         "header": header_param,
@@ -783,7 +783,7 @@ async def test_min_max_items(swagger_docs, aiohttp_client):
     body = {"array": body_param}
     query_param = [1]
     params = {"query": ",".join(str(x) for x in query_param)}
-    resp = await client.post(f"/r", headers=headers, params=params, json=body)
+    resp = await client.post("/r", headers=headers, params=params, json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     msg = "number or items must be more than 2"
@@ -795,7 +795,7 @@ async def test_min_max_items(swagger_docs, aiohttp_client):
     body = {"array": body_param}
     query_param = [1, 2, 3, 4, 5, 6, 7]
     params = {"query": ",".join(str(x) for x in query_param)}
-    resp = await client.post(f"/r", headers=headers, params=params, json=body)
+    resp = await client.post("/r", headers=headers, params=params, json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     msg = "number or items must be less than 5"
@@ -859,7 +859,7 @@ async def test_unique_items(swagger_docs, aiohttp_client):
     body = {"array": body_param}
     query_param = [1, 2, 3]
     params = {"query": ",".join(str(x) for x in query_param)}
-    resp = await client.post(f"/r", headers=headers, params=params, json=body)
+    resp = await client.post("/r", headers=headers, params=params, json=body)
     assert resp.status == 200
     assert await resp.json() == {
         "header": header_param,
@@ -873,7 +873,7 @@ async def test_unique_items(swagger_docs, aiohttp_client):
     body = {"array": body_param}
     query_param = [1, 1]
     params = {"query": ",".join(str(x) for x in query_param)}
-    resp = await client.post(f"/r", headers=headers, params=params, json=body)
+    resp = await client.post("/r", headers=headers, params=params, json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     msg = "all items must be unique"

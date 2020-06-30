@@ -44,7 +44,7 @@ async def test_query_array(swagger_docs, aiohttp_client):
 
     query1 = [1, 2, 3, 4, 5]
     params = {"query1": ",".join(str(x) for x in query1)}
-    resp = await client.post(f"/r", params=params)
+    resp = await client.post("/r", params=params)
     assert resp.status == 200
     assert await resp.json() == {"query1": query1, "query2": None}
 
@@ -539,7 +539,7 @@ async def test_corner_cases(swagger_docs, aiohttp_client):
     client = await aiohttp_client(swagger._app)
 
     params = {"int32": "abc", "int64": "cca", "float1": "bca", "double": "bba"}
-    resp = await client.post(f"/r", params=params)
+    resp = await client.post("/r", params=params)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {

@@ -54,13 +54,13 @@ async def test_spec_file(swagger_file, aiohttp_client):
     assert resp.status == 200
     assert await resp.json() == {"id": 1, "name": "pet_1", "tag": "tag_1"}
 
-    resp = await client.get(f"/pets/1")
+    resp = await client.get("/pets/1")
     assert resp.status == 200
     assert await resp.json() == {"id": 1, "name": "pet_1", "tag": "tag_1"}
 
-    resp = await client.get(f"/pets/100")
+    resp = await client.get("/pets/100")
     assert resp.status == 500
-    assert await resp.json() == {"code": 10, "message": f"pet with ID '100' not found"}
+    assert await resp.json() == {"code": 10, "message": "pet with ID '100' not found"}
 
 
 async def test_route_out_of_spec_file(swagger_file, aiohttp_client):
