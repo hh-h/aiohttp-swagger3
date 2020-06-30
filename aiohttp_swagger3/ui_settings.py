@@ -272,6 +272,8 @@ class RapiDocUiSettings(_UiSettings):
     :param str text_color: Hex color code for text. Default ``#444`` if ``theme`` is ``light``, ``#bbb`` otherwise.
     :param str header_color: Hex color code for the header's background. Default ``#444444``.
     :param str primary_color: Hex color code on various controls such as buttons, tabs. Default ``#FF791A``.
+    :param str font_size: Controls the relative font-sizing for the entire document.
+        Values are ``default``, ``large`` and ``largest``.
     :param str nav_bg_color: Navigation bar's background color. (optional)
     :param str nav_text_color: Navigation bar's Text color. (optional)
     :param str nav_hover_bg_color: Background color of the navigation item on mouse-over. (optional)
@@ -280,8 +282,9 @@ class RapiDocUiSettings(_UiSettings):
     :param str layout: Layout helps in placement of request/response sections. In ``column`` layout, request & response
         sections are placed one below the other, In ``row`` layout they are placed side by side. This attribute is
         applicable only when the device width is more than 768px and the render-style is ``view``. Default ``row``.
-    :param str render_style: Determines display of api-docs. Currently there are two modes supported. ``read`` - more
-        suitable for reading and ``view`` more friendly for quick exploring. Default ``view``.
+    :param str render_style: Determines display of api-docs. Currently there are three modes supported. ``read`` - more
+        suitable for reading, ``view`` more friendly for quick exploring and ``focused`` show one operation at a time.
+        Default ``view``.
     :param str schema_style: Two different ways to display object-schemas in the responses and request bodies.
         It must be either ``tree`` or ``table``. Default ``tree``.
     :param int schema_expand_level: Schema's are expanded by default, use this attribute to control how many levels
@@ -339,6 +342,10 @@ class RapiDocUiSettings(_UiSettings):
     primary_color: str = attr.attrib(
         default="#FF791A", validator=attr.validators.instance_of(str),
     )
+    font_size: str = attr.attrib(
+        default="default",
+        validator=attr.validators.in_(("default", "large", "largest")),
+    )
     # Navigation bar colors
     nav_bg_color: Optional[str] = attr.attrib(
         default=None,
@@ -365,7 +372,7 @@ class RapiDocUiSettings(_UiSettings):
         default="row", validator=attr.validators.in_(("row", "column")),
     )
     render_style: str = attr.attrib(
-        default="view", validator=attr.validators.in_(("read", "view")),
+        default="view", validator=attr.validators.in_(("read", "view", "focused")),
     )
     schema_style: str = attr.attrib(
         default="tree", validator=attr.validators.in_(("tree", "table")),
