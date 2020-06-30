@@ -143,6 +143,7 @@ class ReDocUiSettings(_UiSettings):
     :param bool hideLoading: Do not show loading animation. Useful for small docs. Default ``False``.
     :param bool hideSingleRequestSampleTab: Do not show the request sample tab for requests with only one sample.
         Default ``False``.
+    :param bool expandSingleSchemaField: Automatically expand single field in a schema. Default ``False``.
     :param int,str jsonSampleExpandLevel: Set the default expand level for JSON payload samples (responses and
         request body). Special value ``all`` expands all levels. Default ``2``.
     :param bool menuToggle: If ``True`` clicking second time on expanded menu item will collapse it. Default ``True``.
@@ -187,6 +188,9 @@ class ReDocUiSettings(_UiSettings):
         default=False, validator=attr.validators.instance_of(bool)
     )
     hideSingleRequestSampleTab: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
+    )
+    expandSingleSchemaField: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
     )
     jsonSampleExpandLevel: Union[int, str] = attr.attrib(
