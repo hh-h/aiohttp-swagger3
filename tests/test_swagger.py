@@ -500,3 +500,31 @@ async def test_rapidoc_ui_text_color_default(rapidoc_ui_settings):
 
     rus = rapidoc_ui_settings(theme="dark")
     assert rus.text_color == "#bbb"
+
+
+async def test_swagger_invalid_schema(swagger_docs, swagger_ui_settings):
+    async def my_handler(request):
+        """
+        ---
+        parameters:
+
+          - name: date
+            in: query
+            schema:
+              type: string1
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings())
+    with pytest.raises(Exception) as exc_info:
+        swagger.add_route("GET", "/r", my_handler)
+    msg = (
+        "Invalid schema for handler 'my_handler' GET /r - "
+        "data.parameters[0] must be valid exactly by one of oneOf definition"
+    )
+    assert msg == str(exc_info.value)

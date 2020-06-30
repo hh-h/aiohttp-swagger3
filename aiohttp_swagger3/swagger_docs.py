@@ -2,6 +2,7 @@ import functools
 from collections import defaultdict
 from typing import Dict, Optional, Type, Union
 
+import fastjsonschema
 import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
@@ -81,7 +82,13 @@ class SwaggerDocs(Swagger):
         *_, spec = handler.__doc__.split("---")
         method_spec = yaml.safe_load(spec)
         self.spec["paths"][path][method] = method_spec
-        self.spec_validate(self.spec)
+        try:
+            self.spec_validate(self.spec)
+        except fastjsonschema.exceptions.JsonSchemaException as exc:
+            fn_name = handler.__name__
+            raise Exception(
+                f"Invalid schema for handler '{fn_name}' {method.upper()} {path} - {exc}"
+            )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
         if not validate:
             return handler
