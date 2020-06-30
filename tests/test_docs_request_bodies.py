@@ -914,7 +914,7 @@ async def test_float_as_int(swagger_docs, aiohttp_client):
     int_float = 10
     int_double = 20
     body = {"int_float": int_float, "int_double": int_double}
-    resp = await client.post(f"/r", json=body)
+    resp = await client.post("/r", json=body)
     assert resp.status == 200
     assert await resp.json() == body
 
@@ -945,12 +945,12 @@ async def test_min_max_properties(swagger_docs, aiohttp_client):
     client = await aiohttp_client(swagger._app)
 
     body = {"str1": "str1", "str2": "str1", "str3": "str1"}
-    resp = await client.post(f"/r", json=body)
+    resp = await client.post("/r", json=body)
     assert resp.status == 200
     assert await resp.json() == body
 
     body = {"str1": "str1"}
-    resp = await client.post(f"/r", json=body)
+    resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"body": "number or properties must be more than 2"}
@@ -963,7 +963,7 @@ async def test_min_max_properties(swagger_docs, aiohttp_client):
         "str5": "str1",
         "str6": "str1",
     }
-    resp = await client.post(f"/r", json=body)
+    resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     assert error == {"body": "number or properties must be less than 5"}
