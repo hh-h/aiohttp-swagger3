@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.4.4 (30-06-2020)
+------------------
+
+- raise more verbose exception if schema failed to validate
+- bump swagger ui to 3.28.0
+- bump rapidoc ui to 8.1.1
+- bump redoc ui to v2.0.0-rc.31
+
 0.4.3 (13-03-2020)
 ------------------
 
