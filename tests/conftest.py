@@ -46,7 +46,11 @@ def rapidoc_ui_settings():
 def swagger_docs_with_components():
     def _swagger_docs_with_components(**kwargs):
         app = web.Application()
-        return SwaggerDocs(app, components="tests/testdata/components.yaml", **kwargs,)
+        return SwaggerDocs(
+            app,
+            components="tests/testdata/components.yaml",
+            **kwargs,
+        )
 
     return _swagger_docs_with_components
 
@@ -64,6 +68,10 @@ def swagger_docs():
 def swagger_file():
     def _swagger_file(**kwargs):
         app = web.Application()
-        return SwaggerFile(app, spec_file="tests/testdata/petstore.yaml", **kwargs,)
+        return SwaggerFile(
+            app,
+            spec_file="tests/testdata/petstore.yaml",
+            **kwargs,
+        )
 
     return _swagger_file

@@ -84,13 +84,15 @@ class SwaggerUiSettings(_UiSettings):
         default=1, validator=attr.validators.instance_of(int)
     )
     defaultModelRendering: str = attr.attrib(
-        default="example", validator=attr.validators.in_(("example", "model")),
+        default="example",
+        validator=attr.validators.in_(("example", "model")),
     )
     displayRequestDuration: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
     )
     docExpansion: str = attr.attrib(
-        default="list", validator=attr.validators.in_(("list", "full", "none")),
+        default="list",
+        validator=attr.validators.in_(("list", "full", "none")),
     )
     filter: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
@@ -328,7 +330,8 @@ class RapiDocUiSettings(_UiSettings):
         default=False, validator=attr.validators.instance_of(bool)
     )
     sort_endpoints_by: str = attr.attrib(
-        default="path", validator=attr.validators.in_(("path", "method")),
+        default="path",
+        validator=attr.validators.in_(("path", "method")),
     )
     heading_text: Optional[str] = attr.attrib(
         default=None,
@@ -336,15 +339,18 @@ class RapiDocUiSettings(_UiSettings):
     )
     # UI Colors and Fonts
     theme: str = attr.attrib(
-        default="light", validator=attr.validators.in_(("light", "dark")),
+        default="light",
+        validator=attr.validators.in_(("light", "dark")),
     )
     bg_color: str = attr.attrib(validator=attr.validators.instance_of(str))
     text_color: str = attr.attrib(validator=attr.validators.instance_of(str))
     header_color: str = attr.attrib(
-        default="#444444", validator=attr.validators.instance_of(str),
+        default="#444444",
+        validator=attr.validators.instance_of(str),
     )
     primary_color: str = attr.attrib(
-        default="#FF791A", validator=attr.validators.instance_of(str),
+        default="#FF791A",
+        validator=attr.validators.instance_of(str),
     )
     font_size: str = attr.attrib(
         default="default",
@@ -373,13 +379,16 @@ class RapiDocUiSettings(_UiSettings):
     )
     # UI Layout & Placement
     layout: str = attr.attrib(
-        default="row", validator=attr.validators.in_(("row", "column")),
+        default="row",
+        validator=attr.validators.in_(("row", "column")),
     )
     render_style: str = attr.attrib(
-        default="view", validator=attr.validators.in_(("read", "view", "focused")),
+        default="view",
+        validator=attr.validators.in_(("read", "view", "focused")),
     )
     schema_style: str = attr.attrib(
-        default="tree", validator=attr.validators.in_(("tree", "table")),
+        default="tree",
+        validator=attr.validators.in_(("tree", "table")),
     )
     schema_expand_level: int = attr.attrib(
         default=999, validator=attr.validators.instance_of(int)
@@ -388,7 +397,8 @@ class RapiDocUiSettings(_UiSettings):
         default=False, validator=attr.validators.instance_of(bool)
     )
     default_schema_tab: str = attr.attrib(
-        default="model", validator=attr.validators.in_(("model", "example")),
+        default="model",
+        validator=attr.validators.in_(("model", "example")),
     )
     # Hide/Show Sections
     show_info: bool = attr.attrib(
@@ -417,14 +427,16 @@ class RapiDocUiSettings(_UiSettings):
     )
     # API Server
     api_key_name: str = attr.attrib(
-        default="Authorization", validator=attr.validators.instance_of(str),
+        default="Authorization",
+        validator=attr.validators.instance_of(str),
     )
     api_key_value: Optional[str] = attr.attrib(
         default=None,
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
     api_key_location: str = attr.attrib(
-        default="header", validator=attr.validators.in_(("header", "query")),
+        default="header",
+        validator=attr.validators.in_(("header", "query")),
     )
     server_url: Optional[str] = attr.attrib(
         default=None,
