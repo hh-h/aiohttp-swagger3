@@ -138,6 +138,8 @@ class ReDocUiSettings(_UiSettings):
     :param str expandResponses: Specify which responses to expand by default by response codes. Values should be passed
         as comma-separated list without spaces e.g. ``200,201``. Special value ``all`` expands all responses by default.
         Be careful: this option can slow-down documentation rendering time. Default is empty string.
+    :param int maxDisplayedEnumValues: Display only specified number of enum values. Hide rest values under spoiler.
+        Default ``2``.
     :param bool hideDownloadButton: Do not show "Download" spec button. **THIS DOESN'T MAKE YOUR SPEC PRIVATE**,
         it just hides the button. Default ``False``.
     :param bool hideHostname: If set, the protocol and hostname is not shown in the operation
@@ -148,6 +150,8 @@ class ReDocUiSettings(_UiSettings):
     :param bool expandSingleSchemaField: Automatically expand single field in a schema. Default ``False``.
     :param int,str jsonSampleExpandLevel: Set the default expand level for JSON payload samples (responses and
         request body). Special value ``all`` expands all levels. Default ``2``.
+    :param bool hideSchemaTitles: Do not display schema ``title`` next to to the type. Default ``False``.
+    :param bool simpleOneOfTypeLabel: Show only unique oneOf types in the label without titles. Default ``False``.
     :param bool menuToggle: If ``True`` clicking second time on expanded menu item will collapse it. Default ``True``.
     :param bool nativeScrollbars: Use native scrollbar for sidemenu instead of perfect-scroll (scrolling performance
         optimization for big specs). Default ``False``.
@@ -162,6 +166,7 @@ class ReDocUiSettings(_UiSettings):
     :param bool showExtensions: Show vendor extensions ("x-" fields). Extensions used by ReDoc are ignored.
         Default ``False``.
     :param bool sortPropsAlphabetically: Sort properties alphabetically. Default ``False``.
+    :param bool sortEnumValuesAlphabetically: Sort enum values alphabetically. Default ``False``.
     :param bool suppressWarnings: If set, warnings are not rendered at the top of documentation
         (they still are logged to the console). Default ``False``.
     :param int payloadSampleIdx: If set, payload sample will be inserted at this index or last. Indexes start from 0.
@@ -180,6 +185,9 @@ class ReDocUiSettings(_UiSettings):
     expandResponses: str = attr.attrib(
         default="", validator=attr.validators.instance_of(str)
     )
+    maxDisplayedEnumValues: int = attr.attrib(
+        default=2, validator=attr.validators.instance_of(int)
+    )
     hideDownloadButton: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
     )
@@ -197,6 +205,12 @@ class ReDocUiSettings(_UiSettings):
     )
     jsonSampleExpandLevel: Union[int, str] = attr.attrib(
         default=2, validator=attr.validators.instance_of((int, str))
+    )
+    hideSchemaTitles: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
+    )
+    simpleOneOfTypeLabel: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
     )
     menuToggle: bool = attr.attrib(
         default=True, validator=attr.validators.instance_of(bool)
@@ -223,6 +237,9 @@ class ReDocUiSettings(_UiSettings):
         default=False, validator=attr.validators.instance_of(bool)
     )
     sortPropsAlphabetically: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
+    )
+    sortEnumValuesAlphabetically: bool = attr.attrib(
         default=False, validator=attr.validators.instance_of(bool)
     )
     suppressWarnings: bool = attr.attrib(
