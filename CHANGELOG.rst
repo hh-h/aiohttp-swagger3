@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.5.0 (31-10-2020)
+------------------
+
+- added aiohttp 3.7 support
+- bump swagger ui to 3.36.1
+- bump rapidoc ui to 8.3.0
+- bump redoc ui to v2.0.0-rc.40
+
 0.4.4 (30-06-2020)
 ------------------
 
