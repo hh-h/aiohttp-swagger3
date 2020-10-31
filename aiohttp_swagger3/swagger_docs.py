@@ -140,7 +140,11 @@ class SwaggerDocs(Swagger):
                 ):
                     meth = meth.lower()
                     handler = self._wrap_handler(
-                        meth, path, handler, is_method=False, validate=need_validation,
+                        meth,
+                        path,
+                        handler,
+                        is_method=False,
+                        validate=need_validation,
                     )
             else:
                 handler = self._wrap_handler(

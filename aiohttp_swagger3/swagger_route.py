@@ -143,7 +143,7 @@ class SwaggerRoute:
             for param in self.qp:
                 if param.required:
                     try:
-                        v = request.rel_url.query.getall(param.name)
+                        v: Any = request.rel_url.query.getall(param.name)
                     except KeyError:
                         errors[param.name] = "is required"
                         continue
