@@ -280,6 +280,7 @@ class RapiDocUiSettings(_UiSettings):
     :param str primary_color: Hex color code on various controls such as buttons, tabs. Default ``#FF791A``.
     :param str font_size: Controls the relative font-sizing for the entire document.
         Values are ``default``, ``large`` and ``largest``.
+    :param bool use_path_in_nav_bar: Show API paths in the navigation bar instead of summary/description. Default ``False``.
     :param str nav_bg_color: Navigation bar's background color. (optional)
     :param str nav_text_color: Navigation bar's Text color. (optional)
     :param str nav_hover_bg_color: Background color of the navigation item on mouse-over. (optional)
@@ -300,6 +301,7 @@ class RapiDocUiSettings(_UiSettings):
     :param str default_schema_tab: The schemas are displayed in two tabs - ``model`` and ``example``. This option
         allows you to pick the default tab that you would like to be active. Default ``model``.
     :param bool show_info: Show/hide the documents info section. Default ``True``.
+    :param bool show_components: Show/hide the components section both in document and menu. Default ``False``.
     :param bool show_header: Show/hide the header. If you dont want your user to open any other api spec,
         other than the current one, then set this attribute to ``False``. Default ``True``.
     :param bool allow_authentication: Authentication feature, allows the user to select one of the authentication
@@ -357,6 +359,9 @@ class RapiDocUiSettings(_UiSettings):
         validator=attr.validators.in_(("default", "large", "largest")),
     )
     # Navigation bar colors
+    use_path_in_nav_bar: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
+    )
     nav_bg_color: Optional[str] = attr.attrib(
         default=None,
         validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -403,6 +408,9 @@ class RapiDocUiSettings(_UiSettings):
     # Hide/Show Sections
     show_info: bool = attr.attrib(
         default=True, validator=attr.validators.instance_of(bool)
+    )
+    show_components: bool = attr.attrib(
+        default=False, validator=attr.validators.instance_of(bool)
     )
     show_header: bool = attr.attrib(
         default=True, validator=attr.validators.instance_of(bool)
