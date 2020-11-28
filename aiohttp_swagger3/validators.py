@@ -48,6 +48,7 @@ class Integer(Validator):
     exclusiveMaximum: bool = False
     enum: Optional[List[int]] = None
     nullable: bool = False
+    readOnly: bool = False
     default: Optional[int] = None
     enum_set: Optional[Set[int]] = attr.attrib(init=False)
 
@@ -58,6 +59,9 @@ class Integer(Validator):
     def validate(
         self, raw_value: Union[None, int, str, _MissingType], raw: bool
     ) -> Union[None, int, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if isinstance(raw_value, str):
             if not raw:
                 raise ValidatorError("value should be type of int")
@@ -71,7 +75,7 @@ class Integer(Validator):
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of int")
-        elif isinstance(raw_value, _MissingType):
+        elif is_missing:
             if self.default is None:
                 return raw_value
             value = self.default
@@ -107,6 +111,7 @@ class Number(Validator):
     exclusiveMaximum: bool = False
     enum: Optional[List[float]] = None
     nullable: bool = False
+    readOnly: bool = False
     default: Optional[float] = None
     enum_set: Optional[Set[float]] = attr.attrib(init=False)
 
@@ -117,6 +122,9 @@ class Number(Validator):
     def validate(
         self, raw_value: Union[None, int, float, str, _MissingType], raw: bool
     ) -> Union[None, float, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if isinstance(raw_value, str):
             if not raw:
                 raise ValidatorError("value should be type of float")
@@ -132,7 +140,7 @@ class Number(Validator):
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of float")
-        elif isinstance(raw_value, _MissingType):
+        elif is_missing:
             if self.default is None:
                 return raw_value
             value = self.default
@@ -168,6 +176,7 @@ class String(Validator):
     maxLength: Optional[int] = None
     enum: Optional[List[str]] = None
     nullable: bool = False
+    readOnly: bool = False
     default: Optional[str] = None
     enum_set: Optional[Set[str]] = attr.attrib(init=False)
 
@@ -178,13 +187,16 @@ class String(Validator):
     def validate(
         self, raw_value: Union[None, str, bytes, _MissingType], raw: bool
     ) -> Union[None, str, bytes, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if isinstance(raw_value, (str, bytes)):
             value = raw_value
         elif raw_value is None:
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of str")
-        elif isinstance(raw_value, _MissingType):
+        elif is_missing:
             if self.default is None:
                 return raw_value
             value = self.default
@@ -214,11 +226,15 @@ class String(Validator):
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Boolean(Validator):
     nullable: bool = False
+    readOnly: bool = False
     default: Optional[bool] = None
 
     def validate(
         self, raw_value: Union[None, bool, str, _MissingType], raw: bool
     ) -> Union[None, bool, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if isinstance(raw_value, str):
             if not raw:
                 raise ValidatorError("value should be type of bool")
@@ -234,7 +250,7 @@ class Boolean(Validator):
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of bool")
-        elif isinstance(raw_value, _MissingType):
+        elif is_missing:
             if self.default is None:
                 return raw_value
             value = self.default
@@ -250,10 +266,14 @@ class Array(Validator):
     minItems: Optional[int] = None
     maxItems: Optional[int] = None
     nullable: bool = False
+    readOnly: bool = False
 
     def validate(
         self, raw_value: Union[None, str, List, _MissingType], raw: bool
     ) -> Union[None, List, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if isinstance(raw_value, str):
             if not raw:
                 raise ValidatorError("value should be type of list")
@@ -279,7 +299,7 @@ class Array(Validator):
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of list")
-        elif isinstance(raw_value, _MissingType):
+        elif is_missing:
             return raw_value
         else:
             raise ValidatorError("value should be type of list")
@@ -311,16 +331,20 @@ class Object(Validator):
     maxProperties: Optional[int] = None
     additionalProperties: Union[bool, Validator] = True
     nullable: bool = False
+    readOnly: bool = False
 
     def validate(
         self, raw_value: Union[None, Dict, _MissingType], raw: bool
     ) -> Union[None, Dict, _MissingType]:
+        is_missing = isinstance(raw_value, _MissingType)
+        if not is_missing and self.readOnly:
+            raise ValidatorError("property is read-only")
         if raw_value is None:
             if self.nullable:
                 return None
             raise ValidatorError("value should be type of dict")
         if not isinstance(raw_value, dict):
-            if isinstance(raw_value, _MissingType):
+            if is_missing:
                 return raw_value
             raise ValidatorError("value should be type of dict")
         value = {}
@@ -571,6 +595,7 @@ class AllOfAuth(Validator):
 def to_integer(schema: Dict) -> Integer:
     return Integer(
         nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
         minimum=schema.get("minimum"),
         maximum=schema.get("maximum"),
         exclusiveMinimum=schema.get("exclusiveMinimum", False),
@@ -584,6 +609,7 @@ def to_integer(schema: Dict) -> Integer:
 def to_number(schema: Dict) -> Number:
     return Number(
         nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
         minimum=schema.get("minimum"),
         maximum=schema.get("maximum"),
         exclusiveMinimum=schema.get("exclusiveMinimum", False),
@@ -598,6 +624,7 @@ def to_string(schema: Dict) -> String:
     return String(
         format=schema.get("format"),
         nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
         minLength=schema.get("minLength"),
         maxLength=schema.get("maxLength"),
         enum=schema.get("enum"),
@@ -608,13 +635,16 @@ def to_string(schema: Dict) -> String:
 
 def to_boolean(schema: Dict) -> Boolean:
     return Boolean(
-        nullable=schema.get("nullable", False), default=schema.get("default")
+        nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
+        default=schema.get("default"),
     )
 
 
 def to_array(schema: Dict) -> Array:
     return Array(
         nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
         validator=schema_to_validator(schema["items"]),
         uniqueItems=schema.get("uniqueItems", False),
         minItems=schema.get("minItems"),
@@ -633,6 +663,7 @@ def to_object(schema: Dict) -> Object:
         additional_properties = raw_additional_properties
     return Object(
         nullable=schema.get("nullable", False),
+        readOnly=schema.get("readOnly", False),
         properties=properties,
         required=set(schema.get("required", [])),
         minProperties=schema.get("minProperties"),

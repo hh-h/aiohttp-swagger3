@@ -146,6 +146,7 @@ Features
 - default (only primitives)
 - additionalProperties
 - nullable
+- readOnly
 - allOf, oneOf, anyOf
 - string formats: date, date-time, byte, email, uuid, hostname, ipv4, ipv6
 - custom string format validators
@@ -157,7 +158,6 @@ TODO (raise an issue if needed)
 - not
 - allowEmptyValue
 - Common Parameters for All Methods of a Path (spec file only)
-- readOnly, writeOnly
 - more serialization methods, see: https://swagger.io/docs/specification/serialization/
 - encoding
 - form data serialization (array, object)
