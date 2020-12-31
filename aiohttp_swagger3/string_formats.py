@@ -58,7 +58,5 @@ def sf_hostname_validator(value: str) -> None:
     if not value:
         raise ValidatorError("value should be valid hostname")
     hostname = value[:-1] if value[-1] == "." else value
-    if len(hostname) > 255 or not all(
-        _HOSTNAME_REGEX.match(x) for x in hostname.split(".")
-    ):
+    if len(hostname) > 255 or not all(_HOSTNAME_REGEX.match(x) for x in hostname.split(".")):
         raise ValidatorError("value should be valid hostname")

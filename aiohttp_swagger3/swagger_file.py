@@ -80,9 +80,7 @@ class SwaggerFile(Swagger):
                     setattr(
                         handler,
                         meth,
-                        functools.partialmethod(
-                            self._handle_swagger_method_call, route
-                        ),
+                        functools.partialmethod(self._handle_swagger_method_call, route),
                     )
             else:
                 method_lower = method.lower()
@@ -90,6 +88,4 @@ class SwaggerFile(Swagger):
                     route = SwaggerRoute(method_lower, path, handler, swagger=self)
                     handler = functools.partial(self._handle_swagger_call, route)
 
-        return self._app.router.add_route(
-            method, path, handler, name=name, expect_handler=expect_handler
-        )
+        return self._app.router.add_route(method, path, handler, name=name, expect_handler=expect_handler)

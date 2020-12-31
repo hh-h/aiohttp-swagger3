@@ -8,13 +8,7 @@ from aiohttp import web
 
 from .context import COMPONENTS
 from .swagger import Swagger
-from .validators import (
-    MISSING,
-    Validator,
-    ValidatorError,
-    schema_to_validator,
-    security_to_validator,
-)
+from .validators import MISSING, Validator, ValidatorError, schema_to_validator, security_to_validator
 
 _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
 
@@ -60,9 +54,7 @@ class SwaggerRoute:
         "params",
     )
 
-    def __init__(
-        self, method: str, path: str, handler: _SwaggerHandler, *, swagger: Swagger
-    ) -> None:
+    def __init__(self, method: str, path: str, handler: _SwaggerHandler, *, swagger: Swagger) -> None:
         self.method = method
         self.path = path
         self.handler = handler

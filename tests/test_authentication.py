@@ -306,9 +306,7 @@ async def test_missing_basic_word_in_auth(swagger_docs_with_components, aiohttp_
     assert error == {"authorization": "value should start with 'Basic' word"}
 
 
-async def test_missing_bearer_word_in_auth(
-    swagger_docs_with_components, aiohttp_client
-):
+async def test_missing_bearer_word_in_auth(swagger_docs_with_components, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -353,9 +351,7 @@ async def test_unknown_security(swagger_docs_with_components):
     swagger = swagger_docs_with_components()
     with pytest.raises(Exception) as exc_info:
         swagger.add_route("GET", "/r", handler)
-    assert "security schema wrongAuth must be defined in components" == str(
-        exc_info.value
-    )
+    assert "security schema wrongAuth must be defined in components" == str(exc_info.value)
 
 
 async def test_complex_auth(swagger_docs_with_components, aiohttp_client):
@@ -374,11 +370,7 @@ async def test_complex_auth(swagger_docs_with_components, aiohttp_client):
 
         """
         assert "C-API-KEY" in request["data"] or "x-api-key" in request["data"]
-        api_key = (
-            request["data"]["C-API-KEY"]
-            if "C-API-KEY" in request["data"]
-            else request["data"]["x-api-key"]
-        )
+        api_key = request["data"]["C-API-KEY"] if "C-API-KEY" in request["data"] else request["data"]["x-api-key"]
         authorization = request["data"]["authorization"]
         return web.json_response({"http": authorization, "api_key": api_key})
 

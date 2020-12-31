@@ -58,9 +58,7 @@ async def test_validation_false(swagger_docs, swagger_ui_settings, aiohttp_clien
     }
 
 
-async def test_spec_file_validation_false(
-    swagger_file, swagger_ui_settings, aiohttp_client
-):
+async def test_spec_file_validation_false(swagger_file, swagger_ui_settings, aiohttp_client):
     async def handler(request):
         assert "data" not in request
         assert request.rel_url.query["query"] == "str"
@@ -84,9 +82,7 @@ async def test_spec_file_validation_false(
     assert "/pets" in spec["paths"]
 
 
-async def test_spec_file_route_validation_false(
-    swagger_file, swagger_ui_settings, aiohttp_client
-):
+async def test_spec_file_route_validation_false(swagger_file, swagger_ui_settings, aiohttp_client):
     async def handler(request):
         assert "data" not in request
         assert request.rel_url.query["query"] == "str"
@@ -102,9 +98,7 @@ async def test_spec_file_route_validation_false(
     assert resp.status == 200
 
 
-async def test_route_validation_false(
-    swagger_docs, swagger_ui_settings, aiohttp_client
-):
+async def test_route_validation_false(swagger_docs, swagger_ui_settings, aiohttp_client):
     async def handler(request):
         """
         ---

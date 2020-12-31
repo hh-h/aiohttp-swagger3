@@ -414,9 +414,7 @@ async def test_min_max_length(swagger_docs, aiohttp_client):
             description: OK.
 
         """
-        return web.json_response(
-            {"header": header, "query": query, "path": path, "body": body}
-        )
+        return web.json_response({"header": header, "query": query, "path": path, "body": body})
 
     swagger = swagger_docs()
     swagger.add_route("POST", "/r/{path}", handler)
@@ -430,9 +428,7 @@ async def test_min_max_length(swagger_docs, aiohttp_client):
     query_param = "string"
     params = {"query": query_param}
     path_param = "string"
-    resp = await client.post(
-        f"/r/{path_param}", headers=headers, params=params, json=body
-    )
+    resp = await client.post(f"/r/{path_param}", headers=headers, params=params, json=body)
     assert resp.status == 200
     assert await resp.json() == {
         "header": header_param,
@@ -448,9 +444,7 @@ async def test_min_max_length(swagger_docs, aiohttp_client):
     query_param = "str"
     params = {"query": query_param}
     path_param = "str"
-    resp = await client.post(
-        f"/r/{path_param}", headers=headers, params=params, json=body
-    )
+    resp = await client.post(f"/r/{path_param}", headers=headers, params=params, json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     msg = "value length should be more than 5"
@@ -463,9 +457,7 @@ async def test_min_max_length(swagger_docs, aiohttp_client):
     query_param = "long_string"
     params = {"query": query_param}
     path_param = "long_string"
-    resp = await client.post(
-        f"/r/{path_param}", headers=headers, params=params, json=body
-    )
+    resp = await client.post(f"/r/{path_param}", headers=headers, params=params, json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
     msg = "value length should be less than 10"
@@ -535,9 +527,7 @@ async def test_one_of_basic(swagger_docs, aiohttp_client):
 
 
 async def test_default(swagger_docs, aiohttp_client):
-    async def handler(
-        request, integer: int, number: float, string: str, boolean: bool, body: Dict
-    ):
+    async def handler(request, integer: int, number: float, string: str, boolean: bool, body: Dict):
         """
         ---
         parameters:

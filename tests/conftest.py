@@ -1,13 +1,7 @@
 import pytest
 from aiohttp import web
 
-from aiohttp_swagger3 import (
-    RapiDocUiSettings,
-    ReDocUiSettings,
-    SwaggerDocs,
-    SwaggerFile,
-    SwaggerUiSettings,
-)
+from aiohttp_swagger3 import RapiDocUiSettings, ReDocUiSettings, SwaggerDocs, SwaggerFile, SwaggerUiSettings
 
 pytest_plugins = ["aiohttp.pytest_plugin"]
 

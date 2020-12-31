@@ -1,11 +1,6 @@
 from aiohttp import web
 
-from aiohttp_swagger3 import (
-    RapiDocUiSettings,
-    ReDocUiSettings,
-    SwaggerDocs,
-    SwaggerUiSettings,
-)
+from aiohttp_swagger3 import RapiDocUiSettings, ReDocUiSettings, SwaggerDocs, SwaggerUiSettings
 
 
 async def handler(request):

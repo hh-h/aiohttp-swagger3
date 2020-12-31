@@ -86,17 +86,13 @@ class SwaggerDocs(Swagger):
             self.spec_validate(self.spec)
         except fastjsonschema.exceptions.JsonSchemaException as exc:
             fn_name = handler.__name__
-            raise Exception(
-                f"Invalid schema for handler '{fn_name}' {method.upper()} {path} - {exc}"
-            )
+            raise Exception(f"Invalid schema for handler '{fn_name}' {method.upper()} {path} - {exc}")
         self._app[_SWAGGER_SPECIFICATION] = self.spec
         if not validate:
             return handler
         route = SwaggerRoute(method, path, handler, swagger=self)
         if is_method:
-            return functools.partialmethod(  # type: ignore
-                self._handle_swagger_method_call, route
-            )
+            return functools.partialmethod(self._handle_swagger_method_call, route)  # type: ignore
         return functools.partial(self._handle_swagger_call, route)
 
     def add_route(
@@ -155,6 +151,4 @@ class SwaggerDocs(Swagger):
                     validate=need_validation,
                 )
 
-        return self._app.router.add_route(
-            method, path, handler, name=name, expect_handler=expect_handler
-        )
+        return self._app.router.add_route(method, path, handler, name=name, expect_handler=expect_handler)

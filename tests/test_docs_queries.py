@@ -118,9 +118,7 @@ async def test_enum(swagger_docs, aiohttp_client):
             description: OK.
 
         """
-        return web.json_response(
-            {"integer": integer, "string": string, "number": number}
-        )
+        return web.json_response({"integer": integer, "string": string, "number": number})
 
     swagger = swagger_docs()
     swagger.add_route("GET", "/r", handler)
@@ -529,9 +527,7 @@ async def test_corner_cases(swagger_docs, aiohttp_client):
             description: OK.
 
         """
-        return web.json_response(
-            {"int32": int32, "int64": int64, "float1": float1, "double": double}
-        )
+        return web.json_response({"int32": int32, "int64": int64, "float1": float1, "double": double})
 
     swagger = swagger_docs()
     swagger.add_route("POST", "/r", handler)

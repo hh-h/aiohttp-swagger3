@@ -3,26 +3,18 @@ from typing import Dict, List, Optional, Union
 
 import attr
 
-HEX_COLOR_REGEX = re.compile(
-    r"^#([a-f0-9]{3,4}|[a-f0-9]{4}(?:[a-f0-9]{2}){1,2})$", re.IGNORECASE
-)
+HEX_COLOR_REGEX = re.compile(r"^#([a-f0-9]{3,4}|[a-f0-9]{4}(?:[a-f0-9]{2}){1,2})$", re.IGNORECASE)
 
 
-@attr.attrs(
-    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
-)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class _UiSettings:
     path: str
 
     def to_settings(self) -> Dict:
-        return attr.asdict(
-            self, filter=attr.filters.exclude(attr.fields(_UiSettings).path)
-        )
+        return attr.asdict(self, filter=attr.filters.exclude(attr.fields(_UiSettings).path))
 
 
-@attr.attrs(
-    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
-)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class SwaggerUiSettings(_UiSettings):
     """Settings for `Swagger UI <https://swagger.io/tools/swagger-ui/>`_, see: `configuration <https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/configuration.md>`__
 
@@ -71,44 +63,26 @@ class SwaggerUiSettings(_UiSettings):
         validator=attr.validators.in_(("BaseLayout", "StandaloneLayout")),
     )
     # display
-    deepLinking: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    displayOperationId: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    defaultModelsExpandDepth: int = attr.attrib(
-        default=1, validator=attr.validators.instance_of(int)
-    )
-    defaultModelExpandDepth: int = attr.attrib(
-        default=1, validator=attr.validators.instance_of(int)
-    )
+    deepLinking: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    displayOperationId: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    defaultModelsExpandDepth: int = attr.attrib(default=1, validator=attr.validators.instance_of(int))
+    defaultModelExpandDepth: int = attr.attrib(default=1, validator=attr.validators.instance_of(int))
     defaultModelRendering: str = attr.attrib(
         default="example",
         validator=attr.validators.in_(("example", "model")),
     )
-    displayRequestDuration: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    displayRequestDuration: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
     docExpansion: str = attr.attrib(
         default="list",
         validator=attr.validators.in_(("list", "full", "none")),
     )
-    filter: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    showExtensions: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    showCommonExtensions: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    filter: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    showExtensions: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    showCommonExtensions: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
     # network
     supportedSubmitMethods: List[str] = attr.attrib(
         validator=attr.validators.deep_iterable(
-            member_validator=attr.validators.in_(
-                ("get", "put", "post", "delete", "options", "head", "patch", "trace")
-            ),
+            member_validator=attr.validators.in_(("get", "put", "post", "delete", "options", "head", "patch", "trace")),
             iterable_validator=attr.validators.instance_of(list),
         )
     )
@@ -117,9 +91,7 @@ class SwaggerUiSettings(_UiSettings):
         validator=attr.validators.optional(attr.validators.instance_of(str)),  # type: ignore
     )
 
-    withCredentials: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    withCredentials: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
 
     # noinspection PyUnresolvedReferences
     @supportedSubmitMethods.default
@@ -127,9 +99,7 @@ class SwaggerUiSettings(_UiSettings):
         return ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
 
 
-@attr.attrs(
-    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
-)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class ReDocUiSettings(_UiSettings):
     """Settings for `ReDoc UI <https://redocly.github.io/redoc/>`_, see: `ReDoc options <https://github.com/Redocly/redoc#redoc-options-object>`__
 
@@ -176,81 +146,31 @@ class ReDocUiSettings(_UiSettings):
         Default ``False``.
     """
 
-    disableSearch: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    expandDefaultServerVariables: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    expandResponses: str = attr.attrib(
-        default="", validator=attr.validators.instance_of(str)
-    )
-    maxDisplayedEnumValues: int = attr.attrib(
-        default=2, validator=attr.validators.instance_of(int)
-    )
-    hideDownloadButton: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    hideHostname: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    hideLoading: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    hideSingleRequestSampleTab: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    expandSingleSchemaField: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    jsonSampleExpandLevel: Union[int, str] = attr.attrib(
-        default=2, validator=attr.validators.instance_of((int, str))
-    )
-    hideSchemaTitles: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    simpleOneOfTypeLabel: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    menuToggle: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    nativeScrollbars: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    noAutoAuth: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    onlyRequiredInSamples: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    pathInMiddlePanel: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    requiredPropsFirst: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    scrollYOffset: int = attr.attrib(
-        default=0, validator=attr.validators.instance_of(int)
-    )
-    showExtensions: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    sortPropsAlphabetically: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    sortEnumValuesAlphabetically: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    suppressWarnings: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    payloadSampleIdx: int = attr.attrib(
-        default=0, validator=attr.validators.instance_of(int)
-    )
-    untrustedSpec: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    disableSearch: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    expandDefaultServerVariables: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    expandResponses: str = attr.attrib(default="", validator=attr.validators.instance_of(str))
+    maxDisplayedEnumValues: int = attr.attrib(default=2, validator=attr.validators.instance_of(int))
+    hideDownloadButton: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    hideHostname: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    hideLoading: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    hideSingleRequestSampleTab: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    expandSingleSchemaField: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    jsonSampleExpandLevel: Union[int, str] = attr.attrib(default=2, validator=attr.validators.instance_of((int, str)))
+    hideSchemaTitles: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    simpleOneOfTypeLabel: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    menuToggle: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    nativeScrollbars: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    noAutoAuth: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    onlyRequiredInSamples: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    pathInMiddlePanel: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    requiredPropsFirst: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    scrollYOffset: int = attr.attrib(default=0, validator=attr.validators.instance_of(int))
+    showExtensions: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    sortPropsAlphabetically: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    sortEnumValuesAlphabetically: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    suppressWarnings: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    payloadSampleIdx: int = attr.attrib(default=0, validator=attr.validators.instance_of(int))
+    untrustedSpec: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
 
     # noinspection PyUnresolvedReferences
     @expandResponses.validator
@@ -263,24 +183,17 @@ class ReDocUiSettings(_UiSettings):
                 int(raw_code)
             except ValueError:
                 raise ValueError(
-                    "expandResponses must be either 'all' or "
-                    f"comma-separated list of http codes, got '{raw_code}'"
+                    "expandResponses must be either 'all' or " f"comma-separated list of http codes, got '{raw_code}'"
                 )
 
     # noinspection PyUnresolvedReferences
     @jsonSampleExpandLevel.validator
-    def _json_sample_expand_level_validator(
-        self, _: "attr.Attribute[Union[int, str]]", value: Union[int, str]
-    ) -> None:
+    def _json_sample_expand_level_validator(self, _: "attr.Attribute[Union[int, str]]", value: Union[int, str]) -> None:
         if isinstance(value, str) and value != "all":
-            raise ValueError(
-                f"jsonSampleExpandLevel must be either 'all' or integer, got '{value}'"
-            )
+            raise ValueError(f"jsonSampleExpandLevel must be either 'all' or integer, got '{value}'")
 
 
-@attr.attrs(
-    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
-)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class RapiDocUiSettings(_UiSettings):
     """Settings for `RapiDoc UI <https://mrin9.github.io/RapiDoc/index.html>`_, see: `RapiDoc API <https://mrin9.github.io/RapiDoc/api.html>`__
 
@@ -345,9 +258,7 @@ class RapiDocUiSettings(_UiSettings):
     """
 
     # General
-    sort_tags: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    sort_tags: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
     sort_endpoints_by: str = attr.attrib(
         default="path",
         validator=attr.validators.in_(("path", "method")),
@@ -376,9 +287,7 @@ class RapiDocUiSettings(_UiSettings):
         validator=attr.validators.in_(("default", "large", "largest")),
     )
     # Navigation bar colors
-    use_path_in_nav_bar: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    use_path_in_nav_bar: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
     nav_bg_color: Optional[str] = attr.attrib(
         default=None,
         validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -412,44 +321,22 @@ class RapiDocUiSettings(_UiSettings):
         default="tree",
         validator=attr.validators.in_(("tree", "table")),
     )
-    schema_expand_level: int = attr.attrib(
-        default=999, validator=attr.validators.instance_of(int)
-    )
-    schema_description_expanded: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
+    schema_expand_level: int = attr.attrib(default=999, validator=attr.validators.instance_of(int))
+    schema_description_expanded: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
     default_schema_tab: str = attr.attrib(
         default="model",
         validator=attr.validators.in_(("model", "example")),
     )
     # Hide/Show Sections
-    show_info: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    show_components: bool = attr.attrib(
-        default=False, validator=attr.validators.instance_of(bool)
-    )
-    show_header: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_authentication: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_spec_url_load: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_spec_file_load: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_search: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_try: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
-    allow_server_selection: bool = attr.attrib(
-        default=True, validator=attr.validators.instance_of(bool)
-    )
+    show_info: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    show_components: bool = attr.attrib(default=False, validator=attr.validators.instance_of(bool))
+    show_header: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_authentication: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_spec_url_load: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_spec_file_load: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_search: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_try: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
+    allow_server_selection: bool = attr.attrib(default=True, validator=attr.validators.instance_of(bool))
     # API Server
     api_key_name: str = attr.attrib(
         default="Authorization",
@@ -499,37 +386,27 @@ class RapiDocUiSettings(_UiSettings):
         return "#bbb"
 
     @nav_bg_color.validator
-    def _nav_bg_color_validator(
-        self, _: "attr.Attribute[Optional[str]]", value: Optional[str]
-    ) -> None:
+    def _nav_bg_color_validator(self, _: "attr.Attribute[Optional[str]]", value: Optional[str]) -> None:
         if value is not None and not HEX_COLOR_REGEX.match(value):
             raise ValueError("nav_bg_color must be valid HEX color")
 
     @nav_text_color.validator
-    def _nav_text_color_validator(
-        self, _: "attr.Attribute[Optional[str]]", value: Optional[str]
-    ) -> None:
+    def _nav_text_color_validator(self, _: "attr.Attribute[Optional[str]]", value: Optional[str]) -> None:
         if value is not None and not HEX_COLOR_REGEX.match(value):
             raise ValueError("nav_text_color must be valid HEX color")
 
     @nav_hover_bg_color.validator
-    def _nav_hover_bg_color_validator(
-        self, _: "attr.Attribute[Optional[str]]", value: Optional[str]
-    ) -> None:
+    def _nav_hover_bg_color_validator(self, _: "attr.Attribute[Optional[str]]", value: Optional[str]) -> None:
         if value is not None and not HEX_COLOR_REGEX.match(value):
             raise ValueError("nav_hover_bg_color must be valid HEX color")
 
     @nav_hover_text_color.validator
-    def _nav_hover_text_color_validator(
-        self, _: "attr.Attribute[Optional[str]]", value: Optional[str]
-    ) -> None:
+    def _nav_hover_text_color_validator(self, _: "attr.Attribute[Optional[str]]", value: Optional[str]) -> None:
         if value is not None and not HEX_COLOR_REGEX.match(value):
             raise ValueError("nav_hover_text_color must be valid HEX color")
 
     @nav_accent_color.validator
-    def _nav_accent_color_validator(
-        self, _: "attr.Attribute[Optional[str]]", value: Optional[str]
-    ) -> None:
+    def _nav_accent_color_validator(self, _: "attr.Attribute[Optional[str]]", value: Optional[str]) -> None:
         if value is not None and not HEX_COLOR_REGEX.match(value):
             raise ValueError("nav_accent_color must be valid HEX color")
 

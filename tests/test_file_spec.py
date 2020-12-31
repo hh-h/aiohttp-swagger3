@@ -15,12 +15,8 @@ async def test_spec_file(swagger_file, aiohttp_client):
 
     async def get_one_pet(request, pet_id: int):
         if pet_id in (1, 2, 3):
-            return web.json_response(
-                {"id": pet_id, "name": f"pet_{pet_id}", "tag": f"tag_{pet_id}"}
-            )
-        return web.json_response(
-            {"code": 10, "message": f"pet with ID '{pet_id}' not found"}, status=500
-        )
+            return web.json_response({"id": pet_id, "name": f"pet_{pet_id}", "tag": f"tag_{pet_id}"})
+        return web.json_response({"code": 10, "message": f"pet with ID '{pet_id}' not found"}, status=500)
 
     swagger = swagger_file()
     swagger.add_routes(
