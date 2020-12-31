@@ -1079,14 +1079,10 @@ async def test_incorrect_json_body(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(
-        "/r", data="{{", headers={"content-type": "application/json"}
-    )
+    resp = await client.post("/r", data="{{", headers={"content-type": "application/json"})
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {
-        "body": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
-    }
+    assert error == {"body": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"}
 
 
 async def test_form_data(swagger_docs, aiohttp_client):

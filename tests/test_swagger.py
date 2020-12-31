@@ -129,9 +129,7 @@ async def test_incorrect_rapidoc_ui_path(swagger_docs, rapidoc_ui_settings):
     assert str(exc_info.value) == "path should start with /"
 
 
-async def test_swagger_json_renders_datetime(
-    swagger_docs, swagger_ui_settings, aiohttp_client
-):
+async def test_swagger_json_renders_datetime(swagger_docs, swagger_ui_settings, aiohttp_client):
     async def handler(request):
         """
         ---
@@ -215,9 +213,7 @@ async def test_swagger_file_no_spec():
     assert str(exc_info.value) == "spec file with swagger schema must be provided"
 
 
-async def test_two_uis_one_path(
-    swagger_ui_settings, redoc_ui_settings, rapidoc_ui_settings
-):
+async def test_two_uis_one_path(swagger_ui_settings, redoc_ui_settings, rapidoc_ui_settings):
     app = web.Application()
     with pytest.raises(Exception) as exc_info:
         SwaggerDocs(
@@ -278,37 +274,27 @@ async def test_redoc_ui_expand_responses_validator(swagger_docs, redoc_ui_settin
     with pytest.raises(Exception) as exc_info:
         swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="abc"))
     assert (
-        str(exc_info.value)
-        == "expandResponses must be either 'all' or comma-separated list of http codes, got 'abc'"
+        str(exc_info.value) == "expandResponses must be either 'all' or comma-separated list of http codes, got 'abc'"
     )
 
     with pytest.raises(Exception) as exc_info:
         swagger_docs(redoc_ui_settings=redoc_ui_settings(expandResponses="100,bca"))
     assert (
-        str(exc_info.value)
-        == "expandResponses must be either 'all' or comma-separated list of http codes, got 'bca'"
+        str(exc_info.value) == "expandResponses must be either 'all' or comma-separated list of http codes, got 'bca'"
     )
 
 
-async def test_redoc_ui_json_sample_expand_level_validator(
-    swagger_docs, redoc_ui_settings
-):
+async def test_redoc_ui_json_sample_expand_level_validator(swagger_docs, redoc_ui_settings):
     swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="all"))
     swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel=1))
 
     with pytest.raises(Exception) as exc_info:
         swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="abc"))
-    assert (
-        str(exc_info.value)
-        == "jsonSampleExpandLevel must be either 'all' or integer, got 'abc'"
-    )
+    assert str(exc_info.value) == "jsonSampleExpandLevel must be either 'all' or integer, got 'abc'"
 
     with pytest.raises(Exception) as exc_info:
         swagger_docs(redoc_ui_settings=redoc_ui_settings(jsonSampleExpandLevel="5"))
-    assert (
-        str(exc_info.value)
-        == "jsonSampleExpandLevel must be either 'all' or integer, got '5'"
-    )
+    assert str(exc_info.value) == "jsonSampleExpandLevel must be either 'all' or integer, got '5'"
 
 
 async def test_default_serialization(swagger_docs, swagger_ui_settings, aiohttp_client):
@@ -423,9 +409,7 @@ async def test_redoc_ui_static_files(swagger_docs, redoc_ui_settings, aiohttp_cl
     assert resp.status == 200
 
 
-async def test_rapidoc_ui_static_files(
-    swagger_docs, rapidoc_ui_settings, aiohttp_client
-):
+async def test_rapidoc_ui_static_files(swagger_docs, rapidoc_ui_settings, aiohttp_client):
     swagger = swagger_docs(rapidoc_ui_settings=rapidoc_ui_settings())
 
     client = await aiohttp_client(swagger._app)
@@ -457,9 +441,7 @@ async def test_rapidoc_ui_static_files(
         ),
     ),
 )
-async def test_rapidoc_ui_hex_color_validator_invalid(
-    field, value, rapidoc_ui_settings
-):
+async def test_rapidoc_ui_hex_color_validator_invalid(field, value, rapidoc_ui_settings):
     with pytest.raises(Exception) as exc_info:
         rapidoc_ui_settings(**{field: value})
     assert str(exc_info.value) == f"{field} must be valid HEX color"

@@ -1,19 +1,7 @@
 import json
 import pathlib
 from collections import defaultdict
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    DefaultDict,
-    Dict,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, DefaultDict, Dict, Optional, Set, Tuple, Type, Union
 
 import fastjsonschema
 from aiohttp import hdrs, web
@@ -70,9 +58,9 @@ class Swagger(web.UrlDispatcher):
         self.validate = validate
         self.spec = spec
         self.request_key = request_key
-        self.handlers: DefaultDict[
-            str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]
-        ] = defaultdict(dict)
+        self.handlers: DefaultDict[str, Dict[str, Callable[[web.Request], Awaitable[Tuple[Any, bool]]]]] = defaultdict(
+            dict
+        )
 
         uis = (rapidoc_ui_settings, redoc_ui_settings, swagger_ui_settings)
         paths: Set[str] = set()
@@ -99,9 +87,7 @@ class Swagger(web.UrlDispatcher):
         STRING_FORMATS.set({})
         if self.validate:
             self.register_media_type_handler("application/json", application_json)
-            self.register_media_type_handler(
-                "application/x-www-form-urlencoded", x_www_form_urlencoded
-            )
+            self.register_media_type_handler("application/x-www-form-urlencoded", x_www_form_urlencoded)
 
             self.register_string_format_validator("byte", sf_byte_validator)
             self.register_string_format_validator("date-time", sf_date_time_validator)
@@ -114,9 +100,7 @@ class Swagger(web.UrlDispatcher):
 
         super().__init__()
 
-    def _register_ui(
-        self, ui_settings: Union[SwaggerUiSettings, ReDocUiSettings, RapiDocUiSettings]
-    ) -> None:
+    def _register_ui(self, ui_settings: Union[SwaggerUiSettings, ReDocUiSettings, RapiDocUiSettings]) -> None:
         ui_path = ui_settings.path
         if not ui_path.startswith("/"):
             raise Exception("path should start with /")
@@ -144,34 +128,22 @@ class Swagger(web.UrlDispatcher):
         self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
 
         base_path = pathlib.Path(__file__).parent
-        self._app.router.add_static(
-            f"{ui_path}/{dir_name}_static", base_path / dir_name
-        )
+        self._app.router.add_static(f"{ui_path}/{dir_name}_static", base_path / dir_name)
 
-        self._app[ui_index_html] = ui_template.substitute(
-            {"settings": json.dumps(ui_settings.to_settings())}
-        )
+        self._app[ui_index_html] = ui_template.substitute({"settings": json.dumps(ui_settings.to_settings())})
 
-    async def _handle_swagger_call(
-        self, route: "SwaggerRoute", request: web.Request
-    ) -> web.StreamResponse:
+    async def _handle_swagger_call(self, route: "SwaggerRoute", request: web.Request) -> web.StreamResponse:
         kwargs = await route.parse(request)
         return await route.handler(**kwargs)
 
-    async def _handle_swagger_method_call(
-        self, view: web.View, route: "SwaggerRoute"
-    ) -> web.StreamResponse:
+    async def _handle_swagger_method_call(self, view: web.View, route: "SwaggerRoute") -> web.StreamResponse:
         kwargs = await route.parse(view.request)
         return await route.handler(view, **kwargs)
 
-    def add_head(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_head(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
 
-    def add_options(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_options(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_OPTIONS, path, handler, **kwargs)
 
     def add_get(
@@ -186,29 +158,19 @@ class Swagger(web.UrlDispatcher):
             self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
         return self.add_route(hdrs.METH_GET, path, handler, name=name, **kwargs)
 
-    def add_post(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_post(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_POST, path, handler, **kwargs)
 
-    def add_put(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_put(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PUT, path, handler, **kwargs)
 
-    def add_patch(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_patch(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_PATCH, path, handler, **kwargs)
 
-    def add_delete(
-        self, path: str, handler: WebHandler, **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_delete(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_DELETE, path, handler, **kwargs)
 
-    def add_view(
-        self, path: str, handler: Type[AbstractView], **kwargs: Any
-    ) -> web.AbstractRoute:
+    def add_view(self, path: str, handler: Type[AbstractView], **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_ANY, path, handler, **kwargs)
 
     def register_media_type_handler(
@@ -246,9 +208,7 @@ class Swagger(web.UrlDispatcher):
         typ, subtype = media_type.split("/")
         self.handlers[typ][subtype] = handler
 
-    def register_string_format_validator(
-        self, string_format: str, validator: Callable[[str], None]
-    ) -> None:
+    def register_string_format_validator(self, string_format: str, validator: Callable[[str], None]) -> None:
         """This method allows registering a custom validator for string format
 
         Please, see `example <https://github.com/hh-h/aiohttp-swagger3/blob/master/examples/custom_string_format/main.py>`__
@@ -260,9 +220,7 @@ class Swagger(web.UrlDispatcher):
         sf_validators = STRING_FORMATS.get()
         sf_validators[string_format] = validator
 
-    def _get_media_type_handler(
-        self, media_type: str
-    ) -> Callable[[web.Request], Awaitable[Tuple[Any, bool]]]:
+    def _get_media_type_handler(self, media_type: str) -> Callable[[web.Request], Awaitable[Tuple[Any, bool]]]:
         typ, subtype = media_type.split("/")
         if typ not in self.handlers:
             if "*" not in self.handlers:

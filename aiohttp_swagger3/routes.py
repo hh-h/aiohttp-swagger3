@@ -18,21 +18,15 @@ class CustomEncoder(json.JSONEncoder):
 
 
 async def _swagger_ui(request: web.Request) -> web.Response:
-    return web.Response(
-        text=request.app[_SWAGGER_UI_INDEX_HTML], content_type="text/html"
-    )
+    return web.Response(text=request.app[_SWAGGER_UI_INDEX_HTML], content_type="text/html")
 
 
 async def _redoc_ui(request: web.Request) -> web.Response:
-    return web.Response(
-        text=request.app[_REDOC_UI_INDEX_HTML], content_type="text/html"
-    )
+    return web.Response(text=request.app[_REDOC_UI_INDEX_HTML], content_type="text/html")
 
 
 async def _rapidoc_ui(request: web.Request) -> web.Response:
-    return web.Response(
-        text=request.app[_RAPIDOC_UI_INDEX_HTML], content_type="text/html"
-    )
+    return web.Response(text=request.app[_RAPIDOC_UI_INDEX_HTML], content_type="text/html")
 
 
 async def _swagger_spec(request: web.Request) -> web.Response:

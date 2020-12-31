@@ -56,9 +56,7 @@ class Integer(Validator):
     def _enum_set_default(self) -> Optional[Set[int]]:
         return None if self.enum is None else set(self.enum)
 
-    def validate(
-        self, raw_value: Union[None, int, str, _MissingType], raw: bool
-    ) -> Union[None, int, _MissingType]:
+    def validate(self, raw_value: Union[None, int, str, _MissingType], raw: bool) -> Union[None, int, _MissingType]:
         is_missing = isinstance(raw_value, _MissingType)
         if not is_missing and self.readOnly:
             raise ValidatorError("property is read-only")
@@ -81,10 +79,7 @@ class Integer(Validator):
             value = self.default
         else:
             raise ValidatorError("value should be type of int")
-        if (
-            self.format == IntegerFormat.Int32
-            and not -2_147_483_648 <= value <= 2_147_483_647
-        ):
+        if self.format == IntegerFormat.Int32 and not -2_147_483_648 <= value <= 2_147_483_647:
             raise ValidatorError("value out of bounds int32")
 
         if self.minimum is not None:
@@ -216,9 +211,7 @@ class String(Validator):
                 string_formats[self.format](value)
 
         if self.pattern and not self.pattern.search(value):
-            raise ValidatorError(
-                f"value should match regex pattern '{self.pattern.pattern}'"
-            )
+            raise ValidatorError(f"value should match regex pattern '{self.pattern.pattern}'")
 
         return value
 
@@ -229,9 +222,7 @@ class Boolean(Validator):
     readOnly: bool = False
     default: Optional[bool] = None
 
-    def validate(
-        self, raw_value: Union[None, bool, str, _MissingType], raw: bool
-    ) -> Union[None, bool, _MissingType]:
+    def validate(self, raw_value: Union[None, bool, str, _MissingType], raw: bool) -> Union[None, bool, _MissingType]:
         is_missing = isinstance(raw_value, _MissingType)
         if not is_missing and self.readOnly:
             raise ValidatorError("property is read-only")
@@ -268,9 +259,7 @@ class Array(Validator):
     nullable: bool = False
     readOnly: bool = False
 
-    def validate(
-        self, raw_value: Union[None, str, List, _MissingType], raw: bool
-    ) -> Union[None, List, _MissingType]:
+    def validate(self, raw_value: Union[None, str, List, _MissingType], raw: bool) -> Union[None, List, _MissingType]:
         is_missing = isinstance(raw_value, _MissingType)
         if not is_missing and self.readOnly:
             raise ValidatorError("property is read-only")
@@ -316,14 +305,10 @@ class Array(Validator):
 def to_discriminator(data: Optional[Dict]) -> Optional[DiscriminatorObject]:
     if data is None:
         return None
-    return DiscriminatorObject(
-        property_name=data["propertyName"], mapping=data.get("mapping", {})
-    )
+    return DiscriminatorObject(property_name=data["propertyName"], mapping=data.get("mapping", {}))
 
 
-@attr.attrs(
-    slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True
-)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class Object(Validator):
     properties: Dict[str, Validator]
     required: Set[str]
@@ -333,9 +318,7 @@ class Object(Validator):
     nullable: bool = False
     readOnly: bool = False
 
-    def validate(
-        self, raw_value: Union[None, Dict, _MissingType], raw: bool
-    ) -> Union[None, Dict, _MissingType]:
+    def validate(self, raw_value: Union[None, Dict, _MissingType], raw: bool) -> Union[None, Dict, _MissingType]:
         is_missing = isinstance(raw_value, _MissingType)
         if not is_missing and self.readOnly:
             raise ValidatorError("property is read-only")
@@ -370,12 +353,7 @@ class Object(Validator):
             if not self.additionalProperties:
                 additional_properties = raw_value.keys() - value.keys()
                 if additional_properties:
-                    raise ValidatorError(
-                        {
-                            k: "additional property not allowed"
-                            for k in additional_properties
-                        }
-                    )
+                    raise ValidatorError({k: "additional property not allowed" for k in additional_properties})
             else:
                 for key in raw_value.keys() - value.keys():
                     value[key] = raw_value[key]
@@ -384,22 +362,16 @@ class Object(Validator):
                 validator = self.additionalProperties
                 value[name] = validator.validate(raw_value[name], raw)
         if self.minProperties is not None and len(value) < self.minProperties:
-            raise ValidatorError(
-                f"number or properties must be more than {self.minProperties}"
-            )
+            raise ValidatorError(f"number or properties must be more than {self.minProperties}")
         if self.maxProperties is not None and len(value) > self.maxProperties:
-            raise ValidatorError(
-                f"number or properties must be less than {self.maxProperties}"
-            )
+            raise ValidatorError(f"number or properties must be less than {self.maxProperties}")
         return value
 
 
 @attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
 class Discriminator(Validator):
     validators: List[Validator]
-    discriminator: Optional[DiscriminatorObject] = attr.attrib(
-        converter=to_discriminator
-    )
+    discriminator: Optional[DiscriminatorObject] = attr.attrib(converter=to_discriminator)
     mapping: Dict[str, int]
 
     def validate(self, raw_value: Any, raw: bool) -> Any:
@@ -415,9 +387,7 @@ class Discriminator(Validator):
             mapping_schema_name = self.discriminator.mapping.get(schema_name)
             if mapping_schema_name is None:
                 keys = list(self.discriminator.mapping.keys() | self.mapping.keys())
-                raise ValidatorError(
-                    {self.discriminator.property_name: f"must be one of {keys}"}
-                )
+                raise ValidatorError({self.discriminator.property_name: f"must be one of {keys}"})
             validator_index = self.mapping[mapping_schema_name]
         try:
             return self.validators[validator_index].validate(raw_value, raw)
@@ -653,9 +623,7 @@ def to_array(schema: Dict) -> Array:
 
 
 def to_object(schema: Dict) -> Object:
-    properties = {
-        k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()
-    }
+    properties = {k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()}
     raw_additional_properties = schema.get("additionalProperties", True)
     if isinstance(raw_additional_properties, dict):
         additional_properties = schema_to_validator(raw_additional_properties)
@@ -766,10 +734,7 @@ def security_to_validator(schema: List[Dict]) -> Validator:
         for security in schema:
             if len(security) > 1:
                 validator: Validator = AllOfAuth(
-                    validators=[
-                        _security_to_validator(sec_name, components)
-                        for sec_name in security
-                    ]
+                    validators=[_security_to_validator(sec_name, components) for sec_name in security]
                 )
             elif len(security) == 1:
                 validator = _security_to_validator(next(iter(security)), components)
@@ -781,8 +746,4 @@ def security_to_validator(schema: List[Dict]) -> Validator:
     security = schema[0]
     if len(security) == 1:
         return _security_to_validator(next(iter(security)), components)
-    return AllOfAuth(
-        validators=[
-            _security_to_validator(sec_name, components) for sec_name in security
-        ]
-    )
+    return AllOfAuth(validators=[_security_to_validator(sec_name, components) for sec_name in security])

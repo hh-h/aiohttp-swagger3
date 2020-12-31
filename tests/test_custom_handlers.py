@@ -42,9 +42,7 @@ async def test_custom_media_type(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(
-        "/r", data="<required>[10]", headers={"content-type": "custom/handler"}
-    )
+    resp = await client.post("/r", data="<required>[10]", headers={"content-type": "custom/handler"})
     assert resp.status == 200
     assert await resp.json() == {"required": 10}
 
@@ -117,9 +115,7 @@ async def test_file_upload(swagger_docs, aiohttp_client):
         return web.Response(body=body)
 
     swagger = swagger_docs()
-    swagger.register_media_type_handler(
-        "application/octet-stream", octet_stream_handler
-    )
+    swagger.register_media_type_handler("application/octet-stream", octet_stream_handler)
     swagger.add_route("POST", "/r", handler)
 
     client = await aiohttp_client(swagger._app)
@@ -159,9 +155,7 @@ async def test_asterisk_custom_handlers(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(
-        "/r", data=data, headers={"content-type": "custom/handler"}
-    )
+    resp = await client.post("/r", data=data, headers={"content-type": "custom/handler"})
     assert resp.status == 200
     assert (await resp.read()).decode() == data
 
@@ -171,9 +165,7 @@ async def test_asterisk_custom_handlers(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(
-        "/r", data=data, headers={"content-type": "custom/handler"}
-    )
+    resp = await client.post("/r", data=data, headers={"content-type": "custom/handler"})
     assert resp.status == 200
     assert (await resp.read()).decode() == data
 
@@ -183,8 +175,6 @@ async def test_asterisk_custom_handlers(swagger_docs, aiohttp_client):
 
     client = await aiohttp_client(swagger._app)
 
-    resp = await client.post(
-        "/r", data=data, headers={"content-type": "custom/handler"}
-    )
+    resp = await client.post("/r", data=data, headers={"content-type": "custom/handler"})
     assert resp.status == 200
     assert (await resp.read()).decode() == data

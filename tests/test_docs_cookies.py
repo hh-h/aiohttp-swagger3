@@ -6,9 +6,7 @@ from .helpers import error_to_json
 
 
 async def test_cookies(swagger_docs, aiohttp_client):
-    async def handler(
-        request, array: List[int], integer: int, string: str, boolean: bool
-    ):
+    async def handler(request, array: List[int], integer: int, string: str, boolean: bool):
         """
         ---
         parameters:
@@ -44,9 +42,7 @@ async def test_cookies(swagger_docs, aiohttp_client):
             description: OK.
 
         """
-        return web.json_response(
-            {"array": array, "integer": integer, "string": string, "boolean": boolean}
-        )
+        return web.json_response({"array": array, "integer": integer, "string": string, "boolean": boolean})
 
     swagger = swagger_docs()
     swagger.add_route("POST", "/r", handler)
@@ -113,9 +109,7 @@ async def test_missing_cookies(swagger_docs, aiohttp_client):
             description: OK.
 
         """
-        return web.json_response(
-            {"array": array, "integer": integer, "string": string, "boolean": boolean}
-        )
+        return web.json_response({"array": array, "integer": integer, "string": string, "boolean": boolean})
 
     swagger = swagger_docs()
     swagger.add_route("POST", "/r", cookie_handler)

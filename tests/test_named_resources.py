@@ -6,9 +6,7 @@ async def test_named_resources(swagger_docs):
         return web.json_response()
 
     swagger = swagger_docs()
-    swagger.add_routes(
-        [web.get("/", handler, name="get"), web.post("/", handler, name="post")]
-    )
+    swagger.add_routes([web.get("/", handler, name="get"), web.post("/", handler, name="post")])
 
     assert "get" in swagger._app.router
     assert "post" in swagger._app.router
