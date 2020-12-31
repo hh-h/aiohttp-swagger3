@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.5.2 (31-12-2020)
+------------------
+
+- Happy New Year!
+- added required readOnly support
+- bump rapidoc ui to 8.4.3
+- bump swagger ui to 3.38.0
+
 0.5.1 (28-11-2020)
 ------------------
 
