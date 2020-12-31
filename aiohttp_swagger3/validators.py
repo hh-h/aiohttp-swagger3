@@ -629,11 +629,17 @@ def to_object(schema: Dict) -> Object:
         additional_properties = schema_to_validator(raw_additional_properties)
     else:
         additional_properties = raw_additional_properties
+
+    required = set(schema.get("required", []))
+    for name, validator in properties.items():
+        if getattr(validator, "readOnly", False):
+            required.discard(name)
+
     return Object(
         nullable=schema.get("nullable", False),
         readOnly=schema.get("readOnly", False),
         properties=properties,
-        required=set(schema.get("required", [])),
+        required=required,
         minProperties=schema.get("minProperties"),
         maxProperties=schema.get("maxProperties"),
         additionalProperties=additional_properties,
