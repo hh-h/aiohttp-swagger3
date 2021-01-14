@@ -576,10 +576,11 @@ class AllOfAuth(Validator):
         return values
 
 
-def to_integer(schema: Dict) -> Integer:
+def to_integer(schema: Dict, is_property: bool) -> Integer:
+    read_only = schema.get("readOnly", False) if is_property else False
     return Integer(
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         minimum=schema.get("minimum"),
         maximum=schema.get("maximum"),
         exclusiveMinimum=schema.get("exclusiveMinimum", False),
@@ -590,10 +591,11 @@ def to_integer(schema: Dict) -> Integer:
     )
 
 
-def to_number(schema: Dict) -> Number:
+def to_number(schema: Dict, is_property: bool) -> Number:
+    read_only = schema.get("readOnly", False) if is_property else False
     return Number(
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         minimum=schema.get("minimum"),
         maximum=schema.get("maximum"),
         exclusiveMinimum=schema.get("exclusiveMinimum", False),
@@ -604,11 +606,12 @@ def to_number(schema: Dict) -> Number:
     )
 
 
-def to_string(schema: Dict) -> String:
+def to_string(schema: Dict, is_property: bool) -> String:
+    read_only = schema.get("readOnly", False) if is_property else False
     return String(
         format=schema.get("format"),
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         minLength=schema.get("minLength"),
         maxLength=schema.get("maxLength"),
         enum=schema.get("enum"),
@@ -617,18 +620,20 @@ def to_string(schema: Dict) -> String:
     )
 
 
-def to_boolean(schema: Dict) -> Boolean:
+def to_boolean(schema: Dict, is_property: bool) -> Boolean:
+    read_only = schema.get("readOnly", False) if is_property else False
     return Boolean(
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         default=schema.get("default"),
     )
 
 
-def to_array(schema: Dict) -> Array:
+def to_array(schema: Dict, is_property: bool) -> Array:
+    read_only = schema.get("readOnly", False) if is_property else False
     return Array(
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         validator=schema_to_validator(schema["items"]),
         uniqueItems=schema.get("uniqueItems", False),
         minItems=schema.get("minItems"),
@@ -636,8 +641,8 @@ def to_array(schema: Dict) -> Array:
     )
 
 
-def to_object(schema: Dict) -> Object:
-    properties = {k: schema_to_validator(v) for k, v in schema.get("properties", {}).items()}
+def to_object(schema: Dict, is_property: bool) -> Object:
+    properties = {k: schema_to_validator(v, is_property=True) for k, v in schema.get("properties", {}).items()}
     raw_additional_properties = schema.get("additionalProperties", True)
     if isinstance(raw_additional_properties, dict):
         additional_properties = schema_to_validator(raw_additional_properties)
@@ -649,9 +654,10 @@ def to_object(schema: Dict) -> Object:
         if getattr(validator, "readOnly", False):
             required.discard(name)
 
+    read_only = schema.get("readOnly", False) if is_property else False
     return Object(
         nullable=schema.get("nullable", False),
-        readOnly=schema.get("readOnly", False),
+        readOnly=read_only,
         properties=properties,
         required=required,
         minProperties=schema.get("minProperties"),
@@ -670,15 +676,15 @@ _TYPE_TO_FACTORY = {
 }
 
 
-def _type_to_validator(schema: Dict) -> Validator:
+def _type_to_validator(schema: Dict, *, is_property: bool) -> Validator:
     if "type" not in schema:
         raise KeyError("type is required")
     if schema["type"] not in _TYPE_TO_FACTORY:
         raise Exception(f"Unknown type '{schema['type']}'")
-    return _TYPE_TO_FACTORY[schema["type"]](schema)
+    return _TYPE_TO_FACTORY[schema["type"]](schema, is_property)
 
 
-def schema_to_validator(schema: Dict) -> Validator:
+def schema_to_validator(schema: Dict, *, is_property: bool = False) -> Validator:
     if "$ref" in schema:
         components = COMPONENTS.get()
         if not components:
@@ -688,7 +694,7 @@ def schema_to_validator(schema: Dict) -> Validator:
         schema = components[section][obj]
 
     if not any(field in schema for field in ("oneOf", "anyOf", "allOf")):
-        return _type_to_validator(schema)
+        return _type_to_validator(schema, is_property=is_property)
 
     if "oneOf" in schema:
         cls: Type[Union[OneOf, AnyOf]] = OneOf
