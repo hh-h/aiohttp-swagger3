@@ -368,7 +368,7 @@ class Object(Validator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class Discriminator(Validator):
     validators: List[Validator]
     discriminator: Optional[DiscriminatorObject] = attr.attrib(converter=to_discriminator)
@@ -395,9 +395,14 @@ class Discriminator(Validator):
             raise DiscriminatorValidationError
 
 
-@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class OneOf(Discriminator):
+    nullable: bool = False
+
     def validate(self, raw_value: Any, raw: bool) -> Any:
+        if raw_value is None and self.nullable:
+            return raw_value
+
         if self.discriminator is not None:
             try:
                 return super().validate(raw_value, raw)
@@ -419,9 +424,14 @@ class OneOf(Discriminator):
         return value
 
 
-@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class AnyOf(Discriminator):
+    nullable: bool = False
+
     def validate(self, raw_value: Any, raw: bool) -> Any:
+        if raw_value is None and self.nullable:
+            return raw_value
+
         if self.discriminator is not None:
             try:
                 return super().validate(raw_value, raw)
@@ -436,11 +446,15 @@ class AnyOf(Discriminator):
         raise ValidatorError("fail to validate anyOf")
 
 
-@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True)
+@attr.attrs(slots=True, frozen=True, eq=False, hash=False, auto_attribs=True, kw_only=True)
 class AllOf(Validator):
+    nullable: bool = False
     validators: List[Validator]
 
     def validate(self, raw_value: Any, raw: bool) -> Any:
+        if raw_value is None and self.nullable:
+            return raw_value
+
         value: Dict = {}
         for validator in self.validators:
             try:
@@ -672,42 +686,46 @@ def schema_to_validator(schema: Dict) -> Validator:
         # #/components/schemas/Pet
         *_, section, obj = schema["$ref"].split("/")
         schema = components[section][obj]
-    if "oneOf" in schema or "anyOf" in schema or "allOf" in schema:
-        if "oneOf" in schema:
-            cls: Type[Discriminator] = OneOf
-            type_ = "oneOf"
-        elif "anyOf" in schema:
-            cls = AnyOf
-            type_ = "anyOf"
-        else:
-            return AllOf(
-                validators=[schema_to_validator(sch) for sch in schema["allOf"]],
-            )
 
-        validators = []
-        discriminator = schema.get("discriminator")
-        mapping: Dict[str, int] = {}
-        schema_names: Set[str] = set()
-        for i, sch in enumerate(schema[type_]):
-            validators.append(schema_to_validator(sch))
-            if discriminator is not None and "$ref" in sch:
-                # #/components/schemas/Pet
-                *_, obj = sch["$ref"].split("/")
-                mapping[obj] = i
-                schema_names.add(obj)
-        if discriminator is not None and "mapping" in discriminator:
-            for key, value in discriminator["mapping"].items():
-                if value.startswith("#"):
-                    value = value.split("/")[-1]
-                    discriminator["mapping"][key] = value
-                if value not in schema_names:
-                    raise Exception(f"schema '{value}' must be defined in components")
-        return cls(
-            validators=[schema_to_validator(sch) for sch in schema[type_]],
-            discriminator=schema.get("discriminator"),
-            mapping=mapping,
+    if not any(field in schema for field in ("oneOf", "anyOf", "allOf")):
+        return _type_to_validator(schema)
+
+    if "oneOf" in schema:
+        cls: Type[Union[OneOf, AnyOf]] = OneOf
+        type_ = "oneOf"
+    elif "anyOf" in schema:
+        cls = AnyOf
+        type_ = "anyOf"
+    else:
+        return AllOf(
+            nullable=schema.get("nullable", False),
+            validators=[schema_to_validator(sch) for sch in schema["allOf"]],
         )
-    return _type_to_validator(schema)
+
+    validators = []
+    discriminator = schema.get("discriminator")
+    mapping: Dict[str, int] = {}
+    schema_names: Set[str] = set()
+    for i, sch in enumerate(schema[type_]):
+        validators.append(schema_to_validator(sch))
+        if discriminator is not None and "$ref" in sch:
+            # #/components/schemas/Pet
+            *_, obj = sch["$ref"].split("/")
+            mapping[obj] = i
+            schema_names.add(obj)
+    if discriminator is not None and "mapping" in discriminator:
+        for key, value in discriminator["mapping"].items():
+            if value.startswith("#"):
+                value = value.split("/")[-1]
+                discriminator["mapping"][key] = value
+            if value not in schema_names:
+                raise Exception(f"schema '{value}' must be defined in components")
+    return cls(
+        nullable=schema.get("nullable", False),
+        validators=[schema_to_validator(sch) for sch in schema[type_]],
+        discriminator=schema.get("discriminator"),
+        mapping=mapping,
+    )
 
 
 def _security_to_validator(sec_name: str, components: Dict) -> Validator:
