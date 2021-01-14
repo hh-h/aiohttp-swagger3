@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.5.3 (14-01-2021)
+------------------
+
+- allOf, oneOf, anyOf can be nullable
+- readOnly should affect only properties
+
 0.5.2 (31-12-2020)
 ------------------
 
