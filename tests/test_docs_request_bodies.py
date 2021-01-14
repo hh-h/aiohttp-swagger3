@@ -1506,3 +1506,54 @@ async def test_object_required_read_only_properties(swagger_docs, aiohttp_client
             "updated_at": "property is read-only",
         }
     }
+
+
+async def test_nullable_ref(swagger_docs_with_components, aiohttp_client):
+
+    routes = web.RouteTableDef()
+
+    @routes.post("/r")
+    async def handler(request, body: Dict):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - pet
+                properties:
+                  pet:
+                    nullable: true
+                    allOf:
+                      - $ref: '#/components/schemas/Pet'
+
+        responses:
+          '200':
+            description: OK.
+        """
+        return web.json_response(body)
+
+    swagger = swagger_docs_with_components()
+    swagger.add_routes(routes)
+
+    client = await aiohttp_client(swagger._app)
+
+    body = {
+        "pet": None,
+    }
+    resp = await client.post("/r", json=body)
+    assert resp.status == 200
+    assert await resp.json() == body
+
+    body = {
+        "pet": {
+            "name": "lizzy",
+            "age": 12,
+        }
+    }
+    resp = await client.post("/r", json=body)
+    assert resp.status == 200
+    assert await resp.json() == body
