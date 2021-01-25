@@ -1580,9 +1580,7 @@
           "format": "uri-reference"
         },
         "parameters": {
-          "type": "object",
-          "additionalProperties": {
-          }
+          "type": "object"
         },
         "requestBody": {
         },
