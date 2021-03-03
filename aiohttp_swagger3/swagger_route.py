@@ -1,4 +1,5 @@
 import cgi
+import inspect
 import json
 from types import FunctionType
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
@@ -26,7 +27,7 @@ class RequestValidationFailed(web.HTTPBadRequest):
 
 def _get_fn_parameters(fn: _SwaggerHandler) -> Tuple[str, ...]:
     func = cast(FunctionType, fn)
-    if func.__closure__ is None:
+    if func.__closure__ is None or inspect.isclass(func.__closure__[0].cell_contents):
         arg_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
         return func.__code__.co_varnames[:arg_count]
     return _get_fn_parameters(func.__closure__[0].cell_contents)
