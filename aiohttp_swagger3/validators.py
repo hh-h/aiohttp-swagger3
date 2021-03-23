@@ -457,10 +457,7 @@ class AllOf(Validator):
 
         value: Dict = {}
         for validator in self.validators:
-            try:
-                value.update(validator.validate(raw_value, raw))
-            except ValidatorError:
-                raise ValidatorError("fail to validate allOf")
+            value.update(validator.validate(raw_value, raw))
         return value
 
 
