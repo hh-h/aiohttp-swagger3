@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.4 (dd-mm-yyyy)
+------------------
+
+- detailed error info for allOf
+
 0.5.3 (14-01-2021)
 ------------------
 

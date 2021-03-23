@@ -786,37 +786,37 @@ async def test_all_of_object(swagger_docs, aiohttp_client):
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"name": "required property"}}}
 
     body = {"object": {"name": "string"}}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"id": "required property"}}}
 
     body = {"object": {"test": "value"}}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"id": "required property"}}}
 
     body = {"object": {"id": 10, "name": "string", "age": 10.1}}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"age": "value should be type of int"}}}
 
     body = {"object": {"rank": "321"}}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"id": "required property"}}}
 
     body = {"object": {"age": 15}}
     resp = await client.post("/r", json=body)
     assert resp.status == 400
     error = error_to_json(await resp.text())
-    assert error == {"body": {"object": "fail to validate allOf"}}
+    assert error == {"body": {"object": {"id": "required property"}}}
 
 
 async def test_array_in_object(swagger_docs, aiohttp_client):
