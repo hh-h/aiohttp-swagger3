@@ -6,6 +6,7 @@ Changelog
 
 - detailed error info for allOf
 - bump rapidoc ui to 8.4.9
+- bump redoc ui to v2.0.0-rc.50
 
 0.5.3 (14-01-2021)
 ------------------
