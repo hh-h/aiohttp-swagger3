@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 - fixed bug that empty security raises an Exception (#88)
+- added the ability to set global security in SwaggerDocs via security parameter
 
 0.5.6 (11-05-2021)
 ------------------

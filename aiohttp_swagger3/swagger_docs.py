@@ -24,6 +24,7 @@ class SwaggerDocs(Swagger):
     :param str version: version which will be used in openapi scheme, default ``1.0.0``
     :param str description: description which will be used in openapi scheme (optional)
     :param str components: path to file with components definitions (optional)
+    :param str security: path to file with security definition (optional)
     :param swagger_ui_settings: class:`SwaggerUiSettings` (optional)
     :param redoc_ui_settings: class:`ReDocUiSettings` (optional)
     :param rapidoc_ui_settings: class:`RapiDocUiSettings` (optional)
@@ -41,6 +42,7 @@ class SwaggerDocs(Swagger):
         version: str = "1.0.0",
         description: Optional[str] = None,
         components: Optional[str] = None,
+        security: Optional[str] = None,
         swagger_ui_settings: Optional[SwaggerUiSettings] = None,
         redoc_ui_settings: Optional[ReDocUiSettings] = None,
         rapidoc_ui_settings: Optional[RapiDocUiSettings] = None,
@@ -55,6 +57,10 @@ class SwaggerDocs(Swagger):
 
         if components:
             with open(components) as f:
+                spec.update(yaml.safe_load(f))
+
+        if security:
+            with open(security) as f:
                 spec.update(yaml.safe_load(f))
 
         super().__init__(
