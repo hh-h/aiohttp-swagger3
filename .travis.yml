@@ -1,4 +1,4 @@
-dist: bionic
+dist: focal
 language: python
 matrix:
   include:
@@ -7,10 +7,12 @@ matrix:
   - python: 3.8
   - python: 3.9
   - python: 3.9-dev
+  - python: 3.10-dev
   - python: nightly
   fast_finish: true
   allow_failures:
   - python: 3.9-dev
+  - python: 3.10-dev
   - python: nightly
 install:
   - pip install -r requirements.txt

@@ -1,15 +1,20 @@
-from aiohttp_swagger3 import __version__
-from pathlib import Path, PurePath
+import pathlib
+import re
 from setuptools import setup
 
-readme = Path(__file__).with_name("README.rst")
+BASE = pathlib.Path(__file__).parent
 
-with open(PurePath(__file__).parent / "requirements.txt") as f:
+readme_file = BASE / "README.rst"
+version_file = BASE / "aiohttp_swagger3" / "__init__.py"
+
+version = re.findall(r'^__version__ = "(.+?)"$', version_file.read_text("utf-8"), re.M)[0]
+
+with open(BASE / "requirements.txt") as f:
     install_requires = f.read().splitlines()
 
 setup(
     name="aiohttp-swagger3",
-    version=__version__,
+    version=version,
     packages=["aiohttp_swagger3"],
     package_data={
         "aiohttp_swagger3": [
@@ -26,7 +31,7 @@ setup(
     author="Valetov Konstantin",
     author_email="forjob@thetrue.name",
     description="validation for aiohttp swagger openAPI 3",
-    long_description=readme.read_text("utf-8"),
+    long_description=readme_file.read_text("utf-8"),
     long_description_content_type="text/x-rst",
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
