@@ -71,7 +71,7 @@ class SwaggerRoute:
         security = method_section.get("security")
         components = self._swagger.spec.get("components", {})
         COMPONENTS.set(components)
-        if security is not None:
+        if security:
             parameter = Parameter("", security_to_validator(security), True)
             self.auth = parameter
         if parameters is not None:

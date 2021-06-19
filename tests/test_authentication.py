@@ -435,3 +435,25 @@ async def test_optional_any_of_auth(swagger_docs_with_components, aiohttp_client
     resp = await client.get("/r")
     assert resp.status == 200
     assert await resp.json() == {"has_auth": False}
+
+
+async def test_disabled_security(swagger_docs_with_components, aiohttp_client):
+    async def handler(request):
+        """
+        ---
+        security: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    swagger = swagger_docs_with_components()
+    swagger.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/r")
+    assert resp.status == 200
