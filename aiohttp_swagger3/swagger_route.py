@@ -68,7 +68,8 @@ class SwaggerRoute:
         method_section = self._swagger.spec["paths"][path][method]
         parameters = method_section.get("parameters")
         body = method_section.get("requestBody")
-        security = method_section.get("security")
+        method_security = method_section.get("security")
+        security = method_security if method_security is not None else self._swagger.spec.get("security", [])
         components = self._swagger.spec.get("components", {})
         COMPONENTS.set(components)
         if security:

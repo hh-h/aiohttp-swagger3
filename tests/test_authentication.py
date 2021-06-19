@@ -457,3 +457,48 @@ async def test_disabled_security(swagger_docs_with_components, aiohttp_client):
 
     resp = await client.get("/r")
     assert resp.status == 200
+
+
+async def test_global_security(swagger_docs_with_components, aiohttp_client):
+    async def handler(request):
+        """
+        ---
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    swagger = swagger_docs_with_components(security="tests/testdata/security.yaml")
+    swagger.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/r")
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"authorization": "is required"}
+
+
+async def test_overwrite_global_security(swagger_docs_with_components, aiohttp_client):
+    async def handler(request):
+        """
+        ---
+        security: []
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response()
+
+    swagger = swagger_docs_with_components(security="tests/testdata/security.yaml")
+    swagger.add_route("GET", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.get("/r")
+    assert resp.status == 200
