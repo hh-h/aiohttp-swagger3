@@ -1,0 +1,24 @@
+parameters:
+
+  - name: query1
+    in: query
+    required: true
+    schema:
+      type: array
+      items:
+        type: integer
+      uniqueItems: true
+      minItems: 1
+
+  - name: query2
+    in: query
+    schema:
+      type: array
+      items:
+        type: integer
+      uniqueItems: true
+      minItems: 1
+
+responses:
+  '200':
+    description: OK.

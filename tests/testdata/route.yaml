@@ -1,0 +1,11 @@
+parameters:
+
+  - name: param_id
+    in: path
+    required: true
+    schema:
+      type: integer
+
+responses:
+  '200':
+    description: OK.
