@@ -1,6 +1,6 @@
 import functools
 from collections import defaultdict
-from typing import Dict, Optional, Type, Union
+from typing import Callable, Dict, Optional, Type, Union
 
 import fastjsonschema
 import yaml
@@ -11,6 +11,28 @@ from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
+
+
+def swagger_doc(path: str) -> Callable:
+    """
+    This decorator can be used if you don't want to include the whole schema into docstring,
+    so it can be placed in the YAML file and provide the path to the file,
+    see `docs_decorator_and_docstrings <https://github.com/hh-h/aiohttp-swagger3/tree/master/examples/docs_decorator_and_docstrings>`__ example
+
+    :param str path: path to swagger route schema
+    """
+
+    def wrapper(fn: Callable) -> Callable:
+        doc = fn.__doc__ or ""
+        if "---" in doc:
+            raise Exception(f"cannot use decorator swagger_doc with docstring, function: {fn}")
+
+        with open(path) as f:
+            doc = f"{doc}---\n{f.read()}"
+        fn.__doc__ = doc
+        return fn
+
+    return wrapper
 
 
 class SwaggerDocs(Swagger):

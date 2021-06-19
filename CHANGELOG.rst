@@ -6,6 +6,7 @@ Changelog
 
 - fixed bug that empty security raises an Exception (#88)
 - added the ability to set global security in SwaggerDocs via security parameter
+- added decorator `swagger_doc`, it can be used to add swagger schema from yaml file, see examples/docs_decorator_and_docstrings
 
 0.5.6 (11-05-2021)
 ------------------
