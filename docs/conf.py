@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'aiohttp-swagger3'
-copyright = '2020, Konstantin Valetov'
+copyright = '2021, Konstantin Valetov'
 author = 'Konstantin Valetov'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.6'
+release = '0.6.0'
 
 
 # -- General configuration ---------------------------------------------------

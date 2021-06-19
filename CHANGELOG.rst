@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.6.0 (dd-mm-yyyy)
+0.6.0 (19-06-2021)
 ------------------
 
 - fixed bug that empty security raises an Exception (#88)
