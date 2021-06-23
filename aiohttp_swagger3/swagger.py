@@ -78,7 +78,9 @@ class Swagger(web.UrlDispatcher):
         self.spec_validate = fastjsonschema.compile(
             schema, formats={"uri-reference": r"^\w+:(\/?\/?)[^\s]+\Z|^#(\/\w+)+"}
         )
-        self.spec_validate(self.spec)
+
+        if validate:
+            self.spec_validate(self.spec)
 
         for ui in uis:
             if ui is not None:
