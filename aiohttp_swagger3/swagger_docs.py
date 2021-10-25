@@ -13,7 +13,7 @@ from .swagger import ExpectHandler, Swagger
 from .swagger_route import SwaggerRoute, _SwaggerHandler
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
-_PATH_VAR_REGEX = re.compile(r"{([_a-zA-Z][_a-zA-Z0-9].+?):.+?}")
+_PATH_VAR_REGEX = re.compile(r"{([_a-zA-Z][_a-zA-Z0-9].+?):.+?}(/|$)")
 
 
 def swagger_doc(path: str) -> Callable:
@@ -113,6 +113,9 @@ class SwaggerDocs(Swagger):
         *_, spec = handler.__doc__.split("---")
         method_spec = yaml.safe_load(spec)
         path = _PATH_VAR_REGEX.sub(r"{\1}", path)
+        if self.spec["paths"].get(path, {}).get(method) is not None:
+            raise Exception(f"{method} {path} already exists")
+
         self.spec["paths"][path][method] = method_spec
         try:
             self.spec_validate(self.spec)
