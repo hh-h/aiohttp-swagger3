@@ -78,17 +78,17 @@ async def test_missing_custom_media_type(swagger_docs):
 
     swagger = swagger_docs()
     with pytest.raises(Exception) as exc_info:
-        swagger.add_route("POST", "/r", handler)
+        swagger.add_route("POST", "/r1", handler)
     assert "register handler for custom/handler first" == str(exc_info.value)
 
     swagger.register_media_type_handler("*/handler1", custom_handler)
     with pytest.raises(Exception) as exc_info:
-        swagger.add_route("POST", "/r", handler)
+        swagger.add_route("POST", "/r2", handler)
     assert "missing handler for media type */*" == str(exc_info.value)
 
     swagger.register_media_type_handler("custom/handler1", custom_handler)
     with pytest.raises(Exception) as exc_info:
-        swagger.add_route("POST", "/r", handler)
+        swagger.add_route("POST", "/r3", handler)
     assert "register handler for custom/handler first" == str(exc_info.value)
 
 
