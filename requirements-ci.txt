@@ -1,5 +1,5 @@
-mypy==0.902
-black==21.6b0
-flake8==3.9.2
-isort==5.8.0
+mypy==0.910
+black==21.10b0
+flake8==4.0.1
+isort==5.10.0
 types-pyyaml>=5.4.0
