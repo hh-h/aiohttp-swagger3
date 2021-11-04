@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.7.0 (04-11-2021)
+------------------
+
+- added regex support in path params (#92)
+- allow aiohttp 3.8.0 as required dependency (#93)
+- bump rapidoc ui to 9.1.3
+- bump redoc ui to v2.0.0-rc.56
+- bump swagger ui to 3.52.5
+
 0.6.0 (19-06-2021)
 ------------------
 
