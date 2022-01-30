@@ -12,6 +12,8 @@ from .validators import MISSING, Validator, ValidatorError, schema_to_validator,
 
 _SwaggerHandler = Callable[..., Awaitable[web.StreamResponse]]
 
+REQUEST_BODY_NAME: str = "body"
+
 
 class RequestValidationFailed(web.HTTPBadRequest):
     """This exception can be caught in a aiohttp middleware.
@@ -50,6 +52,7 @@ class SwaggerRoute:
         "hp",
         "cp",
         "bp",
+        "is_body_required",
         "auth",
         "params",
     )
@@ -68,6 +71,7 @@ class SwaggerRoute:
         method_section = self._swagger.spec["paths"][path][method]
         parameters = method_section.get("parameters")
         body = method_section.get("requestBody")
+        self.is_body_required = body and body.get("required", False)
         method_security = method_section.get("security")
         security = method_security if method_security is not None else self._swagger.spec.get("security", [])
         components = self._swagger.spec.get("components", {})
@@ -104,14 +108,14 @@ class SwaggerRoute:
                 self._swagger._get_media_type_handler(media_type)
                 value = body["content"][media_type]
                 self.bp[media_type] = Parameter(
-                    "body",
+                    REQUEST_BODY_NAME,
                     schema_to_validator(value["schema"]),
                     body.get("required", False),
                 )
         self.params = set(_get_fn_parameters(self.handler))
 
     async def parse(self, request: web.Request) -> Dict:
-        params = {}
+        params: Dict = {}
         if "request" in self.params:
             params["request"] = request
         request_key = self._swagger.request_key
@@ -157,29 +161,39 @@ class SwaggerRoute:
                         params[param.name] = value
         # body parameters
         if self.bp:
-            if "Content-Type" not in request.headers:
-                if next(iter(self.bp.values())).required:
-                    errors["body"] = "is required"
-            else:
-                media_type, _ = cgi.parse_header(request.headers["Content-Type"])
-                if media_type not in self.bp:
-                    errors["body"] = f"no handler for {media_type}"
+            if request.body_exists:
+                if "Content-Type" not in request.headers:
+                    if next(iter(self.bp.values())).required:
+                        errors[REQUEST_BODY_NAME] = "is required"
                 else:
-                    handler = self._swagger._get_media_type_handler(media_type)
-                    param = self.bp[media_type]
-                    try:
-                        v, has_raw = await handler(request)
-                    except ValidatorError as e:
-                        errors[param.name] = e.error
+                    media_type, _ = cgi.parse_header(request.headers["Content-Type"])
+                    if media_type not in self.bp:
+                        errors[REQUEST_BODY_NAME] = f"no handler for {media_type}"
                     else:
+                        handler = self._swagger._get_media_type_handler(media_type)
+                        param = self.bp[media_type]
                         try:
-                            value = param.validator.validate(v, has_raw)
+                            v, has_raw = await handler(request)
                         except ValidatorError as e:
                             errors[param.name] = e.error
                         else:
-                            request[request_key][param.name] = value
-                            if param.name in self.params:
-                                params[param.name] = value
+                            try:
+                                value = param.validator.validate(v, has_raw)
+                            except ValidatorError as e:
+                                errors[param.name] = e.error
+                            else:
+                                request[request_key][param.name] = value
+                                if param.name in self.params:
+                                    params[param.name] = value
+
+            elif self.is_body_required:
+                errors[REQUEST_BODY_NAME] = "is required"
+
+            else:
+                request[request_key][REQUEST_BODY_NAME] = None
+                if REQUEST_BODY_NAME in self.params:
+                    params[REQUEST_BODY_NAME] = None
+
         # header parameters
         if self.hp:
             for param in self.hp:
