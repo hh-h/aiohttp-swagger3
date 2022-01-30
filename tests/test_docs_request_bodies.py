@@ -1211,6 +1211,44 @@ async def test_no_content_type(swagger_docs, aiohttp_client):
     assert await resp.json() is None
 
 
+async def test_no_content_type_body_required(swagger_docs, aiohttp_client):
+    async def handler(request, body: Dict):
+        """
+        ---
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post("/r", skip_auto_headers=("Content-Type",))
+    assert resp.status == 400
+    error = error_to_json(await resp.text())
+    assert error == {"body": "is required"}
+
+    resp = await client.post("/r", skip_auto_headers=("Content-Type",), data="payload")
+    assert resp.status == 400
+    assert error == {"body": "is required"}
+
+
 async def test_required_no_content_type(swagger_docs, aiohttp_client):
     async def handler(request, body: Dict):
         """
@@ -1245,7 +1283,7 @@ async def test_required_no_content_type(swagger_docs, aiohttp_client):
     assert error == {"body": "is required"}
 
 
-async def test_optional_body(swagger_docs, aiohttp_client):
+async def test_no_handler(swagger_docs, aiohttp_client):
     async def handler(request, body: Optional[Dict] = None):
         """
         ---
@@ -1360,6 +1398,81 @@ async def test_nullable_ref(swagger_docs_with_components, aiohttp_client):
             "age": 12,
         }
     }
+    resp = await client.post("/r", json=body)
+    assert resp.status == 200
+    assert await resp.json() == body
+
+
+async def test_optional_body_implicit(swagger_docs, aiohttp_client):
+    async def handler(request, body: Optional[Dict]):
+        """
+        ---
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post("/r")
+    assert resp.status == 200
+    assert await resp.json() is None
+
+    body = {"required": 10}
+    resp = await client.post("/r", json=body)
+    assert resp.status == 200
+    assert await resp.json() == body
+
+
+async def test_optional_body_explicit(swagger_docs, aiohttp_client):
+    async def handler(request, body: Optional[Dict]):
+        """
+        ---
+        requestBody:
+          required: false
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - required
+                properties:
+                  required:
+                    type: integer
+
+        responses:
+          '200':
+            description: OK.
+
+        """
+        return web.json_response(body)
+
+    swagger = swagger_docs()
+    swagger.add_route("POST", "/r", handler)
+
+    client = await aiohttp_client(swagger._app)
+
+    resp = await client.post("/r")
+    assert resp.status == 200
+    assert await resp.json() is None
+
+    body = {"required": 10}
     resp = await client.post("/r", json=body)
     assert resp.status == 200
     assert await resp.json() == body
