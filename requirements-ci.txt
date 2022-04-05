@@ -1,5 +1,5 @@
 mypy==0.910
-black==21.10b0
+black==22.3.0
 flake8==4.0.1
 isort==5.10.0
 types-pyyaml>=5.4.0
