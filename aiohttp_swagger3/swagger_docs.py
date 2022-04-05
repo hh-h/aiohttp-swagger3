@@ -112,7 +112,7 @@ class SwaggerDocs(Swagger):
             return handler
         *_, spec = handler.__doc__.split("---")
         method_spec = yaml.safe_load(spec)
-        path = _PATH_VAR_REGEX.sub(r"{\1}", path)
+        path = _PATH_VAR_REGEX.sub(r"{\1}\2", path)
         if self.spec["paths"].get(path, {}).get(method) is not None:
             raise Exception(f"{method} {path} already exists")
 

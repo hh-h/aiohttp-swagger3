@@ -138,3 +138,4 @@ async def test_path_with_regex(swagger_docs, aiohttp_client):
     resp = await client.get("/r/10/r/11/abc")
     assert resp.status == 200
     assert await resp.json() == {"first_param_id": 10, "second_param_id": 11, "third_param_id": "abc"}
+    assert "/r/{first_param_id}/r/{second_param_id}/{third_param_id}" in swagger.spec["paths"]
