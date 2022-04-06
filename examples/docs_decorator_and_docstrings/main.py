@@ -2,7 +2,7 @@ from typing import List
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings, swagger_doc
+from aiohttp_swagger3 import SwaggerDocs, SwaggerInfo, SwaggerUiSettings, swagger_doc
 
 
 async def docstring_handler(request, query1: List[int], query2: List[int] = None):
@@ -50,8 +50,7 @@ def main():
     app = web.Application()
     s = SwaggerDocs(
         app,
-        title="Example",
-        version="1.0.0",
+        info=SwaggerInfo(title="Example", version="1.0.0"),
         swagger_ui_settings=SwaggerUiSettings(path="/docs"),
     )
     s.add_routes(
