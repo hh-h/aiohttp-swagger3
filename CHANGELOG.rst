@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.7.2 (06-04-2022)
+------------------
+
+- Fix missing slash in regex path replacement (#100)
+- added info parameter to SwaggerDocs (#99)
+- bump rapidoc ui to 9.2.0
+- bump redoc ui to v2.0.0-rc.66
+- bump swagger ui to 4.10.3
+- dropped python 3.6 support
+
 0.7.1 (30-01-2021)
 ------------------
 
