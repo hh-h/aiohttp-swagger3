@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 from aiohttp import web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
+from aiohttp_swagger3 import SwaggerDocs, SwaggerInfo, SwaggerUiSettings
 
 
 async def create_pet(request: web.Request, body: Dict) -> web.Response:
@@ -55,8 +55,7 @@ def main():
     app = web.Application()
     s = SwaggerDocs(
         app,
-        title="Swagger Petstore",
-        version="1.0.0",
+        info=SwaggerInfo(title="Swagger Petstore", version="1.0.0"),
         swagger_ui_settings=SwaggerUiSettings(path="/docs"),
     )
     # register your handler before registering routes

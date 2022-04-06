@@ -1,5 +1,6 @@
 import functools
 import re
+import warnings
 from collections import defaultdict
 from typing import Callable, Dict, Optional, Type, Union
 
@@ -10,6 +11,7 @@ from aiohttp.abc import AbstractView
 
 from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger
+from .swagger_info import SwaggerInfo
 from .swagger_route import SwaggerRoute, _SwaggerHandler
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
 
@@ -62,9 +64,10 @@ class SwaggerDocs(Swagger):
         app: web.Application,
         *,
         validate: bool = True,
+        info: Optional[SwaggerInfo] = None,
         request_key: str = "data",
-        title: str = "OpenAPI3",
-        version: str = "1.0.0",
+        title: Optional[str] = None,
+        version: Optional[str] = None,
         description: Optional[str] = None,
         components: Optional[str] = None,
         security: Optional[str] = None,
@@ -72,13 +75,38 @@ class SwaggerDocs(Swagger):
         redoc_ui_settings: Optional[ReDocUiSettings] = None,
         rapidoc_ui_settings: Optional[RapiDocUiSettings] = None,
     ) -> None:
+        if info is not None and (title is not None or version is not None or description is not None):
+            raise Exception("do not use SwaggerDocs' info with title or version or description")
+
+        if info is None:
+            info = SwaggerInfo(title="OpenAPI3", version="1.0.0")
+
+        if title is not None:
+            warnings.warn(
+                "SwaggerDocs' title is deprecated and will be removed in 0.8.0, use info object instead.",
+                FutureWarning,
+            )
+            info.title = title
+
+        if version is not None:
+            warnings.warn(
+                "SwaggerDocs' version is deprecated and will be removed in 0.8.0, use info object instead.",
+                FutureWarning,
+            )
+            info.version = version
+
+        if description is not None:
+            warnings.warn(
+                "SwaggerDocs' description is deprecated and will be removed in 0.8.0, use info object instead.",
+                FutureWarning,
+            )
+            info.description = description
+
         spec: Dict = {
             "openapi": "3.0.0",
-            "info": {"title": title, "version": version},
+            "info": info.to_json(),
             "paths": defaultdict(lambda: defaultdict(dict)),
         }
-        if description is not None:
-            spec["info"]["description"] = description
 
         if components:
             with open(components) as f:

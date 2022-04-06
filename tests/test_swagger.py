@@ -3,7 +3,7 @@ import itertools
 import pytest
 from aiohttp import hdrs, web
 
-from aiohttp_swagger3 import SwaggerDocs, SwaggerFile
+from aiohttp_swagger3 import SwaggerContact, SwaggerDocs, SwaggerFile, SwaggerInfo, SwaggerLicense
 
 
 async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
@@ -27,9 +27,14 @@ async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
 
     swagger = swagger_docs(
         swagger_ui_settings=swagger_ui_settings(),
-        title="test app",
-        version="2.2.2",
-        description="test description",
+        info=SwaggerInfo(
+            title="test app",
+            version="2.2.2",
+            description="test description",
+            terms_of_service="https://example.com/terms",
+            contact=SwaggerContact(name="user", url="https://example.com/contact", email="user@example.com"),
+            license=SwaggerLicense(name="Apache 2.0", url="https://www.apache.org/licenses/LICENSE-2.0.html"),
+        ),
     )
     swagger.add_route("GET", "/r/{param_id}", handler)
 
@@ -43,6 +48,9 @@ async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
             "title": "test app",
             "version": "2.2.2",
             "description": "test description",
+            "termsOfService": "https://example.com/terms",
+            "contact": {"name": "user", "url": "https://example.com/contact", "email": "user@example.com"},
+            "license": {"name": "Apache 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.html"},
         },
         "paths": {
             "/r/{param_id}": {
@@ -510,3 +518,40 @@ async def test_swagger_invalid_schema(swagger_docs, swagger_ui_settings):
         "data.parameters[0] must be valid exactly by one of oneOf definition"
     )
     assert msg == str(exc_info.value)
+
+
+async def test_deprecated_properties(swagger_docs):
+    with pytest.warns(None) as warnings:
+        swagger_docs(
+            title="test app",
+            version="2.2.2",
+            description="test description",
+        )
+
+    assert issubclass(warnings[0].category, FutureWarning)
+    assert (
+        str(warnings[0].message)
+        == "SwaggerDocs' title is deprecated and will be removed in 0.8.0, use info object instead."
+    )
+
+    assert issubclass(warnings[1].category, FutureWarning)
+    assert (
+        str(warnings[1].message)
+        == "SwaggerDocs' version is deprecated and will be removed in 0.8.0, use info object instead."
+    )
+
+    assert issubclass(warnings[2].category, FutureWarning)
+    assert (
+        str(warnings[2].message)
+        == "SwaggerDocs' description is deprecated and will be removed in 0.8.0, use info object instead."
+    )
+
+
+async def test_mix_info_with_other_properties(swagger_docs):
+    with pytest.raises(Exception, match="do not use SwaggerDocs' info with title or version or description"):
+        swagger_docs(
+            info=SwaggerInfo(title="test app", version="2.2.2"),
+            title="test app",
+            version="2.2.2",
+            description="test description",
+        )
