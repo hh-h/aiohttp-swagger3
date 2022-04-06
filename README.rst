@@ -47,13 +47,12 @@ Disable validation
 Requirements
 ============
 
-- python >= 3.6
+- python >= 3.7
 - aiohttp >= 3.5.4
 - pyyaml >= 5.3
 - attrs >= 19.3.0
 - python-fastjsonschema >= 2.14.3
 - strict\_rfc3339 == 0.7
-- contextvars >= 2.4 (for python 3.6 only)
 
 Limitations
 ===========
