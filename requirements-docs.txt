@@ -1,2 +1,2 @@
 -r requirements.txt
-sphinx==2.4.4
+sphinx==3.0.4
