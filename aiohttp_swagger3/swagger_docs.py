@@ -9,7 +9,6 @@ import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
-from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger, _handle_swagger_call, _handle_swagger_method_call
 from .swagger_info import SwaggerInfo
 from .swagger_route import SwaggerRoute, _SwaggerHandler
@@ -125,7 +124,6 @@ class SwaggerDocs(Swagger):
             redoc_ui_settings=redoc_ui_settings,
             rapidoc_ui_settings=rapidoc_ui_settings,
         )
-        self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def _wrap_handler(
         self,
@@ -150,7 +148,6 @@ class SwaggerDocs(Swagger):
         except fastjsonschema.exceptions.JsonSchemaException as exc:
             fn_name = handler.__name__
             raise Exception(f"Invalid schema for handler '{fn_name}' {method.upper()} {path} - {exc}")
-        self._app[_SWAGGER_SPECIFICATION] = self.spec
         if not validate:
             return handler
         route = SwaggerRoute(method, path, handler, swagger=self)

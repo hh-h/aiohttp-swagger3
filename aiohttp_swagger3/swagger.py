@@ -1,6 +1,7 @@
 import json
 import pathlib
 from collections import defaultdict
+from functools import partial
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, DefaultDict, Dict, Optional, Set, Tuple, Type, Union
 
 import fastjsonschema
@@ -10,16 +11,7 @@ from aiohttp.abc import AbstractView
 from .context import STRING_FORMATS
 from .handlers import application_json, x_www_form_urlencoded
 from .index_templates import RAPIDOC_UI_TEMPLATE, REDOC_UI_TEMPLATE, SWAGGER_UI_TEMPLATE
-from .routes import (
-    _RAPIDOC_UI_INDEX_HTML,
-    _REDOC_UI_INDEX_HTML,
-    _SWAGGER_UI_INDEX_HTML,
-    _rapidoc_ui,
-    _redirect,
-    _redoc_ui,
-    _swagger_spec,
-    _swagger_ui,
-)
+from .routes import _redirect, _swagger_spec, _ui
 from .string_formats import (
     sf_byte_validator,
     sf_date_time_validator,
@@ -110,27 +102,22 @@ class Swagger(web.UrlDispatcher):
             self._app.router.add_route("GET", ui_path, _redirect)
 
         if isinstance(ui_settings, SwaggerUiSettings):
-            ui_handler = _swagger_ui
             ui_template = SWAGGER_UI_TEMPLATE
-            ui_index_html = _SWAGGER_UI_INDEX_HTML
             dir_name = "swagger_ui"
         elif isinstance(ui_settings, ReDocUiSettings):
-            ui_handler = _redoc_ui
             ui_template = REDOC_UI_TEMPLATE
-            ui_index_html = _REDOC_UI_INDEX_HTML
             dir_name = "redoc_ui"
         else:
-            ui_handler = _rapidoc_ui
             ui_template = RAPIDOC_UI_TEMPLATE
-            ui_index_html = _RAPIDOC_UI_INDEX_HTML
             dir_name = "rapidoc_ui"
-        self._app.router.add_route("GET", f"{ui_path}/", ui_handler)
-        self._app.router.add_route("GET", f"{ui_path}/swagger.json", _swagger_spec)
+
+        ui_text = ui_template.substitute({"settings": json.dumps(ui_settings.to_settings())})
+
+        self._app.router.add_route("GET", f"{ui_path}/", partial(_ui, ui_text))
+        self._app.router.add_route("GET", f"{ui_path}/swagger.json", partial(_swagger_spec, self.spec))
 
         base_path = pathlib.Path(__file__).parent
         self._app.router.add_static(f"{ui_path}/{dir_name}_static", base_path / dir_name)
-
-        self._app[ui_index_html] = ui_template.substitute({"settings": json.dumps(ui_settings.to_settings())})
 
     def add_head(self, path: str, handler: WebHandler, **kwargs: Any) -> web.AbstractRoute:
         return self.add_route(hdrs.METH_HEAD, path, handler, **kwargs)
