@@ -75,7 +75,7 @@ Example
 .. code:: python
 
     from aiohttp import web
-    from aiohttp_swagger3 import SwaggerDocs, SwaggerUiSettings
+    from aiohttp_swagger3 import SwaggerDocs, SwaggerInfo, SwaggerUiSettings
 
     async def get_one_pet(request: web.Request, pet_id: int) -> web.Response:
         """
@@ -109,8 +109,10 @@ Example
         swagger = SwaggerDocs(
             app,
             swagger_ui_settings=SwaggerUiSettings(path="/docs/"),
-            title="Swagger Petstore",
-            version="1.0.0",
+            info=SwaggerInfo(
+                title="Swagger Petstore",
+                version="1.0.0",
+            ),
             components="components.yaml"
         )
         swagger.add_routes([
