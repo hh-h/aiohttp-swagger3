@@ -65,6 +65,7 @@ class SwaggerDocs(Swagger):
         *,
         validate: bool = True,
         info: Optional[SwaggerInfo] = None,
+        servers: Optional[Dict] = None,
         request_key: str = "data",
         title: Optional[str] = None,
         version: Optional[str] = None,
@@ -115,6 +116,9 @@ class SwaggerDocs(Swagger):
         if security:
             with open(security) as f:
                 spec.update(yaml.safe_load(f))
+
+        if servers:
+            spec["servers"] = servers
 
         super().__init__(
             app,
