@@ -1,4 +1,3 @@
-import cgi
 import json
 from types import FunctionType
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, cast
@@ -166,7 +165,7 @@ class SwaggerRoute:
                     if next(iter(self.bp.values())).required:
                         errors[REQUEST_BODY_NAME] = "is required"
                 else:
-                    media_type, _ = cgi.parse_header(request.headers["Content-Type"])
+                    media_type = request.content_type
                     if media_type not in self.bp:
                         errors[REQUEST_BODY_NAME] = f"no handler for {media_type}"
                     else:
