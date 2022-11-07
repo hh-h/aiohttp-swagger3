@@ -10,7 +10,7 @@ from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
 from .routes import _SWAGGER_SPECIFICATION
-from .swagger import ExpectHandler, Swagger
+from .swagger import ExpectHandler, Swagger, _handle_swagger_call, _handle_swagger_method_call
 from .swagger_info import SwaggerInfo
 from .swagger_route import SwaggerRoute, _SwaggerHandler
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
@@ -155,8 +155,8 @@ class SwaggerDocs(Swagger):
             return handler
         route = SwaggerRoute(method, path, handler, swagger=self)
         if is_method:
-            return functools.partialmethod(self._handle_swagger_method_call, route)  # type: ignore
-        return functools.partial(self._handle_swagger_call, route)
+            return functools.partialmethod(_handle_swagger_method_call, route)  # type: ignore
+        return functools.partial(_handle_swagger_call, route)
 
     def add_route(
         self,
