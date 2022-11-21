@@ -7,8 +7,8 @@ aiohttp-swagger3
    :target: https://codecov.io/github/hh-h/aiohttp-swagger3?branch=master
 .. image:: https://badge.fury.io/py/aiohttp-swagger3.svg
    :target: https://badge.fury.io/py/aiohttp-swagger3
-.. image:: https://img.shields.io/badge/python-3.6%2B-brightgreen.svg
-   :target: https://img.shields.io/badge/python-3.6%2B-brightgreen.svg
+.. image:: https://img.shields.io/badge/python-3.7%2B-brightgreen.svg
+   :target: https://img.shields.io/badge/python-3.7%2B-brightgreen.svg
 .. image:: https://img.shields.io/badge/code%20style-black-black.svg
    :target: https://github.com/ambv/black
 .. image:: https://img.shields.io/pypi/l/aiohttp-swagger3.svg

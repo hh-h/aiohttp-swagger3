@@ -1,4 +1,4 @@
-dist: focal
+dist: jammy
 language: python
 matrix:
   include:
@@ -6,15 +6,13 @@ matrix:
   - python: 3.8
   - python: 3.9
   - python: 3.10
-  - python: 3.10-dev
-  - python: 3.11-dev
+  - python: 3.11
   - python: nightly
   fast_finish: true
   allow_failures:
-  - python: 3.10-dev
-  - python: 3.11-dev
   - python: nightly
 install:
+  - pip install -U pip setuptools
   - pip install -r requirements.txt
   - pip install tox-travis codecov
 script:
@@ -30,4 +28,4 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     branch: master
-    python: 3.9
+    python: 3.10
