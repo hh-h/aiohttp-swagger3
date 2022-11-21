@@ -12,6 +12,7 @@ matrix:
   allow_failures:
   - python: nightly
 install:
+  - pip install -U pip setuptools
   - pip install -r requirements.txt
   - pip install tox-travis codecov
 script:
