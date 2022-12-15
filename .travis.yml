@@ -14,7 +14,7 @@ matrix:
 install:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
-  - pip install tox-travis codecov
+  - pip install -U "tox < 4" tox-travis codecov
 script:
   - tox
 after_success:
