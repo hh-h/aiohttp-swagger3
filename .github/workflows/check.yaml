@@ -28,7 +28,9 @@ jobs:
           python-version: '${{ matrix.python-version }}'
       - uses: actions/checkout@v3
       - run: pip install -U pip setuptools
-      - run: pip install -r requirements.txt
-      - run: pip install tox-travis codecov tox-gh-actions
-      - run: tox
-      - run: codecov
+      - run: pip install -r requirements.txt requirements-ci.txt
+      - run: flake8 aiohttp_swagger3 tests examples
+      - run: isort -q --check --diff aiohttp_swagger3 tests examples
+      - run: black -q -l 120 --check --diff aiohttp_swagger3 tests examples
+      - run: mypy aiohttp_swagger3
+      - run: pytest --codecov --cov=aiohttp_swagger3 --cov-report=term-missing tests/
