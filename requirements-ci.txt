@@ -7,4 +7,3 @@ pytest==7.1.1
 pytest-xdist==2.5.0
 pytest-cov==3.0.0
 codecov==2.1.12
-pytest-codecov==0.5.1

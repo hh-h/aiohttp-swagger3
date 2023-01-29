@@ -27,10 +27,11 @@ jobs:
         with:
           python-version: '${{ matrix.python-version }}'
       - uses: actions/checkout@v3
+      - uses: codecov/codecov-action@v3.1.1
       - run: pip install -U pip setuptools
       - run: pip install -r requirements.txt -r requirements-ci.txt
       - run: flake8 aiohttp_swagger3 tests examples
       - run: isort -q --check --diff aiohttp_swagger3 tests examples
       - run: black -q -l 120 --check --diff aiohttp_swagger3 tests examples
       - run: mypy aiohttp_swagger3
-      - run: pytest --codecov --cov=aiohttp_swagger3 --cov-report=term-missing tests/
+      - run: pytest --cov=aiohttp_swagger3 --cov-report=term-missing tests/
