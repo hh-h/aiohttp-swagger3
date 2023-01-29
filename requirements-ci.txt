@@ -3,3 +3,7 @@ black==22.3.0
 flake8==4.0.1
 isort==5.10.1
 types-pyyaml>=5.4.0
+pytest==7.1.1
+pytest-xdist==2.5.0
+pytest-cov==3.0.0
+codecov==2.1.12
