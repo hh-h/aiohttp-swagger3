@@ -3,7 +3,7 @@ import ipaddress
 import re
 import uuid
 
-import strict_rfc3339
+from rfc3339_validator import validate_rfc3339
 
 from .exceptions import ValidatorError
 
@@ -19,12 +19,12 @@ def sf_uuid_validator(value: str) -> None:
 
 
 def sf_date_validator(value: str) -> None:
-    if not strict_rfc3339.validate_rfc3339(f"{value}T00:00:00Z"):
+    if not validate_rfc3339(f"{value}T00:00:00Z"):
         raise ValidatorError("value should be date format")
 
 
 def sf_date_time_validator(value: str) -> None:
-    if not strict_rfc3339.validate_rfc3339(value):
+    if not validate_rfc3339(value):
         raise ValidatorError("value should be datetime format")
 
 
