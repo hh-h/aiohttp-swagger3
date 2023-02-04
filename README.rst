@@ -1,8 +1,8 @@
 aiohttp-swagger3
 ================
 
-.. image:: https://travis-ci.com/hh-h/aiohttp-swagger3.svg?branch=master
-   :target: https://travis-ci.com/hh-h/aiohttp-swagger3
+.. image:: https://github.com/hh-h/aiohttp-swagger3/actions/workflows/ci.yaml/badge.svg?branch=master
+   :target: https://github.com/hh-h/aiohttp-swagger3/actions
 .. image:: https://img.shields.io/codecov/c/github/hh-h/aiohttp-swagger3/master.svg?style=flat
    :target: https://codecov.io/github/hh-h/aiohttp-swagger3?branch=master
 .. image:: https://badge.fury.io/py/aiohttp-swagger3.svg
@@ -48,11 +48,11 @@ Requirements
 ============
 
 - python >= 3.7
-- aiohttp >= 3.5.4
-- pyyaml >= 5.3
+- aiohttp >= 3.6.2
+- pyyaml >= 5.4
 - attrs >= 19.3.0
-- python-fastjsonschema >= 2.14.3
-- strict\_rfc3339 == 0.7
+- python-fastjsonschema >= 2.15.0
+- rfc3339-validator >= 0.1.4
 
 Limitations
 ===========
