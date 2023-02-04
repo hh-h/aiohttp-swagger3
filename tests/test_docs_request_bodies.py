@@ -1138,7 +1138,6 @@ async def test_form_data(swagger_docs, aiohttp_client):
 
 
 async def test_object_can_have_optional_props(swagger_docs, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.post("/r")
@@ -1353,7 +1352,6 @@ async def test_wrong_body(swagger_docs, aiohttp_client):
 
 
 async def test_nullable_ref(swagger_docs_with_components, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.post("/r")

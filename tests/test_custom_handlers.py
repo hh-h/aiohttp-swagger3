@@ -9,7 +9,7 @@ async def test_custom_media_type(swagger_docs, aiohttp_client):
     async def custom_handler(request: web.Request) -> Tuple[Dict, bool]:
         # <key1>[value1]<key2>[value2]
         text = await request.text()
-        return dict(re.findall(r"<(?P<key>.+?)>\[(?P<value>.+?)\]", text)), True
+        return dict(re.findall(r"<(?P<key>.+?)>\[(?P<value>.+?)]", text)), True
 
     swagger = swagger_docs()
     swagger.register_media_type_handler("custom/handler", custom_handler)

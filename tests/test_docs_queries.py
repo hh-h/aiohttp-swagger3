@@ -584,7 +584,6 @@ async def test_string_pattern(swagger_docs, aiohttp_client):
 
 
 async def test_decorated_routes(swagger_docs, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.get("/r")

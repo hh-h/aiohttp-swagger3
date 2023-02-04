@@ -57,7 +57,6 @@ async def test_decorated_handlers(swagger_docs, aiohttp_client):
 
 
 async def test_docstring_and_decorator_collision(swagger_docs, aiohttp_client):
-
     with pytest.raises(Exception, match="cannot use decorator swagger_doc with docstring, function:"):
 
         @swagger_doc("tests/testdata/route.yaml")
