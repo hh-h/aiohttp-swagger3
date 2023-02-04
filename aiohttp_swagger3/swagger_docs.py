@@ -45,11 +45,9 @@ class SwaggerDocs(Swagger):
 
     :param aiohttp.web.Application app: aiohttp's Application instance
     :param bool validate: if ``False``, request validation is disabled, default ``True``
+    :param info: class:`SwaggerInfo`
     :param str request_key: key name under which the data will be stored in ``request``
                             after validation, default ``data``
-    :param str title: title which will be used in openapi scheme, default ``OpenAPI3``
-    :param str version: version which will be used in openapi scheme, default ``1.0.0``
-    :param str description: description which will be used in openapi scheme (optional)
     :param str components: path to file with components definitions (optional)
     :param str security: path to file with security definition (optional)
     :param swagger_ui_settings: class:`SwaggerUiSettings` (optional)
