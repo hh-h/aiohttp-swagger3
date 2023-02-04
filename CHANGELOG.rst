@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.7.3 (04-02-2023)
+0.7.4 (04-02-2023)
 ------------------
 
 - Replaced strict_rfc3339 with rfc3339-validator (#118)
