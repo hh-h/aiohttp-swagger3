@@ -9,6 +9,11 @@ Classes
 .. autoclass:: aiohttp_swagger3.swagger_file.SwaggerFile
   :members: register_string_format_validator, register_media_type_handler
 
+Settings
+^^^^^^^^
+
+.. autoclass:: aiohttp_swagger3.swagger_info.SwaggerInfo
+
 Decorators
 ^^^^^^^^^^
 
