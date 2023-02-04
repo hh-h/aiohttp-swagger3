@@ -4,3 +4,4 @@ recursive-include aiohttp_swagger3/redoc_ui *
 recursive-include aiohttp_swagger3/schema *
 recursive-include aiohttp_swagger3/swagger_ui *
 recursive-include aiohttp_swagger3/rapidoc_ui *
+include aiohttp_swagger3/py.typed

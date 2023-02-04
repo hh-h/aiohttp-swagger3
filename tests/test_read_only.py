@@ -6,7 +6,6 @@ from .helpers import error_to_json
 
 
 async def test_object_read_only_properties_skipped(swagger_docs, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.post("/r")
@@ -58,7 +57,6 @@ async def test_object_read_only_properties_skipped(swagger_docs, aiohttp_client)
 
 
 async def test_object_read_only_properties_passed(swagger_docs, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.post("/r")
@@ -131,7 +129,6 @@ async def test_object_read_only_properties_passed(swagger_docs, aiohttp_client):
 
 
 async def test_object_required_read_only_properties(swagger_docs, aiohttp_client):
-
     routes = web.RouteTableDef()
 
     @routes.post("/r")

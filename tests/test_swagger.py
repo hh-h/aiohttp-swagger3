@@ -511,17 +511,14 @@ async def test_swagger_invalid_schema(swagger_docs, swagger_ui_settings):
         return web.json_response()
 
     swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings())
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(
+        Exception, match="Invalid schema for handler 'my_handler' GET /r - .* must be valid exactly .* definition"
+    ):
         swagger.add_route("GET", "/r", my_handler)
-    msg = (
-        "Invalid schema for handler 'my_handler' GET /r - "
-        "data.parameters[0] must be valid exactly by one of oneOf definition"
-    )
-    assert msg == str(exc_info.value)
 
 
 async def test_deprecated_properties(swagger_docs):
-    with pytest.warns(None) as warnings:
+    with pytest.warns(FutureWarning) as warnings:
         swagger_docs(
             title="test app",
             version="2.2.2",
