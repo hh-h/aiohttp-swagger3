@@ -156,7 +156,7 @@ class SwaggerDocs(Swagger):
             return functools.partialmethod(_handle_swagger_method_call, route)  # type: ignore
         return functools.partial(_handle_swagger_call, route)
 
-    def add_route(
+    def add_route(  # type: ignore
         self,
         method: str,
         path: str,

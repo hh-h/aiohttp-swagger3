@@ -53,7 +53,7 @@ class SwaggerFile(Swagger):
         )
         self._app[_SWAGGER_SPECIFICATION] = self.spec
 
-    def add_route(
+    def add_route(  # type: ignore
         self,
         method: str,
         path: str,
