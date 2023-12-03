@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Awaitable, Callable, DefaultDict, Dict, O
 
 import fastjsonschema
 from aiohttp import hdrs, web
-from aiohttp.abc import AbstractView
+from aiohttp.abc import AbstractView, StreamResponse
 
 from .context import STRING_FORMATS
 from .handlers import application_json, x_www_form_urlencoded
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 
 WebHandler = Callable[[web.Request], Awaitable[web.StreamResponse]]
-ExpectHandler = Callable[[web.Request], Awaitable[None]]
+ExpectHandler = Callable[[web.Request], Awaitable[Optional[StreamResponse]]]
 
 
 class Swagger(web.UrlDispatcher):

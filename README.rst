@@ -47,8 +47,8 @@ Disable validation
 Requirements
 ============
 
-- python >= 3.7
-- aiohttp >= 3.6.2
+- python >= 3.8
+- aiohttp >= 3.8.0
 - pyyaml >= 5.4
 - attrs >= 19.3.0
 - python-fastjsonschema >= 2.15.0
