@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.8.0 (04-02-2023)
+------------------
+
+- Added aiohttp 3.9.x support
+- Dropped aiohttp 3.6.x and 3.7.x
+- Dropped python 3.7
+
 0.7.4 (04-02-2023)
 ------------------
 
