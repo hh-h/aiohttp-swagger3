@@ -5,7 +5,6 @@ import yaml
 from aiohttp import hdrs, web
 from aiohttp.abc import AbstractView
 
-from .routes import _SWAGGER_SPECIFICATION
 from .swagger import ExpectHandler, Swagger, _handle_swagger_call, _handle_swagger_method_call
 from .swagger_route import SwaggerRoute, _SwaggerHandler
 from .ui_settings import RapiDocUiSettings, ReDocUiSettings, SwaggerUiSettings
@@ -51,7 +50,6 @@ class SwaggerFile(Swagger):
             redoc_ui_settings=redoc_ui_settings,
             rapidoc_ui_settings=rapidoc_ui_settings,
         )
-        self._app[_SWAGGER_SPECIFICATION] = self.spec
 
     def add_route(
         self,
