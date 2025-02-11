@@ -47,7 +47,7 @@ Disable validation
 Requirements
 ============
 
-- python >= 3.8
+- python >= 3.9
 - aiohttp >= 3.8.0
 - pyyaml >= 5.4
 - attrs >= 19.3.0
