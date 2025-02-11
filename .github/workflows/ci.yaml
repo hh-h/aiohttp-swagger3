@@ -35,7 +35,7 @@ jobs:
       - run: ruff check
       - run: mypy aiohttp_swagger3
       - run: pytest --cov=aiohttp_swagger3 --cov-report=term-missing tests/
-      - uses: codecov/codecov-action@v3.1.1
+      - uses: codecov/codecov-action@v5.3.1
 
   deploy:
     name: Deploy
