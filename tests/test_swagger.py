@@ -72,6 +72,46 @@ async def test_swagger_json(swagger_docs, swagger_ui_settings, aiohttp_client):
     }
 
 
+async def test_swagger_json_multi_tenant(swagger_docs, swagger_ui_settings, aiohttp_client):
+    async def handler(request):
+        """
+        ---
+        responses:
+          '200':
+            description: OK.
+        """
+        return web.json_response(None)
+
+    app = web.Application()
+    swagger1 = SwaggerDocs(
+        app,
+        swagger_ui_settings=swagger_ui_settings(path="/docs1"),
+        info=SwaggerInfo(title="test app 1", version="1.0.0"),
+    )
+    swagger1.add_route("GET", "/handler1", handler)
+
+    swagger2 = SwaggerDocs(
+        app,
+        swagger_ui_settings=swagger_ui_settings(path="/docs2"),
+        info=SwaggerInfo(title="test app 2", version="1.0.0"),
+    )
+    swagger2.add_route("GET", "/handler2", handler)
+
+    client = await aiohttp_client(app)
+
+    resp1 = await client.get("/docs1/swagger.json")
+    assert resp1.status == 200
+    resp1_json = await resp1.json()
+    assert resp1_json["info"]["title"] == "test app 1"
+    assert "/handler1" in resp1_json["paths"]
+
+    resp1 = await client.get("/docs2/swagger.json")
+    assert resp1.status == 200
+    resp1_json = await resp1.json()
+    assert resp1_json["info"]["title"] == "test app 2"
+    assert "/handler2" in resp1_json["paths"]
+
+
 async def test_swagger_ui_index_html(swagger_docs, swagger_ui_settings, aiohttp_client):
     swagger = swagger_docs(swagger_ui_settings=swagger_ui_settings())
 
