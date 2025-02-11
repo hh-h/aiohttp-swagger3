@@ -1,22 +1,26 @@
-[metadata]
-description_file = README.rst
+[project]
+requires-python = ">=3.9"
 
-[aliases]
-test = pytest
+[tool.ruff]
+line-length = 120
+indent-width = 4
+extend-exclude = ["docs"]
 
-[flake8]
-ignore = E203, E266, E501, W503
-max-line-length = 120
-select = B, C, E, F, W, T4, B9
+target-version = "py312"
 
-[isort]
-line_length = 120
-multi_line_output = 3
-include_trailing_comma = true
-known_first_party = aiohttp_swagger3
-known_third_party = pytest
+[tool.ruff.lint]
+select = ["I"]
+ignore = ["F"]
 
-[mypy]
+fixable = ["I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
 incremental = true
 warn_redundant_casts = true
 disallow_subclassing_any = true
@@ -33,4 +37,4 @@ disallow_any_decorated = true
 disallow_untyped_decorators = true
 strict_optional = true
 disallow_any_unimported = true
-;disallow_any_generics = true
+# disallow_any_generics = true

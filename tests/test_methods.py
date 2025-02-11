@@ -93,14 +93,14 @@ async def test_all_methods(swagger_docs, aiohttp_client):
         return web.json_response()
 
     swagger = swagger_docs()
-    swagger.add_get("/r", handler, allow_head=False),
-    swagger.add_head("/r", handler),
-    swagger.add_put("/r", handler),
-    swagger.add_patch("/r", handler),
-    swagger.add_post("/r", handler),
-    swagger.add_delete("/r", handler),
-    swagger.add_options("/r", handler),
-    swagger.add_view("/r2", View),
+    swagger.add_get("/r", handler, allow_head=False)
+    swagger.add_head("/r", handler)
+    swagger.add_put("/r", handler)
+    swagger.add_patch("/r", handler)
+    swagger.add_post("/r", handler)
+    swagger.add_delete("/r", handler)
+    swagger.add_options("/r", handler)
+    swagger.add_view("/r2", View)
 
     client = await aiohttp_client(swagger._app)
 

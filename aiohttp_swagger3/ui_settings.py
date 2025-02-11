@@ -183,7 +183,7 @@ class ReDocUiSettings(_UiSettings):
                 int(raw_code)
             except ValueError:
                 raise ValueError(
-                    "expandResponses must be either 'all' or " f"comma-separated list of http codes, got '{raw_code}'"
+                    f"expandResponses must be either 'all' or comma-separated list of http codes, got '{raw_code}'"
                 )
 
     # noinspection PyUnresolvedReferences
